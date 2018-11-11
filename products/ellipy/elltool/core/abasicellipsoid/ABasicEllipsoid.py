@@ -37,8 +37,8 @@ class ABasicEllipsoid(ABC):
 
     @abstractmethod
     def to_dict(self, is_prop_included: bool = False, abs_tol: float = None) -> \
-            Tuple[Dict[str, np.matrix], Dict[str, str], Dict[str, str],
-                  Dict[str, Callable[[np.matrix], np.matrix]]]:
+            Tuple[Dict[str, np.ndarray], Dict[str, str], Dict[str, str],
+                  Dict[str, Callable[[np.ndarray], np.ndarray]]]:
         pass
 
     def _is_equal_internal(self, other, is_prop_included: bool) -> Tuple[bool, str]:

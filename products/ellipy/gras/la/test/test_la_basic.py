@@ -1,0 +1,2 @@
+class TestLaBasic:
+    pass

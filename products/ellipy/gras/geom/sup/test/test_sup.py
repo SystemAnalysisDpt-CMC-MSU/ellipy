@@ -1,0 +1,2 @@
+class TestSup:
+    pass

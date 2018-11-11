@@ -10,5 +10,5 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @property
     @abstractmethod
-    def _center_vec(self) -> np.matrix:
+    def _center_vec(self) -> np.ndarray:
         pass
