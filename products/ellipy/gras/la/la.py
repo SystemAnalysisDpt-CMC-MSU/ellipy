@@ -8,7 +8,20 @@ def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float) -> bool:
 
 
 def is_mat_pos_def(q_mat: np.ndarray, abs_tol: float = 0., is_flag_sem_def_on: bool = False) -> bool:
-    pass
+    if abs_tol < 0:
+        throw_error('wrongInput:absTolNegative', 'absTol is expected to be not-negative')
+    if not is_mat_symm(q_mat, abs_tol):
+        throw_error('wrongInput:nonSymmMat','input matrix must be symmetric')
+    eig_vec, v_vec = np.linalg.eig(q_mat)
+    min_eig = min(eig_vec)
+    is_pos_def = True
+    if is_flag_sem_def_on:
+        if min_eig < -abs_tol:
+            is_pos_def = False
+    else:
+        if min_eig <= abs_tol:
+            is_pos_def = False
+    return is_pos_def
 
 
 def is_mat_symm(q_mat: np.ndarray, abs_tol: float = 0.) -> bool:
