@@ -1,6 +1,7 @@
 from ellipy.gen.common.common import throw_error, abs_rel_compare
 from typing import Callable
 import numpy as np
+from numpy import linalg
 
 
 def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float) -> bool:
@@ -70,4 +71,16 @@ def sqrtm_pos(q_mat: np.ndarray, abs_tol: float) -> np.ndarray:
 
 
 def try_treat_as_real(inp_mat:  np.ndarray, tol_val: float = np.finfo(float).eps) -> np.ndarray:
-    pass
+    if not(np.isscalar(tol_val) and is_numeric(tol_val) and tol_val > 0):
+        throw_error('wrongInput:tolVal', 'tolVal must be a positive numeric scalar')
+    if np.all(np.isreal(inp_mat)):
+        return inp_mat
+    else:
+        img_inp_mat = inp_mat.imag
+        norm_value = linalg.norm(img_inp_mat, np.inf)
+        if norm_value < tol_val:
+            return inp_mat.real
+        else:
+            out_vec = str('Norm of imaginary part of source object = ' + str(norm_value) +
+                          '. It can not be more than tolVal = ' + str(tol_val))
+            throw_error('wrongInput:inpMat', out_vec)
