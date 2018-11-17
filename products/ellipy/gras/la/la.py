@@ -3,7 +3,6 @@ from typing import Callable, Union
 import numpy as np
 from numpy import linalg
 
-
 def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float) -> bool:
     pass
 
@@ -114,7 +113,14 @@ def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
 
 
 def sqrtm_pos(q_mat: np.ndarray, abs_tol: float) -> np.ndarray:
-    pass
+    if abs_tol < 0:
+        throw_error('wrongInput:absTolNegative', 'absTol is expected to be not-negative')
+    d_vec, v_mat = np.linalg.eig(q_mat)
+    if d_vec.any() < -abs_tol:
+        throw_error('wrongInput:notPosSemDef', 'input matrix is expected to be positive semi-definite')
+    d_vec[d_vec < 0] = 0
+    d_mat = np.sqrt(np.eye(len(q_mat)) * d_vec)
+    return v_mat.dot(d_mat.dot(np.linalg.inv(v_mat)))
 
 
 def try_treat_as_real(inp_mat:  Union[bool, int, float, complex, np.ndarray], tol_val: float = np.finfo(float).eps) \

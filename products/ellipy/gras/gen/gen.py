@@ -1,6 +1,6 @@
 from typing import Tuple, Callable
 import numpy as np
-
+from ellipy.gen.common.common import throw_error
 
 def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
     pass
@@ -11,7 +11,19 @@ def sort_rows_tol(inp_mat: np.ndarray, tol: float) -> Tuple[np.ndarray, np.ndarr
 
 
 def sqrt_pos(inp_arr: np.ndarray, abs_tol: float) -> np.ndarray:
-    pass
+    if abs_tol < 0:
+        throw_error('wrongInput:absTolNegative', 'absTol is expected to be not-negative')
+    if np.isscalar(inp_arr):
+        if inp_arr < -abs_tol:
+            throw_error('wrongInput:negativeInput', 'input value is under -absTol')
+        elif inp_arr < 0:
+            inp_arr = 0
+        return np.sqrt(inp_arr)
+    else:
+        if inp_arr.any() < -abs_tol:
+            throw_error('wrongInput:negativeInput', 'input array contains values under -absTol')
+        inp_arr[inp_arr < 0] = 0
+        return np.sqrt(inp_arr)
 
 
 class MatVector:
