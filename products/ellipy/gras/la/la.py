@@ -125,7 +125,7 @@ def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
     return regular_mat
 
 
-def sqrtm_pos(q_mat: np.ndarray, abs_tol: float) -> np.ndarray:
+def sqrtm_pos(q_mat: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
     if abs_tol < 0:
         throw_error('wrongInput:absTolNegative', 'absTol is expected to be not-negative')
     d_vec, v_mat = np.linalg.eig(q_mat)

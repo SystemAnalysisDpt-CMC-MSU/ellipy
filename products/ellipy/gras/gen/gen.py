@@ -10,7 +10,7 @@ def sort_rows_tol(inp_mat: np.ndarray, tol: float) -> Tuple[np.ndarray, np.ndarr
     pass
 
 
-def sqrt_pos(inp_arr: np.ndarray, abs_tol: float) -> np.ndarray:
+def sqrt_pos(inp_arr: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
     if abs_tol < 0:
         throw_error('wrongInput:absTolNegative', 'absTol is expected to be not-negative')
     if np.isscalar(inp_arr):
