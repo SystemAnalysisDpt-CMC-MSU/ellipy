@@ -38,7 +38,33 @@ def ml_orth_transl(src_mat: np.ndarray, dst_arr: np.ndarray) -> np.ndarray:
 
 
 def orth_transl(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
-    pass
+    abs_tol = 1e-7
+    n_dims = dst_vec.shape[0]
+    src_vec = try_treat_as_real(src_vec)
+    dst_vec = try_treat_as_real(dst_vec)
+    dst_squared_norm = np.sum(dst_vec * dst_vec)
+    src_squared_norm = np.sum(src_vec * src_vec)
+
+    if dst_squared_norm == 0:
+        throw_error('wrongInput:dstZero', 'destination vectors are expected to be non-zero')
+    if src_squared_norm == 0:
+        throw_error('wrongInput:srcZero', 'source vectors are expected to be non-zero')
+
+    dst_vec = dst_vec / np.sqrt(dst_squared_norm)
+    src_vec = src_vec / np.sqrt(src_squared_norm)
+
+    scal_prod = np.sum(src_vec * dst_vec)
+    s_val = np.sqrt(max(1 - scal_prod * scal_prod, 0))
+    q_mat = np.zeros((n_dims, 2), dtype=float)
+    q_mat[:, 0] = dst_vec[:, 0]
+    if np.abs(s_val) > abs_tol:
+        q_mat[:, 1] = ((src_vec - scal_prod * dst_vec) / s_val)[:, 0]
+    else:
+        q_mat[:, 1] = 0
+
+    s_mat = [[scal_prod - 1, s_val], [-s_val, scal_prod - 1]]
+    o_mat = np.identity(n_dims, dtype=float) + np.dot(np.dot(q_mat, s_mat), q_mat.transpose())
+    return o_mat
 
 
 def orth_transl_haus(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
@@ -82,7 +108,7 @@ def sqrtm_pos(q_mat: np.ndarray, abs_tol: float) -> np.ndarray:
 
 def try_treat_as_real(inp_mat:  np.ndarray, tol_val: float = np.finfo(float).eps) -> np.ndarray:
     if not(np.isscalar(tol_val) and is_numeric(tol_val) and tol_val > 0):
-        throw_error('wrongInput:tolVal', 'tolVal must be a positive numeric scalar')
+        throw_error('wrongInput:tol_val', 'tol_val must be a positive numeric scalar')
     if np.all(np.isreal(inp_mat)):
         return inp_mat
     else:
@@ -92,5 +118,6 @@ def try_treat_as_real(inp_mat:  np.ndarray, tol_val: float = np.finfo(float).eps
             return inp_mat.real
         else:
             out_vec = str('Norm of imaginary part of source object = ' + str(norm_value) +
-                          '. It can not be more than tolVal = ' + str(tol_val))
-            throw_error('wrongInput:inpMat', out_vec)
+                          '. It can not be more than tol_val = ' + str(tol_val))
+            throw_error('wrongInput:inp_mat', out_vec)
+
