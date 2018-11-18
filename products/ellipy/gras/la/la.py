@@ -63,7 +63,17 @@ def reg_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
 
 
 def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
-    pass
+    if not(np.isscalar(reg_tol) and is_numeric(reg_tol) and reg_tol > 0):
+        throw_error('wrongInput:reg_tol', 'reg_tol must be a positive numeric scalar')
+    reg_tol = try_treat_as_real(reg_tol)
+    if not(is_mat_symm(inp_mat)):
+        throw_error('wrongInput:inp_mat', 'matrix must be symmetric')
+    d_mat, v_mat = np.linalg.eig(inp_mat)
+    m_mat = np.diag(np.maximum(0, reg_tol-d_mat))
+    m_mat = np.dot(np.dot(v_mat, m_mat), v_mat.transpose())
+    regular_mat = inp_mat + m_mat
+    regular_mat = 0.5 * (regular_mat + regular_mat.transpose())
+    return regular_mat
 
 
 def sqrtm_pos(q_mat: np.ndarray, abs_tol: float) -> np.ndarray:
