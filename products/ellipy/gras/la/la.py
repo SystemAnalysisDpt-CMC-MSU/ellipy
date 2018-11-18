@@ -100,7 +100,7 @@ def reg_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
 
 
 def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
-    if not(np.isscalar(reg_tol) and is_numeric(reg_tol) and reg_tol > 0.0):
+    if not(np.isscalar(reg_tol) and is_numeric(reg_tol) and reg_tol.real > 0.0):
         throw_error('wrongInput:reg_tol', 'reg_tol must be a positive numeric scalar')
     reg_tol = try_treat_as_real(reg_tol)
     if not(is_mat_symm(inp_mat)):
@@ -124,7 +124,10 @@ def try_treat_as_real(inp_mat:  np.ndarray, tol_val: float = np.finfo(float).eps
         return inp_mat
     else:
         img_inp_mat = inp_mat.imag
-        norm_value = linalg.norm(img_inp_mat, np.inf)
+        if np.isscalar(img_inp_mat):
+            norm_value = img_inp_mat
+        else:
+            norm_value = linalg.norm(img_inp_mat, np.inf)
         if norm_value < tol_val:
             return inp_mat.real
         else:
