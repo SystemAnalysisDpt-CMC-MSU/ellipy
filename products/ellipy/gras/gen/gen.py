@@ -20,7 +20,7 @@ def sqrt_pos(inp_arr: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
             inp_arr = 0.
         return np.sqrt(inp_arr)
     else:
-        if inp_arr.any() < -abs_tol:
+        if np.any(inp_arr < -abs_tol):
             throw_error('wrongInput:negativeInput', 'input array contains values under -abs_tol')
         inp_arr[inp_arr < 0.] = 0.
         return np.sqrt(inp_arr)
