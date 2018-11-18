@@ -26,16 +26,48 @@ def icosahedron() -> Tuple[np.ndarray, np.ndarray]:
     alpha_vec = __IND_VEC * pi/2.5
     v_mat[6+__IND_VEC] = np.column_stack((np.cos(alpha_vec)/r, np.sin(alpha_vec)/r, -__Z_VEC/r))
     f_mat = np.ndarray(shape=(20, 3), dtype=int, buffer=np.array([
-        [1, 2, 3],  [1, 3, 4],  [1, 4, 5],   [1, 5, 6],    [1, 6, 2],
-        [2, 7, 3],  [3, 8, 4],  [4, 9, 5],   [5, 10, 6],   [6, 11, 2],
-        [7, 8, 3],  [8, 9, 4],  [9, 10, 5],  [10, 11, 6],  [11, 7, 2],
-        [7, 12, 8], [8, 12, 9], [9, 12, 10], [10, 12, 11], [11, 12, 7]
+        [0, 1, 2],  [0, 2, 3],  [0, 3, 4],  [0, 4, 5],   [0, 5, 1],
+        [1, 6, 2],  [2, 7, 3],  [3, 8, 4],  [4, 9, 5],   [5, 10, 1],
+        [6, 7, 2],  [7, 8, 3],  [8, 9, 4],  [9, 10, 5],  [10, 6, 1],
+        [6, 11, 7], [7, 11, 8], [8, 11, 9], [9, 11, 10], [10, 11, 6]
     ]))
     return v_mat, f_mat
 
 
 def map_face_2_edge(v_mat: np.ndarray, f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    pass
+    def triangulation(t_mat: np.ndarray, p_mat: np.ndarray) -> Tuple[np.ndarray, np.array, np.array]:
+        n_faces = np.size(t_mat, 0)  # Should I return this as a result of the function?
+        max_ind = np.size(t_mat, 1)  # I suppose it is always 3, then this and next two rows should be rewritten
+        ind_2_check = np.array([(i, j) for i in np.arange(max_ind) for j in np.arange(i + 1, max_ind)])
+        number_of_ind = np.size(ind_2_check, 0)
+        pos_edges = np.sort(np.reshape(t_mat[:, ind_2_check], newshape=(-1, 2)))
+        faces = np.repeat(np.arange(n_faces), number_of_ind)
+        edges, idx, inv_idx = np.unique(pos_edges, axis=0, return_index=True, return_inverse=True)
+        sort_idx_vec = np.argsort(inv_idx)
+        inv_idx = inv_idx[sort_idx_vec]
+        faces = faces[sort_idx_vec]
+        f_mid_c_vec = np.split(faces, np.flatnonzero(np.diff(inv_idx)) + 1)  # I think it is useless
+        numbers_of_faces = np.bincount(inv_idx)
+        return edges, faces, numbers_of_faces
+    e_mat, ind_f_vec, ind_shift_vec = triangulation(f_mat, v_mat)
+    n_edges = np.size(e_mat, 0)
+    n_faces = np.size(f_mat, 0)
+    ind_f2e_vec = np.zeros(shape=(np.sum(ind_shift_vec), 1))
+    ind_f2e_vec[0] = 1
+    ind_f2e_vec[0+np.cumsum(ind_shift_vec[:-1])] = np.ones(shape=(n_edges-1, 1))
+    ind_f2e_vec = np.cumsum(ind_f2e_vec) - 1  # I don't realise how I get int type here as PyCharm tells it in line 67
+    ind_edge_num_vec = \
+        + 1 * np.all(np.equal(f_mat[ind_f_vec, [0, 1]], e_mat[ind_f2e_vec]), 1) \
+        - 1 * np.all(np.equal(f_mat[ind_f_vec, [1, 0]], e_mat[ind_f2e_vec]), 1) \
+        + 2 * np.all(np.equal(f_mat[ind_f_vec, [1, 2]], e_mat[ind_f2e_vec]), 1) \
+        - 2 * np.all(np.equal(f_mat[ind_f_vec, [2, 1]], e_mat[ind_f2e_vec]), 1) \
+        + 3 * np.all(np.equal(f_mat[ind_f_vec, [0, 2]], e_mat[ind_f2e_vec]), 1) \
+        - 3 * np.all(np.equal(f_mat[ind_f_vec, [2, 0]], e_mat[ind_f2e_vec]), 1)
+    ind_sort_vec = np.lexsort((ind_f_vec, np.abs(ind_edge_num_vec)))
+    ind_f2e_vec = ind_f2e_vec[ind_sort_vec]
+    f2e_mat = np.reshape(ind_f2e_vec, newshape=(3, n_faces))
+    f2e_is_dir_mat = np.reshape(np.greater(ind_edge_num_vec[ind_sort_vec], 0), newshape=(3, n_faces))
+    return e_mat, f2e_mat, f2e_is_dir_mat
 
 def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
                     max_edge_len: float, n_max_steps: float = np.inf,
