@@ -34,22 +34,12 @@ def math_orth_col(src_mat: np.ndarray) -> np.ndarray:
 
 
 def ml_orth_transl(src_mat: np.ndarray, dst_arr: np.ndarray) -> np.ndarray:
-    dst_arr_size = len(dst_arr.shape)
-    if src_mat.shape == (0, 0) or src_mat.shape == (0,):
-        return np.array(np.empty(0), dtype=float)
-    elif dst_arr_size == 1:
-        n_elems = 1
-        n_vecs = 1
-    elif dst_arr_size == 2:
-        n_elems = 1
-        n_vecs = dst_arr.shape[1]
-    else:
-        n_vecs = dst_arr.shape[1]
-        n_elems = dst_arr.shape[2]
+    n_elems = 1 if dst_arr.ndim <= 2 else dst_arr.shape[2]
+    n_vecs = 1 if dst_arr.ndim <= 1 else dst_arr.shape[1]
     n_dims = dst_arr.shape[0]
     src_mat = src_mat.reshape((n_dims, n_vecs))
     dst_arr = dst_arr.reshape((n_dims, n_vecs, n_elems))
-    o_arr = np.zeros((n_dims, n_dims, n_elems, n_vecs), dtype=float)
+    o_arr = np.zeros((n_dims, n_dims, n_elems, n_vecs), dtype=np.float64)
     for i_vec in range(n_vecs):
         src_vec = np.expand_dims(src_mat[:, i_vec], axis=1)
         for i_elem in range(n_elems):
@@ -141,4 +131,3 @@ def try_treat_as_real(inp_mat:  np.ndarray, tol_val: float = np.finfo(float).eps
             throw_error('wrongInput:inp_mat',
                         'Norm of imaginary part of source object = {}. It can not be more then tol_val = {}.'
                         .format(norm_value, tol_val))
-
