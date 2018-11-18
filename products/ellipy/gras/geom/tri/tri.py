@@ -60,10 +60,10 @@ def map_face_2_edge(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarr
         - 2 * np.all(np.equal(f_mat[:, [2, 1]], e_mat[ind_f2e_vec]), 1) \
         + 3 * np.all(np.equal(f_mat[:, [0, 2]], e_mat[ind_f2e_vec]), 1) \
         - 3 * np.all(np.equal(f_mat[:, [2, 0]], e_mat[ind_f2e_vec]), 1)
-    ind_sort_vec = np.lexsort((ind_f_vec, np.abs(ind_edge_num_vec)))
+    ind_sort_vec = np.lexsort((ind_f_vec, np.abs(ind_edge_num_vec)-1))
     ind_f2e_vec = ind_f2e_vec[ind_sort_vec]
-    f2e_mat = np.reshape(ind_f2e_vec, newshape=(3, n_faces))
-    f2e_is_dir_mat = np.reshape(np.greater(ind_edge_num_vec[ind_sort_vec], 0), newshape=(3, n_faces))
+    f2e_mat = np.reshape(ind_f2e_vec, newshape=(3, n_faces)).T
+    f2e_is_dir_mat = np.reshape(np.greater(ind_edge_num_vec[ind_sort_vec], 0), newshape=(3, n_faces)).T
     return e_mat, f2e_mat, f2e_is_dir_mat
 
 
