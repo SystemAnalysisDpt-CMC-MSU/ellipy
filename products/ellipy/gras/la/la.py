@@ -8,11 +8,11 @@ def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float) -> bool:
 
 
 def is_mat_pos_def(q_mat: np.ndarray, abs_tol: float = 0., is_flag_sem_def_on: bool = False) -> bool:
-    if abs_tol < 0:
-        throw_error('wrongInput:absTolNegative', 'absTol is expected to be not-negative')
+    if abs_tol < 0.:
+        throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
     if not is_mat_symm(q_mat, abs_tol):
-        throw_error('wrongInput:nonSymmMat','input matrix must be symmetric')
-    eig_vec, v_vec = np.linalg.eig(q_mat)
+        throw_error('wrongInput:nonSymmMat', 'input matrix must be symmetric')
+    eig_vec, _ = np.linalg.eig(q_mat)
     min_eig = min(eig_vec)
     is_pos_def = True
     if is_flag_sem_def_on:
@@ -126,14 +126,14 @@ def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
 
 
 def sqrtm_pos(q_mat: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
-    if abs_tol < 0:
-        throw_error('wrongInput:absTolNegative', 'absTol is expected to be not-negative')
+    if abs_tol < 0.:
+        throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
     d_vec, v_mat = np.linalg.eig(q_mat)
     if d_vec.any() < -abs_tol:
         throw_error('wrongInput:notPosSemDef', 'input matrix is expected to be positive semi-definite')
-    d_vec[d_vec < 0] = 0
-    d_mat = np.sqrt(np.eye(len(q_mat)) * d_vec)
-    return v_mat.dot(d_mat.dot(np.linalg.inv(v_mat)))
+    d_vec[d_vec < 0.] = 0.
+    d_mat = np.sqrt(np.diag(d_vec))
+    return v_mat@d_mat@v_mat.transpose()
 
 
 def try_treat_as_real(inp_mat:  Union[bool, int, float, complex, np.ndarray], tol_val: float = np.finfo(float).eps) \
