@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Tuple
 import numpy as np
 import ellipy.elltool.conf.properties as p
 
+
 class ParsePropMixin:
     __PROP_NAME_LIST = ['version', 'isVerbose', 'absTol', 'relTol', 'regTol',
                         'ODESolverName', 'isODENormControl', 'isEnabledOdeSolverOptions',

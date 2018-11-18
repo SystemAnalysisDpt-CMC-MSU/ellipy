@@ -1,5 +1,6 @@
 from ellipy.gen.common.common import throw_error
 from typing import List, Dict, Any
+# noinspection PyProtectedMember
 from ellipy.elltool.conf.properties._ParseProp import ParsePropMixin
 
 
@@ -159,4 +160,5 @@ class Properties(ParsePropMixin):
         Properties.__conf_repo_mgr[opt_name] = opt_val
 
 
+# noinspection PyProtectedMember
 Properties._implicit_init()

@@ -60,10 +60,6 @@ class MatVector:
 
 class SquareMatVector(MatVector):
     @staticmethod
-    def __array_svd(sym_arr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        pass
-
-    @staticmethod
     def inv(data_arr: np.ndarray) -> np.ndarray:
         pass
 
@@ -93,6 +89,10 @@ class SquareMatVector(MatVector):
 
 
 class SymmetricMatVector(SquareMatVector):
+    @staticmethod
+    def __array_svd(sym_arr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        pass
+
     @staticmethod
     def lr_svd_multiply(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray, flag: str = 'R') -> np.ndarray:
         pass

@@ -37,10 +37,12 @@ class GetCallerNameExtTestClass:
         GetCallerNameExtTestClass.__method_name = method_name
         GetCallerNameExtTestClass.__class_name = class_name
 
+    # noinspection PyMethodMayBeStatic
     def simple_method(self):
         method_name, class_name = get_caller_name_ext(1)
         GetCallerNameExtTestClass.set_caller_info(method_name, class_name)
 
+    # noinspection PyMethodMayBeStatic
     def sub_function_method(self):
         def sub_function():
             method_name, class_name = get_caller_name_ext(1)
@@ -48,12 +50,15 @@ class GetCallerNameExtTestClass:
 
         sub_function()
 
+    # noinspection PyMethodMayBeStatic
     def sub_function_method1(self):
         get_caller_name_function1()
 
+    # noinspection PyMethodMayBeStatic
     def sub_function_method2(self):
         get_caller_name_function2()
 
+    # noinspection PyMethodMayBeStatic
     def sub_function_method3(self):
         get_caller_name_function3()
 
@@ -167,39 +172,48 @@ class TestCommon:
                     assert val1 == val2
 
         # size error
-        with pytest.raises(Exception) as e:  
+        with pytest.raises(Exception) as e:
+            # noinspection PyTypeChecker
             abs_rel_compare(np.array([1, 1]), np.array([[1], [1]]), 0.1, None, np.abs)
         assert 'wrongInput:wrongArgs' in str(e.value)
         # absTol error #1
-        with pytest.raises(Exception) as e:  
+        with pytest.raises(Exception) as e:
+            # noinspection PyTypeChecker
             abs_rel_compare(np.array([1, 1]), np.array([1, 1]), -0.1, None, np.abs)
         assert 'wrongInput:wrongAbsTol' in str(e.value)
         # absTol error #2
-        with pytest.raises(Exception) as e:  
+        with pytest.raises(Exception) as e:
+            # noinspection PyTypeChecker
             abs_rel_compare(np.array([1, 1]), np.array([1, 1]), np.array([0.1, 0.1]), None, np.abs)
         assert 'wrongInput:wrongAbsTol' in str(e.value)
         # absTol error #3
-        with pytest.raises(Exception) as e:  
+        with pytest.raises(Exception) as e:
+            # noinspection PyTypeChecker
             abs_rel_compare(np.array([1, 1]), np.array([1, 1]), None, None, np.abs)
         assert 'wrongInput:wrongAbsTol' in str(e.value)
         # absTol error #4
-        with pytest.raises(Exception) as e:  
+        with pytest.raises(Exception) as e:
+            # noinspection PyTypeChecker
             abs_rel_compare(np.array([1, 1]), np.array([1, 1]), np.array([]), None, np.abs)
         assert 'wrongInput:wrongAbsTol' in str(e.value)
         # relTol error #1
-        with pytest.raises(Exception) as e:  
+        with pytest.raises(Exception) as e:
+            # noinspection PyTypeChecker
             abs_rel_compare(np.array([1, 1]), np.array([1, 1]), 0.1, -0.1, np.abs)
         assert 'wrongInput:wrongRelTol' in str(e.value)
         # relTol error #2
-        with pytest.raises(Exception) as e:  
+        with pytest.raises(Exception) as e:
+            # noinspection PyTypeChecker
             abs_rel_compare(np.array([1, 1]), np.array([1, 1]), 0.1, np.array([0.1, 0.1]), np.abs)
         assert 'wrongInput:wrongRelTol' in str(e.value)
         # relTol error #3
-        with pytest.raises(Exception) as e:  
+        with pytest.raises(Exception) as e:
+            # noinspection PyTypeChecker
             abs_rel_compare(np.array([1, 1]), np.array([1, 1]), 0.1, np.array([]), np.abs)
         assert 'wrongInput:wrongRelTol' in str(e.value)
         # fNormOp error
-        with pytest.raises(Exception) as e:  
+        with pytest.raises(Exception) as e:
+            # noinspection PyTypeChecker
             abs_rel_compare(np.array([1, 1]), np.array([1, 1]), 0.1, None, 100)
         assert 'wrongInput:wrongNormOp' in str(e.value)
 
