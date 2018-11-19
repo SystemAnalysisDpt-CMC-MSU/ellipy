@@ -16,13 +16,13 @@ class TestGen:
             return is_not_neg_ans
 
         def check(*args):
-            inp_arr, *_ = args
+            inp_arr_f, *_ = args
             out_arr = sqrt_pos(*args)
-            assert np.all(out_arr.shape == inp_arr.shape)
+            assert np.all(out_arr.shape == inp_arr_f.shape)
             res_arr = sqrt_pos(*args)
-            exp_res_arr = np.array([sqrt_pos(x) for x in inp_arr.reshape((1, -1))])
+            exp_res_arr = np.array([sqrt_pos(x) for x in inp_arr_f.reshape((1, -1))])
             assert np.array_equal(res_arr.reshape(1, -1), exp_res_arr)
-            is_not_neg_arr = np.array([sqrt_pos(x) for x in inp_arr.reshape((1, -1))])
+            is_not_neg_arr = np.array([sqrt_pos(x) for x in inp_arr_f.reshape((1, -1))])
             is_exp_not_neg = np.all(is_not_neg_arr.reshape((1, -1)))
             is_not_neg_res = is_not_neg(*args)
             assert np.array_equal(is_not_neg_res, is_exp_not_neg)

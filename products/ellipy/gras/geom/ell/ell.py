@@ -23,8 +23,8 @@ def rho_mat(ell_shape_mat: np.ndarray, dirs_mat: np.ndarray,
     if ell_center_vec is None:
         m = ell_shape_mat.shape[0]
         ell_center_vec = np.zeros((m, 1))
-        nd = dirs_mat.shape[1]
-        me = ell_shape_mat.shape[0]
+    nd = dirs_mat.shape[1]
+    me = ell_shape_mat.shape[0]
     if nd == 1:
         sq = sqrt_pos(np.transpose(dirs_mat)@ell_shape_mat@dirs_mat)
         sup_arr = np.transpose(ell_center_vec)@dirs_mat + sq

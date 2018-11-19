@@ -5,11 +5,12 @@ import pytest
 import math
 from ellipy.elltool.conf.properties.Properties import Properties
 
+
 class TestLaBasic:
     def test_sqrt_m_compare(self):
-        def check(inp_mat, l_tol, r_tol, is_ex_ok):
-            is_ok = np.array_equal(sqrtm_pos(inp_mat, l_tol),sqrtm_pos(inp_mat, r_tol))
-            assert  is_ok == is_ex_ok
+        def check(inp_mat_f, l_tol, r_tol, is_ex_ok):
+            is_ok = np.array_equal(sqrtm_pos(inp_mat_f, l_tol), sqrtm_pos(inp_mat_f, r_tol))
+            assert is_ok == is_ex_ok
 
         inp_mat = np.eye(2)
         check(inp_mat, 1.5, 0, True)
@@ -21,24 +22,24 @@ class TestLaBasic:
 
     def test_sqrt_m_simple(self):
         def check_is_pos(eig_vec, is_pos_exp, *args):
-            inp_mat = np.diag(eig_vec)
-            inp_pos = is_mat_pos_def(inp_mat, abs_tol, *args)
+            inp_mat_f = np.diag(eig_vec)
+            inp_pos = is_mat_pos_def(inp_mat_f, abs_tol, *args)
             assert inp_pos == is_pos_exp
 
-            is_not_neg = is_mat_pos_def(inp_mat, abs_tol, True)
+            is_not_neg = is_mat_pos_def(inp_mat_f, abs_tol, True)
             if is_not_neg:
-                assert np.all(np.isreal(sqrtm_pos(inp_mat, abs_tol)))
+                assert np.all(np.isreal(sqrtm_pos(inp_mat_f, abs_tol)))
                 sqrt_vec = sqrt_pos(np.array([eig_vec]), abs_tol)
                 exp_sqrt_vec = np.array([sqrt_pos(np.array(x), abs_tol) for x in np.array([eig_vec])])
                 assert np.all(sqrt_vec == exp_sqrt_vec)
                 assert np.all(np.isreal(sqrt_vec))
             else:
-                with pytest.raises(Exception) as e:
-                    sqrtm_pos(inp_mat, abs_tol)
-                assert 'wrongInput:notPosSemDef' in str(e.value)
-                with pytest.raises(Exception) as e:
+                with pytest.raises(Exception) as s:
+                    sqrtm_pos(inp_mat_f, abs_tol)
+                assert 'wrongInput:notPosSemDef' in str(s.value)
+                with pytest.raises(Exception) as s:
                     sqrt_pos(np.array([eig_vec]), abs_tol)
-                assert 'wrongInput:negativeInput' in str(e.value)
+                assert 'wrongInput:negativeInput' in str(s.value)
 
         with pytest.raises(Exception) as e:
             sqrtm_pos(np.eye(2), -1)
@@ -126,40 +127,43 @@ class TestLaBasic:
         def check(f_handle):
             assert f_handle(np.array([[1]]), abs_tol)
 
-            test_mat = np.random.rand(10, 10)
-            test_mat = test_mat.transpose()@test_mat
-            _, v_mat = np.linalg.eig(test_mat)
-            d_mat = np.diag([i for i in range(1, 11)])
-            test_mat = v_mat.transpose()@d_mat@v_mat
-            test_mat = 0.5 * (test_mat.transpose() + test_mat)
-            is_ok = f_handle(test_mat, abs_tol)
+            test_mat_check = np.random.rand(10, 10)
+            test_mat_check = test_mat_check.transpose()@test_mat_check
+            _, v_mat = np.linalg.eig(test_mat_check)
+            d_mat = np.diag([k for k in range(1, 11)])
+            test_mat_check = v_mat.transpose()@d_mat@v_mat
+            test_mat_check = 0.5 * (test_mat_check.transpose() + test_mat_check)
+            is_ok = f_handle(test_mat_check, abs_tol)
             assert is_ok
 
         def check_mult_times():
-            test_mat = np.random.rand(5, 5)
-            test_mat = test_mat.transpose() @ test_mat
-            _, v_mat = np.linalg.eig(test_mat)
-            d_mat = np.diag([i for i in range(1, 6)])
-            test_mat = v_mat.transpose() @ d_mat @ v_mat
-            test_mat = -0.5 * (test_mat.transpose() + test_mat)
-            is_false = is_mat_pos_def(test_mat, abs_tol)
+            test_mat_check = np.random.rand(5, 5)
+            test_mat_check = test_mat_check.transpose() @ test_mat_check
+            _, v_mat = np.linalg.eig(test_mat_check)
+            d_mat = np.diag([k for k in range(1, 6)])
+            test_mat_check = v_mat.transpose() @ d_mat @ v_mat
+            test_mat_check = -0.5 * (test_mat_check.transpose() + test_mat_check)
+            is_false = is_mat_pos_def(test_mat_check, abs_tol)
             assert is_false is False
-            with pytest.raises(Exception) as e:
-                sqrtm_pos(test_mat, abs_tol)
-            assert 'wrongInput:notPosSemDef' in str(e.value)
+            with pytest.raises(Exception) as s:
+                sqrtm_pos(test_mat_check, abs_tol)
+            assert 'wrongInput:notPosSemDef' in str(s.value)
 
-        def check_determ(orth3mat, diag_vec, is_true, is_sem_pos_def: bool = None):
-            test_mat = orth3mat.transpose()@np.diag(diag_vec)@orth3mat
-            test_mat = 0.5 * (test_mat + test_mat.transpose())
+        def check_determ(orth3mat_check, diag_vec_check, is_true, is_sem_pos_def: bool = None):
+            test_mat_check = orth3mat_check.transpose()@np.diag(diag_vec_check)@orth3mat_check
+            test_mat_check = 0.5 * (test_mat_check + test_mat_check.transpose())
             if is_sem_pos_def is None:
-                is_ok = is_mat_pos_def(test_mat, abs_tol)
+                is_ok = is_mat_pos_def(test_mat_check, abs_tol)
             else:
-                is_ok = is_mat_pos_def(test_mat, abs_tol, is_sem_pos_def)
+                is_ok = is_mat_pos_def(test_mat_check, abs_tol, is_sem_pos_def)
             assert is_true == is_ok
 
+        def f_is_mat_pos_sem_def(q_mat, abs_tol_test):
+            return is_mat_pos_def(q_mat, abs_tol_test, True)
 
-        f_is_mat_pos_sem_def = lambda q_mat, abs_tol: is_mat_pos_def(q_mat, abs_tol, True)
-        f_is_mat_pos_def = lambda q_mat, abs_tol: is_mat_pos_def(q_mat, abs_tol, False)
+        def f_is_mat_pos_def(q_mat, abs_tol_test):
+            return is_mat_pos_def(q_mat, abs_tol_test, False)
+
         check(is_mat_pos_def)
         check(f_is_mat_pos_sem_def)
         check(f_is_mat_pos_def)

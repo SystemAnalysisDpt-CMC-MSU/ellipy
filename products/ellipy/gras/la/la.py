@@ -136,7 +136,7 @@ def sqrtm_pos(q_mat: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
     if np.any(d_vec < -abs_tol):
         throw_error('wrongInput:notPosSemDef', 'input matrix is expected to be positive semi-definite')
     d_vec[d_vec < 0.] = 0.
-    d_mat = np.sqrt(np.diag(d_vec))
+    d_mat = (np.diag(np.sqrt(d_vec)))
     if np.linalg.norm(abs(v_mat@v_mat.transpose() - np.eye(n))) > Properties.get_abs_tol():
         throw_error('wrongInput:notOrth', 'matrix v_mat is expected to be orthogonal')
     return v_mat@d_mat@v_mat.transpose()
