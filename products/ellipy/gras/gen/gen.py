@@ -32,7 +32,12 @@ def sqrt_pos(inp_arr: Union[int, float, np.ndarray], abs_tol: float = 0.) -> Uni
 class MatVector:
     @staticmethod
     def triu(data_arr: np.ndarray) -> np.ndarray:
-        pass
+        ret_arr = np.copy(data_arr)
+        arr_size = ret_arr.shape[2]
+        for i_elem in range(arr_size):
+            ret_arr[:, :, i_elem] = np.triu(ret_arr[:, :, i_elem])
+        return ret_arr
+
 
     @staticmethod
     def make_symmetric(data_arr: np.ndarray) -> np.ndarray:
@@ -40,11 +45,21 @@ class MatVector:
 
     @staticmethod
     def pinv(data_arr: np.ndarray) -> np.ndarray:
-        pass
+        arr_size = data_arr.shape
+        if len(arr_size) == 2:
+            arr_size[2] = 1
+        inv_data_array = np.zeros((arr_size[1], arr_size[0], arr_size[2]))
+        for t in range(arr_size[2]):
+            inv_data_array[:, :, t] = np.linalg.pinv(data_arr[:, :, t])
+        return inv_data_array
 
     @staticmethod
     def transpose(inp_arr: np.ndarray) -> np.ndarray:
-        pass
+        inp_size = inp_arr.shape
+        if len(inp_size) == 2:
+            inp_size[2] = 1
+        trans_arr = np.transpose(inp_arr, (1, 0, 2))
+        return trans_arr
 
     @staticmethod
     def from_formula_mat(x: np.ndarray, t_vec: np.ndarray) -> np.ndarray:
