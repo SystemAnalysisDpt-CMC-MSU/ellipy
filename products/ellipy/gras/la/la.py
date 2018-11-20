@@ -2,7 +2,7 @@ from ellipy.gen.common.common import throw_error, abs_rel_compare, is_numeric
 from typing import Callable, Union
 import numpy as np
 from numpy import linalg
-from ellipy.elltool.conf.properties.Properties import Properties
+
 
 def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float) -> bool:
     pass
@@ -128,7 +128,7 @@ def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
     return regular_mat
 
 
-def sqrtm_pos(q_mat: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
+def sqrtm_pos(q_mat: np.ndarray, abs_tol: float = 0., abs_tol_orth: float = 1e-06) -> np.ndarray:
     if abs_tol < 0.:
         throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
     d_vec, v_mat = np.linalg.eig(q_mat)
@@ -137,7 +137,7 @@ def sqrtm_pos(q_mat: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
         throw_error('wrongInput:notPosSemDef', 'input matrix is expected to be positive semi-definite')
     d_vec[d_vec < 0.] = 0.
     d_mat = (np.diag(np.sqrt(d_vec)))
-    if np.linalg.norm(abs(v_mat@v_mat.transpose() - np.eye(n))) > Properties.get_abs_tol():
+    if np.linalg.norm(abs(v_mat@v_mat.transpose() - np.eye(n))) > abs_tol_orth:
         throw_error('wrongInput:notOrth', 'matrix v_mat is expected to be orthogonal')
     return v_mat@d_mat@v_mat.transpose()
 
