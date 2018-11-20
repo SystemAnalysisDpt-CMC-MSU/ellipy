@@ -2,6 +2,9 @@ from ellipy.gen.common.common import throw_error, abs_rel_compare
 from typing import Callable
 import numpy as np
 from numpy import linalg
+from typing import Union, Callable
+
+from ellipy.gen.common.common import throw_error, is_numeric, abs_rel_compare
 
 
 def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float) -> bool:
@@ -57,15 +60,15 @@ def orth_transl(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
     src_squared_norm = np.sum(src_vec * src_vec)
 
     if dst_squared_norm == 0.0:
-        throw_error('wrongInput:dstZero', 'destination vectors are expected to be non-zero')
+        throw_error('wrongInput:dst_zero', 'destination vectors are expected to be non-zero')
     if src_squared_norm == 0.0:
-        throw_error('wrongInput:srcZero', 'source vectors are expected to be non-zero')
+        throw_error('wrongInput:src_zero', 'source vectors are expected to be non-zero')
 
     dst_vec = dst_vec / np.sqrt(dst_squared_norm)
     src_vec = src_vec / np.sqrt(src_squared_norm)
 
     scal_prod = np.sum(src_vec * dst_vec)
-    s_val = np.sqrt(max(1.0 - scal_prod * scal_prod, 0.0))
+    s_val = np.sqrt(np.maximum(1.0 - scal_prod * scal_prod, 0.0))
     q_mat = np.zeros((n_dims, 2), dtype=np.float64)
     q_mat[:, 0] = np.squeeze(dst_vec)
     if np.abs(s_val) > __ABS_TOL:
@@ -100,7 +103,7 @@ def reg_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
 
 
 def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
-    if not(np.isscalar(reg_tol) and is_numeric(reg_tol) and reg_tol.real > 0.0):
+    if not(np.isscalar(reg_tol) and is_numeric(reg_tol) and np.real(reg_tol) > 0.0):
         throw_error('wrongInput:reg_tol', 'reg_tol must be a positive numeric scalar')
     reg_tol = try_treat_as_real(reg_tol)
     if not(is_mat_symm(inp_mat)):
@@ -117,7 +120,8 @@ def sqrtm_pos(q_mat: np.ndarray, abs_tol: float) -> np.ndarray:
     pass
 
 
-def try_treat_as_real(inp_mat:  np.ndarray, tol_val: float = np.finfo(float).eps) -> np.ndarray:
+def try_treat_as_real(inp_mat:  Union[bool, int, float, complex, np.ndarray], tol_val: float = np.finfo(float).eps) \
+        -> np.ndarray:
     if not(np.isscalar(tol_val) and is_numeric(tol_val) and tol_val > 0.0):
         throw_error('wrongInput:tol_val', 'tol_val must be a positive numeric scalar')
     if np.all(np.isreal(inp_mat)):
@@ -125,11 +129,11 @@ def try_treat_as_real(inp_mat:  np.ndarray, tol_val: float = np.finfo(float).eps
     else:
         img_inp_mat = inp_mat.imag
         if np.isscalar(img_inp_mat):
-            norm_value = img_inp_mat
+            norm_value = np.abs(img_inp_mat)
         else:
             norm_value = linalg.norm(img_inp_mat, np.inf)
         if norm_value < tol_val:
-            return inp_mat.real
+            return np.real(inp_mat.real)
         else:
             throw_error('wrongInput:inp_mat',
                         'Norm of imaginary part of source object = {}. It can not be more then tol_val = {}.'

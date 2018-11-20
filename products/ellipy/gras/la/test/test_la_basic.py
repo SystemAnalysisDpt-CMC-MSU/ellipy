@@ -4,15 +4,14 @@ import numpy as np
 
 
 class TestLaBasic:
-
     def test_try_treat_as_real(self):
         __ERROR_MSG = 'Incorrect work a try_treat_as_real function'
         real_mat = np.random.rand(3, 3)
         imag_mat = np.eye(3, dtype=np.float64) * (np.finfo(float).eps / 2.0) * 1.0j
-        imag_bad_mat = np.eye(3, dtype=np.float64) * (np.finfo(float).eps * 10.0) * 1.0j  # ok<NASGU>
+        imag_bad_mat = np.eye(3, dtype=np.float64) * (np.finfo(float).eps * 10.0) * 1.0j
         null_mat = np.zeros((3, 3), dtype=np.float64)
         gib_vec = np.array([0, np.finfo(float).eps * 1.0j / 2.0, 0.0], dtype=complex)
-        bad_vec = np.array([1.0, 0.0, 4.0 * 1.0j], dtype=complex)  # ok<NASGU>
+        bad_vec = np.array([1.0, 0.0, 4.0 * 1.0j], dtype=complex)
         null_vec = np.array([0, 0, 0], dtype=np.float64)
 
         assert np.array_equal(try_treat_as_real(real_mat), real_mat), __ERROR_MSG
@@ -52,22 +51,23 @@ class TestLaBasic:
         assert np.array_equal(imag_mat, sh_mat), 'Incorrect work reg_pos_def_mat function'
 
         # negative tests
-        wrong_rel_tol = -__REG_TOL  # ok<NASGU>
+        wrong_rel_tol = -__REG_TOL
         with pytest.raises(Exception) as e:
             reg_pos_def_mat(zero_mat, wrong_rel_tol)
         assert 'wrongInput:reg_tol' in str(e.value)
 
-        wrong_rel_tol = np.array([__REG_TOL, __REG_TOL], dtype=np.float64)  # ok<NASGU>
+        wrong_rel_tol = np.array([__REG_TOL, __REG_TOL], dtype=np.float64)
         with pytest.raises(Exception) as e:
+            # noinspection PyTypeChecker
             reg_pos_def_mat(zero_mat, wrong_rel_tol)
         assert 'wrongInput:reg_tol' in str(e.value)
 
-        wrong_rel_tol = __REG_TOL + 1.0j * np.finfo(float).eps * 2.0  # ok<NASGU>
+        wrong_rel_tol = __REG_TOL + 1.0j * np.finfo(float).eps * 2.0
         with pytest.raises(Exception) as e:
             reg_pos_def_mat(zero_mat, wrong_rel_tol)
         assert 'wrongInput:inp_mat' in str(e.value)
 
-        non_square_mat = np.zeros((2, 3), dtype=np.float64)  # ok<NASGU>
+        non_square_mat = np.zeros((2, 3), dtype=np.float64)
         with pytest.raises(Exception) as e:
             reg_pos_def_mat(non_square_mat, __REG_TOL)
-        assert 'wrongInput:inp_mat' in str(e.value)
+        assert 'wrongInput:nonSquareMat' in str(e.value)
