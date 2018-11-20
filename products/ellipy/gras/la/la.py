@@ -1,10 +1,7 @@
-from ellipy.gen.common.common import throw_error, abs_rel_compare
-from typing import Callable
+from ellipy.gen.common.common import throw_error, abs_rel_compare, is_numeric
+from typing import Callable, Union
 import numpy as np
 from numpy import linalg
-from typing import Union, Callable
-
-from ellipy.gen.common.common import throw_error, is_numeric, abs_rel_compare
 
 
 def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float) -> bool:
