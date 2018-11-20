@@ -1,3 +1,5 @@
+from ellipy.gen.common.common import throw_error, abs_rel_compare
+from typing import Callable
 import numpy as np
 
 
@@ -10,7 +12,16 @@ def is_mat_pos_def(q_mat: np.ndarray, abs_tol: float = 0., is_flag_sem_def_on: b
 
 
 def is_mat_symm(q_mat: np.ndarray, abs_tol: float = 0.) -> bool:
-    pass
+    if q_mat.ndim != 2:
+        throw_error('wrongInput:nonSquareMat', 'q_mat should be a matrix')
+    n_rows = q_mat.shape[0]
+    n_cols = q_mat.shape[1]
+    if n_rows != n_cols:
+        throw_error('wrongInput:nonSquareMat', 'q_mat should be a square matrix')
+
+    abs_func: Callable[[np.ndarray], np.ndarray] = lambda x: np.abs(x)
+    is_symm, *_ = abs_rel_compare(q_mat, q_mat.T, abs_tol, None, abs_func)
+    return is_symm
 
 
 def mat_orth(src_mat: np.ndarray) -> np.ndarray:

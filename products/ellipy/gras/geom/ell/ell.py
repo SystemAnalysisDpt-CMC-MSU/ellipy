@@ -1,6 +1,7 @@
 from typing import Tuple
 import numpy as np
 
+
 def ell_volume(q_mat: np.ndarray) -> float:
     pass
 
