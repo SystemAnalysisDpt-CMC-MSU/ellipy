@@ -11,19 +11,20 @@ def sort_rows_tol(inp_mat: np.ndarray, tol: float) -> Tuple[np.ndarray, np.ndarr
 
 
 def sqrt_pos(inp_arr: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
+    inp_arr_new = np.array(inp_arr, copy=True)
     if abs_tol < 0.:
         throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
-    if np.isscalar(inp_arr):
-        if inp_arr < -abs_tol:
+    if np.isscalar(inp_arr_new):
+        if inp_arr_new < -abs_tol:
             throw_error('wrongInput:negativeInput', 'input value is under -abs_tol')
-        elif inp_arr < 0.:
-            inp_arr = 0.
-        return np.sqrt(inp_arr)
+        elif inp_arr_new < 0.:
+            inp_arr_new = 0.
+        return np.sqrt(inp_arr_new)
     else:
-        if np.any(inp_arr < -abs_tol):
+        if np.any(inp_arr_new < -abs_tol):
             throw_error('wrongInput:negativeInput', 'input array contains values under -abs_tol')
-        inp_arr[inp_arr < 0.] = 0.
-        return np.sqrt(inp_arr)
+        inp_arr_new[inp_arr_new < 0.] = 0.
+        return np.sqrt(inp_arr_new)
 
 
 class MatVector:

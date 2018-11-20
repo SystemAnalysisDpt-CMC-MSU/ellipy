@@ -128,17 +128,16 @@ def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
     return regular_mat
 
 
-def sqrtm_pos(q_mat: np.ndarray, abs_tol: float = 0., abs_tol_orth: float = 1e-06) -> np.ndarray:
+def sqrtm_pos(q_mat: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
     if abs_tol < 0.:
         throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
-    d_vec, v_mat = np.linalg.eig(q_mat)
-    n = q_mat.shape[0]
+    if not is_mat_symm(q_mat, abs_tol):
+        throw_error('wrongInput:nonSymmMat', 'input matrix must be symmetric')
+    d_vec, v_mat = np.linalg.eigh(q_mat)
     if np.any(d_vec < -abs_tol):
         throw_error('wrongInput:notPosSemDef', 'input matrix is expected to be positive semi-definite')
     d_vec[d_vec < 0.] = 0.
     d_mat = (np.diag(np.sqrt(d_vec)))
-    if np.linalg.norm(abs(v_mat@v_mat.transpose() - np.eye(n))) > abs_tol_orth:
-        throw_error('wrongInput:notOrth', 'matrix v_mat is expected to be orthogonal')
     return v_mat@d_mat@v_mat.transpose()
 
 

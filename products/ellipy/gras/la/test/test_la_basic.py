@@ -98,7 +98,7 @@ class TestLaBasic:
         test_1_mat = np.eye(2)
         test_2_sqrt_mat = np.eye(2) + 0.5 * max_tol
         test_2_mat = test_2_sqrt_mat@test_2_sqrt_mat.transpose()
-        assert np.linalg.norm(sqrtm_pos(test_1_mat, max_tol) - sqrtm_pos(test_2_mat, max_tol)) > max_tol
+        assert np.linalg.norm(sqrtm_pos(test_1_mat, max_tol) - sqrtm_pos(test_2_mat, max_tol)) < max_tol
 
         test_mat = np.array([[1, 0], [0, -1]])
         with pytest.raises(Exception) as e:
@@ -107,7 +107,7 @@ class TestLaBasic:
 
         with pytest.raises(Exception) as e:
             sqrtm_pos(np.array([[-11, 30], [-10, 24]]))
-        assert 'wrongInput:notOrth' in str(e.value)
+        assert 'wrongInput:nonSymmMat' in str(e.value)
 
     def test_is_mat_pos_simple(self):
         is_ok = not is_mat_pos_def(np.zeros((2, 2)), 10**(-7))
@@ -129,7 +129,7 @@ class TestLaBasic:
 
             test_mat_check = np.random.rand(10, 10)
             test_mat_check = test_mat_check.transpose()@test_mat_check
-            _, v_mat = np.linalg.eig(test_mat_check)
+            _, v_mat = np.linalg.eigh(test_mat_check)
             d_mat = np.diag([k for k in range(1, 11)])
             test_mat_check = v_mat.transpose()@d_mat@v_mat
             test_mat_check = 0.5 * (test_mat_check.transpose() + test_mat_check)
@@ -139,7 +139,7 @@ class TestLaBasic:
         def check_mult_times():
             test_mat_check = np.random.rand(5, 5)
             test_mat_check = test_mat_check.transpose() @ test_mat_check
-            _, v_mat = np.linalg.eig(test_mat_check)
+            _, v_mat = np.linalg.eigh(test_mat_check)
             d_mat = np.diag([k for k in range(1, 6)])
             test_mat_check = v_mat.transpose() @ d_mat @ v_mat
             test_mat_check = -0.5 * (test_mat_check.transpose() + test_mat_check)
