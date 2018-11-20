@@ -74,7 +74,7 @@ def orth_transl(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
         q_mat[:, 1] = 0.0
 
     s_mat = np.array([[scal_prod - 1.0, s_val], [-s_val, scal_prod - 1.0]], dtype=np.float64)
-    o_mat = np.identity(n_dims, dtype=np.float64) + np.dot(np.dot(q_mat, s_mat), q_mat.transpose())
+    o_mat = np.identity(n_dims, dtype=np.float64) + q_mat @ s_mat @ q_mat.T
     return o_mat
 
 
@@ -107,9 +107,9 @@ def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
         throw_error('wrongInput:inp_mat', 'matrix must be symmetric')
     d_mat, v_mat = np.linalg.eig(inp_mat)
     m_mat = np.diag(np.maximum(0.0, reg_tol-d_mat))
-    m_mat = np.dot(np.dot(v_mat, m_mat), v_mat.transpose())
+    m_mat = v_mat @ m_mat @ v_mat.T
     regular_mat = inp_mat + m_mat
-    regular_mat = 0.5 * (regular_mat + regular_mat.transpose())
+    regular_mat = 0.5 * (regular_mat + regular_mat.T)
     return regular_mat
 
 

@@ -5,18 +5,15 @@ from timeit import default_timer as timer
 
 
 class TestOrthTransl:
-    src_tl_mat = np.array([[0, 3], [1, 1], [0.3, -4], [-2, 1]], dtype=np.float64)
-    dst_tl_mat = np.array([[-1, -5], [2, 2], [3, 1], [4, 5]], dtype=np.float64)
+    __SRC_TL_MAT = np.array([[0, 3], [1, 1], [0.3, -4], [-2, 1]], dtype=np.float64)
+    __DST_TL_MAT = np.array([[-1, -5], [2, 2], [3, 1], [4, 5]], dtype=np.float64)
     __MAX_TOL = 1e-8
 
     def test_orth_transl(self):
-        def check(src_vecc, dst_vecc, exp_error_tag):
+        def check(check_src_vec, check_dst_vec, exp_error_tag):
             with pytest.raises(Exception) as e:
-                orth_transl(src_vecc, dst_vecc)
+                orth_transl(check_src_vec, check_dst_vec)
             assert exp_error_tag in str(e.value)
-            # with pytest.raises(Exception) as e:
-            #     orth_transl_qr(src_vecc, dst_vecc)
-            # assert exp_error_tag in str(e.value)
 
         src_vec = np.array([0, 0], dtype=np.float64)
         dst_vec = np.array([1, 0], dtype=np.float64)
@@ -54,8 +51,8 @@ class TestOrthTransl:
                 .format(f_handle, f_handle_single, real_tol, self.__MAX_TOL)
 
         __N_ELEMS = 1000
-        src_mat = self.src_tl_mat
-        dst_mat = self.dst_tl_mat
+        src_mat = self.__SRC_TL_MAT
+        dst_mat = self.__DST_TL_MAT
         dst_array = np.tile(dst_mat[:, :, np.newaxis], (1, 1, __N_ELEMS))
         n_vecs = np.size(src_mat, 1)
         t_start = timer()
@@ -82,8 +79,8 @@ class TestOrthTransl:
     def aux_check_orth_plain(self, o_mat, func_name):
         assert (o_mat.ndim <= 2)
         assert np.size(o_mat, 0) == np.size(o_mat, 1)
-        self.aux_check_eye(o_mat.transpose() @ o_mat, 'o_mat^t*o_mat', func_name)
-        self.aux_check_eye(o_mat @ o_mat.transpose(), 'o_mat*o_mat^t', func_name)
+        self.aux_check_eye(o_mat.T @ o_mat, 'o_mat^t*o_mat', func_name)
+        self.aux_check_eye(o_mat @ o_mat.T, 'o_mat*o_mat^t', func_name)
 
     def aux_check_eye(self, e_mat, msg_str, func_name):
         n_dims = np.size(e_mat, 0)
