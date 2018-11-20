@@ -87,7 +87,7 @@ def is_member(a_vec, b_vec) -> Tuple[np.ndarray, np.ndarray]:
     return bool_ind_vec, common_ind_vec[common_inv_vec]
 
 
-def is_numeric(array: np.ndarray) -> bool:
+def is_numeric(array: Union[bool, int, float, complex, np.ndarray]) -> bool:
     """Determine whether the argument has a numeric datatype, when
     converted to a NumPy array.
 
@@ -96,7 +96,7 @@ def is_numeric(array: np.ndarray) -> bool:
 
     Parameters
     ----------
-    array : array-like
+    array : float or array-like
         The array to check.
 
     Returns
