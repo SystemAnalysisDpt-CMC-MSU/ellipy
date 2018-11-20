@@ -35,3 +35,141 @@ class TestGen:
         inp_arr = np.array([[1]])
         check(inp_arr)
         check(np.array([[2]]))
+
+    def test_from_expression_single_no_const(self):
+        # testing for a single-sized expression
+        exp = "[[sin(t)]]"
+        # single-element array
+        t = np.array([0])
+        exp_arr = np.array([[[0]]], dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # int
+        t = 0
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # float
+        t = 0.
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # vector
+        t = np.array([0, np.pi / 2, np.pi])
+        exp_arr = np.array([[[0., 1., 0.]]], dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.allclose(res_arr, exp_arr)
+
+    def test_from_expression_single_const(self):
+        # testing for a single-sized expression
+        exp = "[[1.]]"
+        # single-element array
+        t = np.array([0])
+        exp_arr = np.array([[[1]]], dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # int
+        t = 0
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # float
+        t = 0.
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # vector
+        t = np.array([0, np.pi / 2, np.pi])
+        exp_arr = np.array([[[1., 1., 1.]]], dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+
+    def test_from_expression_matrix_no_const(self):
+        # testing for a matrix expression
+        exp = "[[sin(t), cos(t)], [-cos(t), sin(t)]]"
+        # single-element array
+        t = np.array([0])
+        exp_arr = np.array([[[0.],
+                             [1.]],
+                            [[-1.],
+                             [0.]]],
+                           dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # int
+        t = 0
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # float
+        t = 0.
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # vector
+        t = np.array([0, np.pi / 2, np.pi])
+        exp_arr = np.array([[[0., 1., 0],
+                             [1., 0., -1.]],
+                            [[-1., 0., 1.],
+                             [0., 1., 0.]]],
+                           dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.allclose(res_arr, exp_arr)
+
+    def test_from_expression_matrix_some_const(self):
+        # testing for a matrix expression with some constants in it
+        exp = "[[sin(t), cos(t)], [-cos(t), 2]]"
+        # single-element array
+        t = np.array([0])
+        exp_arr = np.array([[[0.],
+                             [1.]],
+                            [[-1.],
+                             [2.]]],
+                           dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # int
+        t = 0
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # float
+        t = 0.
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # vector
+        t = np.array([0, np.pi / 2, np.pi])
+        exp_arr = np.array([[[0., 1., 0],
+                             [1., 0., -1.]],
+                            [[-1., 0., 1.],
+                             [2., 2., 2.]]],
+                           dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.allclose(res_arr, exp_arr)
+
+    def test_from_expression_matrix_all_const(self):
+        # testing for a matrix expression with all constants
+        exp = "[[1, 2], [3, 4], [5, 6]]"
+        # single-element array
+        t = np.array([0])
+        exp_arr = np.array([[[1.],
+                             [2.]],
+                            [[3.],
+                             [4.]],
+                            [[5.],
+                             [6.]]],
+                           dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # int
+        t = 0
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # float
+        t = 0.
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        # vector
+        t = np.array([0, np.pi / 2, np.pi])
+        exp_arr = np.array([[[1., 1., 1],
+                             [2., 2., 2.]],
+                            [[3., 3., 3.],
+                             [4., 4., 4.]],
+                            [[5., 5., 5.],
+                             [6., 6., 6.]]],
+                           dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)

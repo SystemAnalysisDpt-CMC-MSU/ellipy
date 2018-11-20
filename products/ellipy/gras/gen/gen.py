@@ -75,9 +75,28 @@ class MatVector:
         pass
 
     @staticmethod
-    def from_expression(exp_str: str, t_vec: np.ndarray) -> np.ndarray:
-        pass
-
+    def from_expression(exp_str: str, t_vec: Union[int,float,np.ndarray]) -> np.ndarray:
+        exec("from numpy import *")
+        if type(t_vec) == np.ndarray:
+            t = t_vec.tolist()
+        else:
+            t = [t_vec]
+        if len(t) == 1:
+            ret_val = np.array(eval(exp_str))
+            if len(ret_val.shape) < 3:
+                ret_val = np.expand_dims(ret_val, 2)
+            return ret_val
+        else:
+            ret_val = eval(exp_str)
+            ret_val = [[np.repeat(np.asarray(j), len(t)) if type(j) != np.ndarray else j
+                        for j in i]
+                       for i in ret_val]
+            ret_val = np.array(ret_val)
+            if len(ret_val.shape) < 3:
+                ret_val = np.expand_dims(ret_val, 2)
+                ret_val = np.tile(ret_val, (1, 1, len(t)))
+            return ret_val
+    
     @staticmethod
     def r_multiply_by_vec(a_arr: np.ndarray, b_mat: np.ndarray, use_sparse_matrix: bool = True) -> np.ndarray:
         from ellipy.gen.common.common import throw_error
