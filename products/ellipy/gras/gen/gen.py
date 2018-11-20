@@ -80,7 +80,19 @@ class MatVector:
 
     @staticmethod
     def r_multiply_by_vec(a_arr: np.ndarray, b_mat: np.ndarray, use_sparse_matrix: bool = True) -> np.ndarray:
-        pass
+        from ellipy.gen.common.common import throw_error
+        if len(b_mat.shape) != 2:
+            throw_error('wrongInput', 'bMat is expected to be 2-dimensional array')
+        n_rows = a_arr.shape[0]
+        n_cols = a_arr.shape[1]
+        n_time_points = a_arr.shape[2]
+        if use_sparse_matrix:
+            pass
+        else:
+            c_mat = np.zeros(n_rows, n_time_points)
+            for i_time_point in range(0, n_time_points):
+                c_mat[:, i_time_point] = a_arr[:, :, i_time_point] @ b_mat[:, i_time_point]
+        return c_mat
 
     @staticmethod
     def r_multiply(a_arr: np.ndarray, b_arr: np.ndarray, c_arr: np.array,
