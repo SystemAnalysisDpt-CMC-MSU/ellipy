@@ -11,11 +11,9 @@ def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float) -> bool:
 def is_mat_pos_def(q_mat: np.ndarray, abs_tol: float = 0., is_flag_sem_def_on: bool = False) -> bool:
     if abs_tol < 0.:
         throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
-    if not (q_mat.shape[0] == q_mat.shape[1]):
-        throw_error('wrongInput:nonSquareMat', 'abs_tol is expected to be not-negative')
     if not is_mat_symm(q_mat, abs_tol):
         throw_error('wrongInput:nonSymmMat', 'input matrix must be symmetric')
-    eig_vec, _ = np.linalg.eig(q_mat)
+    eig_vec = np.linalg.eigvalsh(q_mat)
     min_eig = min(eig_vec)
     is_pos_def = True
     if is_flag_sem_def_on:
@@ -137,8 +135,8 @@ def sqrtm_pos(q_mat: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
     if np.any(d_vec < -abs_tol):
         throw_error('wrongInput:notPosSemDef', 'input matrix is expected to be positive semi-definite')
     d_vec[d_vec < 0.] = 0.
-    d_mat = (np.diag(np.sqrt(d_vec)))
-    return v_mat@d_mat@v_mat.transpose()
+    d_mat = np.diag(np.sqrt(d_vec))
+    return v_mat @ d_mat @ v_mat.T
 
 
 def try_treat_as_real(inp_mat:  Union[bool, int, float, complex, np.ndarray], tol_val: float = np.finfo(float).eps) \

@@ -1,4 +1,4 @@
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Union
 import numpy as np
 from ellipy.gen.common.common import throw_error
 
@@ -10,17 +10,18 @@ def sort_rows_tol(inp_mat: np.ndarray, tol: float) -> Tuple[np.ndarray, np.ndarr
     pass
 
 
-def sqrt_pos(inp_arr: np.ndarray, abs_tol: float = 0.) -> np.ndarray:
-    inp_arr_new = np.array(inp_arr, copy=True)
+def sqrt_pos(inp_arr: Union[int, float, np.ndarray], abs_tol: float = 0.) -> Union[float, np.ndarray]:
     if abs_tol < 0.:
         throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
-    if np.isscalar(inp_arr_new):
+    if np.isscalar(inp_arr):
+        inp_arr_new = np.float64(inp_arr)
         if inp_arr_new < -abs_tol:
             throw_error('wrongInput:negativeInput', 'input value is under -abs_tol')
         elif inp_arr_new < 0.:
             inp_arr_new = 0.
         return np.sqrt(inp_arr_new)
     else:
+        inp_arr_new = np.array(inp_arr, copy=True, dtype=np.float64)
         if np.any(inp_arr_new < -abs_tol):
             throw_error('wrongInput:negativeInput', 'input array contains values under -abs_tol')
         inp_arr_new[inp_arr_new < 0.] = 0.
