@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Callable, Optional
+from typing import Tuple, Dict, Callable, Union
 import numpy as np
 from numpy import matlib as ml
 from ellipy.gen.common.common import throw_error
@@ -72,8 +72,9 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
                     max_edge_len: float, n_max_steps: float = np.inf,
                     f_vert_adjust_func: Callable[[np.ndarray], np.ndarray] = None,
                     is_stat_collected: bool = False) -> \
-        Tuple[np.ndarray, np.ndarray,
-              Optional[Dict[str, np.ndarray]], Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]:
+        Union[Tuple[np.ndarray, np.ndarray],
+              Tuple[np.ndarray, np.ndarray,
+                    Dict[str, np.ndarray], np.ndarray, np.ndarray, np.ndarray]]:
     def deal(inp_arr: np.ndarray) -> np.ndarray:
         return inp_arr
 
