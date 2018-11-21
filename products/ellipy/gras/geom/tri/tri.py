@@ -49,7 +49,7 @@ def map_face_2_edge(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarr
     ind_f_vec = ind_f_vec[sort_idx_vec]
     ind_shift_vec = np.bincount(inv_idx)
     n_edges = np.size(e_mat, 0)
-    ind_f2e_vec = np.zeros(shape=(np.sum(ind_shift_vec), 1), dtype=np.int64)
+    ind_f2e_vec = np.zeros(shape=(np.sum(ind_shift_vec), 1), dtype=np.int32)
     ind_f2e_vec[0] = 1
     ind_f2e_vec[np.cumsum(ind_shift_vec[:-1])] = np.ones(shape=(n_edges-1, 1))
     ind_f2e_vec = np.cumsum(ind_f2e_vec) - 1
@@ -128,8 +128,9 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
 
             # Collect stats
             if is_stat_collected:
-                n_edges_to_shrink_vec = np.stack((n_edges_to_shrink_vec, np.sum(is_e2part_vec)))
-                max_edge_length_vec = np.stack((max_edge_length_vec, np.max(e_length_vec)))
+                n_edges_to_shrink_vec = np.array(np.append(n_edges_to_shrink_vec, np.sum(is_e2part_vec)),
+                                                 dtype=np.int32)
+                max_edge_length_vec = np.append(max_edge_length_vec, np.max(e_length_vec))
 
             # Find new faces, edges and vertices
             n_shrinked_faces = np.sum(is_f2part_vec).flatten()[0]
@@ -146,12 +147,12 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
             ind_vf3_vec = f_mat[is_f2part_vec, 2]
 
             # Remove partitioned faces and edges
-            f_mat = f_mat[not is_f2part_vec]
-            f2e_mat = f2e_mat[not is_f2part_vec]
-            f2e_is_dir_mat = f2e_is_dir_mat[not is_f2part_vec]
+            f_mat = f_mat[~is_f2part_vec]
+            f2e_mat = f2e_mat[~is_f2part_vec]
+            f2e_is_dir_mat = f2e_is_dir_mat[~is_f2part_vec]
             is_e_kept_vec = np.array([False] * n_edges).T
             is_e_kept_vec[f2e_mat] = True
-            ind_e_kept_vec = np.cumsum(is_e_kept_vec) - 1
+            ind_e_kept_vec = np.cumsum(is_e_kept_vec)
             if np.size(f2e_mat, 0) == 1:
                 # this is because f2e_mat becomes a column for 1 face in f2e_mat
                 f2e_mat = ind_e_kept_vec[f2e_mat].T
@@ -162,71 +163,71 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
             n_edges = np.size(e_mat, 0)
 
             # Build the first group of new edges (internal edges)
-            e1_new_mat = np.array([
-                [ind_vf12_vec, ind_vf23_vec],
-                [ind_vf12_vec, ind_vf13_vec],
-                [ind_vf23_vec, ind_vf13_vec]])
+            e1_new_mat = np.vstack([
+                np.column_stack([ind_vf12_vec, ind_vf23_vec]),
+                np.column_stack([ind_vf12_vec, ind_vf13_vec]),
+                np.column_stack([ind_vf23_vec, ind_vf13_vec])])
 
             # Build the first group of new faces (internal faces)
-            f1_new_mat = np.array([ind_vf12_vec, ind_vf23_vec, ind_vf13_vec])
+            f1_new_mat = np.column_stack([ind_vf12_vec, ind_vf23_vec, ind_vf13_vec])
 
-            ind_new_e_vec = np.arange(n_edges, n_edges + n_shrinked_faces).T
+            ind_new_e_vec = np.arange(n_edges, n_edges + n_shrinked_faces)
 
             # Build face-to-edge map for the first group of new edges and faces
-            f2e1_new_mat = (ml.repmat(ind_new_e_vec, 1, 3) +
-                            np.ones(shape=(n_shrinked_faces, 1)) @ (np.array([0, 2, 1]) * n_shrinked_faces)) - 1
+            f2e1_new_mat = (ml.repmat(ind_new_e_vec, 3, 1).T +
+                            np.ones(shape=(n_shrinked_faces, 1)) @ (np.matrix([0, 2, 1]) * n_shrinked_faces))
 
             # Build face-to-edge directions for the first group of new edges and faces
             f2e1_is_dir_new_mat = np.ones(shape=np.shape(f2e1_new_mat), dtype=bool)
 
             # Build the second group of new edges (edges on the boundaries of the partitioned faces)
-            ind_new_vert = np.arange(n_verts - 1, n_verts + n_new_verts).T
-            e2_new_mat = np.array([
-                [ind_v1_vec, ind_new_vert],
-                [ind_new_vert, ind_v2_vec]
+            ind_new_vert = np.arange(n_verts, n_verts + n_new_verts)
+            e2_new_mat = np.vstack([
+                np.column_stack([ind_v1_vec, ind_new_vert]),
+                np.column_stack([ind_new_vert, ind_v2_vec])
             ])
 
             # Build the second group of new faces (faces on the boundaries of partitioned faces)
-            f2_new_mat = np.array([
-                [ind_vf12_vec, ind_vf13_vec, ind_vf1_vec],
-                [ind_vf23_vec, ind_vf12_vec, ind_vf2_vec],
-                [ind_vf13_vec, ind_vf23_vec, ind_vf3_vec]
+            f2_new_mat = np.vstack([
+                np.column_stack([ind_vf12_vec, ind_vf13_vec, ind_vf1_vec]),
+                np.column_stack([ind_vf23_vec, ind_vf12_vec, ind_vf2_vec]),
+                np.column_stack([ind_vf13_vec, ind_vf23_vec, ind_vf3_vec])
             ])
 
             # Build face-to-edge map for the second group of faces and edges
             ind_shift_edge_vec = np.arange(n_shrinked_faces).T
 
-            dir_mat = not np.logical_xor(np.kron(np.array([[0, 0], [1, 0], [1, 1]]) * n_shrinked_faces,
-                                                 np.ones(shape=(n_shrinked_faces, 1))),
-                                         np.array([
-                                             f2e_is_dir_part_mat[:, [2, 0]],
-                                             f2e_is_dir_part_mat[:, [0, 1]],
-                                             f2e_is_dir_part_mat[:, [1, 2]]
-                                         ]))
+            dir_mat = ~np.logical_xor(np.kron(np.array([[0, 0], [1, 0], [1, 1]]) * n_shrinked_faces,
+                                              np.ones(shape=(n_shrinked_faces, 1))),
+                                      np.vstack((
+                                          f2e_is_dir_part_mat[:, [2, 0]],
+                                          f2e_is_dir_part_mat[:, [0, 1]],
+                                          f2e_is_dir_part_mat[:, [1, 2]]
+                                      )))
 
             f2e2_new_mat = n_edges + \
-                np.array([ml.repmat(ind_shift_edge_vec, 3, 1) +
-                          np.kron(np.array([1, 0, 2]) * n_shrinked_faces, np.ones(shape=(n_shrinked_faces, 1))),
+                np.hstack([(ml.repmat(ind_shift_edge_vec, 1, 3) +
+                          np.kron(np.array([1, 0, 2]) * n_shrinked_faces, np.ones(shape=(1, n_shrinked_faces)))).T,
                           3 * n_shrinked_faces - n_verts + dir_mat * n_new_verts +
-                          np.array([
-                              [ind_vf13_vec, ind_vf12_vec],
-                              [ind_vf12_vec, ind_vf23_vec],
-                              [ind_vf23_vec, ind_vf13_vec]
+                          np.vstack([
+                              np.column_stack([ind_vf13_vec, ind_vf12_vec]),
+                              np.column_stack([ind_vf12_vec, ind_vf23_vec]),
+                              np.column_stack([ind_vf23_vec, ind_vf13_vec])
                           ])
-                          ]) - 1
+                          ])
 
-            f2e2_is_dir_new_mat = np.array([np.kron(np.array([1, 0, 0]),
-                                                    np.ones(shape=(n_shrinked_faces, 1))),
-                                            dir_mat], dtype=bool)
+            f2e2_is_dir_new_mat = np.array(np.hstack([(np.kron(np.array([1, 0, 0]),
+                                                               np.ones(shape=(1, n_shrinked_faces)))).T,
+                                                      dir_mat]), dtype=bool)
 
             # Build the third group of new faces that correspond to edges
             # that have only 1 partitioned face of 2 adjacent faces
 
             # - this identifies edges in e_mat
-            ind_e_broken_but_kept_vec = ind_e_kept_vec[is_e2part_vec and is_e_kept_vec]
+            ind_e_broken_but_kept_vec = ind_e_kept_vec[is_e2part_vec & is_e_kept_vec]
 
             # but we still need to find indices of new vertices in the middles of these edges
-            ind_v_mid_e_broken_nut_kept_vec = ind_e_part_vec[is_e2part_vec and is_e_kept_vec]
+            ind_v_mid_e_broken_nut_kept_vec = ind_e_part_vec[is_e2part_vec & is_e_kept_vec]
 
             # faces have zero volume
             f3_new_mat = np.column_stack((ind_v_mid_e_broken_nut_kept_vec, e_mat[ind_e_broken_but_kept_vec]))
@@ -242,15 +243,15 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
                 v_new_mat = f_vert_adjust_func(v_new_mat)
 
             # Update edges, faces, vertices and f2e_map
-            v_mat = np.stack((v_mat, v_new_mat))
-            e_mat = np.stack((e_mat, e1_new_mat, e2_new_mat))
-            f_mat = np.stack((f_mat, f1_new_mat, f2_new_mat, f3_new_mat))
-            f2e_mat = np.stack((f2e_mat, f2e1_new_mat, f2e2_new_mat, f2e3_new_mat))
-            f2e_is_dir_mat = np.stack((f2e_is_dir_mat, f2e1_is_dir_new_mat, f2e2_is_dir_new_mat, f2e3_is_dir_new_mat))
+            v_mat = np.vstack((v_mat, v_new_mat))
+            e_mat = np.vstack((e_mat, e1_new_mat, e2_new_mat))
+            f_mat = np.vstack((f_mat, f1_new_mat, f2_new_mat, f3_new_mat))
+            f2e_mat = np.array(np.vstack((f2e_mat, f2e1_new_mat, f2e2_new_mat, f2e3_new_mat)), dtype=np.int32)
+            f2e_is_dir_mat = np.vstack((f2e_is_dir_mat, f2e1_is_dir_new_mat, f2e2_is_dir_new_mat, f2e3_is_dir_new_mat))
 
             # Update edge length vec
             d_mat = v_mat[e_mat[n_edges:, 0]] - v_mat[e_mat[n_edges:, 1]]
-            e_length_vec = np.stack((e_length_vec, np.sqrt(np.sum(d_mat * d_mat, 1))))
+            e_length_vec = np.concatenate((e_length_vec, np.sqrt(np.sum(d_mat * d_mat, 1))))
 
             # Update number of entities
             n_verts = np.size(v_mat, 0)
