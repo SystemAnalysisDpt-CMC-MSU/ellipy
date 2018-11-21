@@ -10,7 +10,7 @@ def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float) -> bool:
 
 def is_mat_pos_def(q_mat: np.ndarray, abs_tol: float = 0., is_flag_sem_def_on: bool = False) -> bool:
     if abs_tol < 0.:
-        throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
+        throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be nonnegative')
     if not is_mat_symm(q_mat, abs_tol):
         throw_error('wrongInput:nonSymmMat', 'input matrix must be symmetric')
     eig_vec = np.linalg.eigvalsh(q_mat)

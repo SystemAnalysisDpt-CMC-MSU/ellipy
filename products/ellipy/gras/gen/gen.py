@@ -12,7 +12,7 @@ def sort_rows_tol(inp_mat: np.ndarray, tol: float) -> Tuple[np.ndarray, np.ndarr
 
 def sqrt_pos(inp_arr: Union[int, float, np.ndarray], abs_tol: float = 0.) -> Union[float, np.ndarray]:
     if abs_tol < 0.:
-        throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
+        throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be nonnegative')
     if np.isscalar(inp_arr):
         inp_arr_new = np.float64(inp_arr)
         if inp_arr_new < -abs_tol:
