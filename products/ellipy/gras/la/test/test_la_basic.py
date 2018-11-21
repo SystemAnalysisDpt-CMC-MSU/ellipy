@@ -256,7 +256,7 @@ class TestLaBasic:
         assert not is_ok
         sh_mat = reg_pos_def_mat(sh_mat, __REG_TOL)
         is_ok = is_mat_pos_def(sh_mat, __ABS_TOL)
-        assert not is_ok
+        assert is_ok
 
         # test small imaginary part
         beg_mat = np.array([[4, 4, 14], [4, 4, 14], [14, 14, 78]], dtype=np.float64)
