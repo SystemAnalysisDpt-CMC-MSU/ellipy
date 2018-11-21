@@ -2,7 +2,6 @@ from ellipy.gras.la.la import *
 from ellipy.gras.gen.gen import *
 import numpy as np
 import pytest
-import math
 from ellipy.elltool.conf.properties.Properties import Properties
 
 
@@ -63,46 +62,48 @@ class TestLaBasic:
         check_is_pos([abs_tol, -2*min_eig_val], True, True)
 
     def test_sqrt_m(self):
-        max_tol = 10 ** (-6)
+        __MAX_TOL = 1e-6
         n_dim = 100
         test_mat = np.eye(n_dim)
-        sqrt_mat = sqrtm_pos(test_mat, max_tol)
+        sqrt_mat = sqrtm_pos(test_mat, __MAX_TOL)
+        assert np.array_equal(test_mat, sqrt_mat)
+        sqrt_mat = sqrtm_pos(test_mat)
         assert np.array_equal(test_mat, sqrt_mat)
 
         n_dim = [1, 100]
         test_mat = np.diag(n_dim)
-        sqrt_mat = sqrtm_pos(test_mat, max_tol)
+        sqrt_mat = sqrtm_pos(test_mat, __MAX_TOL)
         assert np.array_equal(sqrt_pos(test_mat), sqrt_mat)
         sqrt_mat = sqrtm_pos(test_mat)
         assert np.array_equal(sqrt_pos(test_mat), sqrt_mat)
 
         test_mat = np.array([[2, 1], [1, 2]])
-        v_mat = np.array([[-1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]])
-        d_mat = np.diag([1, math.sqrt(3)])
-        sqrt_test_mat = v_mat @ d_mat @ v_mat.transpose()
-        sqrt_mat = sqrtm_pos(test_mat, max_tol)
+        v_mat = np.array([[-1 / np.sqrt(2), 1 / np.sqrt(2)], [1 / np.sqrt(2), 1 / np.sqrt(2)]])
+        d_mat = np.diag([1, np.sqrt(3)])
+        sqrt_test_mat = v_mat @ d_mat @ v_mat.T
+        sqrt_mat = sqrtm_pos(test_mat, __MAX_TOL)
         assert np.array_equal(sqrt_test_mat, sqrt_mat)
         sqrt_mat = sqrtm_pos(test_mat)
         assert np.array_equal(sqrt_test_mat, sqrt_mat)
 
         test_mat = np.array([[5, -4, 1], [-4, 6, -4], [1, -4, 5]])
         sqrt_test_mat = np.array([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
-        sqrt_mat = sqrtm_pos(test_mat, max_tol)
-        assert np.linalg.norm(sqrtm_pos(sqrt_test_mat, max_tol) - sqrtm_pos(sqrt_mat, max_tol)) < max_tol
+        sqrt_mat = sqrtm_pos(test_mat, __MAX_TOL)
+        assert np.linalg.norm(sqrtm_pos(sqrt_test_mat, __MAX_TOL) - sqrtm_pos(sqrt_mat, __MAX_TOL)) < __MAX_TOL
 
         test_1_mat = np.eye(2)
-        test_2_sqrt_mat = np.eye(2) + 1.01 * max_tol
+        test_2_sqrt_mat = np.eye(2) + 1.01 * __MAX_TOL
         test_2_mat = test_2_sqrt_mat @ test_2_sqrt_mat.transpose()
-        assert np.linalg.norm(sqrtm_pos(test_1_mat, max_tol) - sqrtm_pos(test_2_mat, max_tol)) > max_tol
+        assert np.linalg.norm(sqrtm_pos(test_1_mat, __MAX_TOL) - sqrtm_pos(test_2_mat, __MAX_TOL)) > __MAX_TOL
 
         test_1_mat = np.eye(2)
-        test_2_sqrt_mat = np.eye(2) + 0.5 * max_tol
+        test_2_sqrt_mat = np.eye(2) + 0.5 * __MAX_TOL
         test_2_mat = test_2_sqrt_mat@test_2_sqrt_mat.transpose()
-        assert np.linalg.norm(sqrtm_pos(test_1_mat, max_tol) - sqrtm_pos(test_2_mat, max_tol)) < max_tol
+        assert np.linalg.norm(sqrtm_pos(test_1_mat, __MAX_TOL) - sqrtm_pos(test_2_mat, __MAX_TOL)) < __MAX_TOL
 
         test_mat = np.array([[1, 0], [0, -1]])
         with pytest.raises(Exception) as e:
-            sqrt_pos(np.array(test_mat), max_tol)
+            sqrt_pos(np.array(test_mat), __MAX_TOL)
         assert 'wrongInput' in str(e.value)
 
         with pytest.raises(Exception) as e:
@@ -110,11 +111,11 @@ class TestLaBasic:
         assert 'wrongInput:nonSymmMat' in str(e.value)
 
     def test_is_mat_pos_simple(self):
-        is_ok = not is_mat_pos_def(np.zeros((2, 2)), 10**(-7))
+        is_ok = not is_mat_pos_def(np.zeros((2, 2)), 1e-7)
         assert is_ok
-        is_ok = is_mat_pos_def(np.zeros((2, 2)), 10**(-7), True)
+        is_ok = is_mat_pos_def(np.zeros((2, 2)), 1e-7, True)
         assert is_ok
-        is_ok = not is_mat_pos_def(np.zeros((2, 2)), 10**(-7), False)
+        is_ok = not is_mat_pos_def(np.zeros((2, 2)), 1e-7, False)
         assert is_ok
         is_ok = not is_mat_pos_def(np.zeros((2, 2)))
         assert is_ok
@@ -124,34 +125,34 @@ class TestLaBasic:
     def test_is_mat_pos_and_pos_sem_def(self):
         abs_tol = Properties.get_abs_tol()
 
-        def check(f_handle):
-            assert f_handle(np.array([[1]]), abs_tol)
+        def check(f):
+            assert f(np.array([[1]]), abs_tol)
 
             test_mat_check = np.random.rand(10, 10)
-            test_mat_check = test_mat_check.transpose()@test_mat_check
+            test_mat_check = test_mat_check.T @ test_mat_check
             _, v_mat = np.linalg.eigh(test_mat_check)
-            d_mat = np.diag([k for k in range(1, 11)])
-            test_mat_check = v_mat.transpose()@d_mat@v_mat
-            test_mat_check = 0.5 * (test_mat_check.transpose() + test_mat_check)
-            is_ok = f_handle(test_mat_check, abs_tol)
+            d_mat = np.diag(np.arange(1, 11))
+            test_mat_check = v_mat.T @ d_mat @ v_mat
+            test_mat_check = 0.5 * (test_mat_check.T + test_mat_check)
+            is_ok = f(test_mat_check, abs_tol)
             assert is_ok
 
         def check_mult_times():
             test_mat_check = np.random.rand(5, 5)
-            test_mat_check = test_mat_check.transpose() @ test_mat_check
+            test_mat_check = test_mat_check.T @ test_mat_check
             _, v_mat = np.linalg.eigh(test_mat_check)
-            d_mat = np.diag([k for k in range(1, 6)])
-            test_mat_check = v_mat.transpose() @ d_mat @ v_mat
-            test_mat_check = -0.5 * (test_mat_check.transpose() + test_mat_check)
-            is_false = is_mat_pos_def(test_mat_check, abs_tol)
+            d_mat = np.diag(np.arange(1, 6))
+            test_mat_check = v_mat.T @ d_mat @ v_mat
+            test_mat_check = -0.5 * (test_mat_check.T + test_mat_check)
+            is_false = is_mat_pos_def(test_mat_check, abs_tol, True)
             assert is_false is False
             with pytest.raises(Exception) as s:
                 sqrtm_pos(test_mat_check, abs_tol)
             assert 'wrongInput:notPosSemDef' in str(s.value)
 
         def check_determ(orth3mat_check, diag_vec_check, is_true, is_sem_pos_def: bool = None):
-            test_mat_check = orth3mat_check.transpose()@np.diag(diag_vec_check)@orth3mat_check
-            test_mat_check = 0.5 * (test_mat_check + test_mat_check.transpose())
+            test_mat_check = orth3mat_check.T @ np.diag(diag_vec_check) @ orth3mat_check
+            test_mat_check = 0.5 * (test_mat_check + test_mat_check.T)
             if is_sem_pos_def is None:
                 is_ok = is_mat_pos_def(test_mat_check, abs_tol)
             else:
@@ -169,9 +170,9 @@ class TestLaBasic:
         check(f_is_mat_pos_def)
 
         test_mat = np.random.rand(10, 10)
-        test_mat = test_mat.transpose()@test_mat
-        test_mat = 0.5 * (test_mat + test_mat.transpose())
-        assert f_is_mat_pos_sem_def(test_mat.transpose()@test_mat, abs_tol)
+        test_mat = test_mat.T @ test_mat
+        test_mat = 0.5 * (test_mat + test_mat.T)
+        assert f_is_mat_pos_sem_def(test_mat.T @ test_mat, abs_tol)
 
         test_mat = np.array([[1, 5], [5, 25]])
         assert not is_mat_pos_def(test_mat, abs_tol)
@@ -189,7 +190,7 @@ class TestLaBasic:
         assert 'wrongInput:nonSymmMat' in str(e.value)
 
         n_times = 50
-        for i in range(1, n_times + 1):
+        for i_time in range(n_times):
             check_mult_times()
 
         is_pos_or_sem_def = True
