@@ -80,18 +80,16 @@ class MatVector:
     @staticmethod
     def from_expression(exp_str: str, t_vec: Union[int, float, np.ndarray]) -> np.ndarray:
         exec("from numpy import *")
-        if type(t_vec) == np.ndarray:
-            t = t_vec.tolist()
-        else:
-            t = [t_vec]
+        t = np.asarray(t_vec, dtype=np.float64).flatten()
         if len(t) == 1:
             ret_val = np.array(eval(exp_str))
             if len(ret_val.shape) < 3:
                 ret_val = np.expand_dims(ret_val, 2)
             return ret_val
         else:
+            time_len = len(t)
             ret_val = eval(exp_str)
-            ret_val = [[np.repeat(np.asarray(j), len(t)) if type(j) != np.ndarray else j
+            ret_val = [[np.repeat(np.asarray(j), time_len) if type(j) != np.ndarray else j
                         for j in i]
                        for i in ret_val]
             ret_val = np.array(ret_val)
