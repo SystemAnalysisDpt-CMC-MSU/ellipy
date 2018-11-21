@@ -33,21 +33,23 @@ class MatVector:
     @staticmethod
     def triu(data_arr: np.ndarray) -> np.ndarray:
         ret_arr = np.copy(data_arr)
+        if len(data_arr.shape) == 2:
+            ret_arr = np.expand_dims(ret_arr, 2)
         arr_size = ret_arr.shape[2]
         for i_elem in range(arr_size):
             ret_arr[:, :, i_elem] = np.triu(ret_arr[:, :, i_elem])
         return ret_arr
 
-
     @staticmethod
     def make_symmetric(data_arr: np.ndarray) -> np.ndarray:
-        pass
+        ret_arr = 0.5 * (data_arr + MatVector.transpose(data_arr));
+        return ret_arr
 
     @staticmethod
     def pinv(data_arr: np.ndarray) -> np.ndarray:
         arr_size = data_arr.shape
         if len(arr_size) == 2:
-            arr_size[2] = 1
+            arr_size = (arr_size[0], arr_size[1], 1)
         inv_data_array = np.zeros((arr_size[1], arr_size[0], arr_size[2]))
         for t in range(arr_size[2]):
             inv_data_array[:, :, t] = np.linalg.pinv(data_arr[:, :, t])
@@ -56,9 +58,10 @@ class MatVector:
     @staticmethod
     def transpose(inp_arr: np.ndarray) -> np.ndarray:
         inp_size = inp_arr.shape
+        data_arr = np.copy(inp_arr)
         if len(inp_size) == 2:
-            inp_size[2] = 1
-        trans_arr = np.transpose(inp_arr, (1, 0, 2))
+            data_arr = np.expand_dims(data_arr, 2)
+        trans_arr = np.transpose(data_arr, (1, 0, 2))
         return trans_arr
 
     @staticmethod
@@ -75,7 +78,7 @@ class MatVector:
         pass
 
     @staticmethod
-    def from_expression(exp_str: str, t_vec: Union[int,float,np.ndarray]) -> np.ndarray:
+    def from_expression(exp_str: str, t_vec: Union[int, float, np.ndarray]) -> np.ndarray:
         exec("from numpy import *")
         if type(t_vec) == np.ndarray:
             t = t_vec.tolist()
@@ -96,7 +99,7 @@ class MatVector:
                 ret_val = np.expand_dims(ret_val, 2)
                 ret_val = np.tile(ret_val, (1, 1, len(t)))
             return ret_val
-    
+
     @staticmethod
     def r_multiply_by_vec(a_arr: np.ndarray, b_mat: np.ndarray, use_sparse_matrix: bool = True) -> np.ndarray:
         from ellipy.gen.common.common import throw_error
@@ -133,7 +136,7 @@ class SquareMatVector(MatVector):
         pass
 
     @staticmethod
-    def make_pos_definite_by_eig(data_arr: np.ndarray, value: float=1e-12) -> np.ndarray:
+    def make_pos_definite_by_eig(data_arr: np.ndarray, value: float = 1e-12) -> np.ndarray:
         pass
 
     @staticmethod

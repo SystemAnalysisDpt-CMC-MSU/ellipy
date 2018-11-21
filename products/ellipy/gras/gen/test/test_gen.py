@@ -36,6 +36,48 @@ class TestGen:
         check(inp_arr)
         check(np.array([[2]]))
 
+    def test_triu_single(self):
+        data_arr = np.array([[[1], [2], [3]], [[4], [5], [6]], [[7], [8], [9]]])
+        exp_arr = np.array([[[1], [2], [3]], [[0], [5], [6]], [[0], [0], [9]]])
+        res_arr = MatVector.triu(data_arr)
+        assert np.array_equal(res_arr, exp_arr)
+
+    def test_triu_single_2d(self):
+        data_arr = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        exp_arr = np.array([[[1], [2], [3]], [[0], [5], [6]], [[0], [0], [9]]])
+        res_arr = MatVector.triu(data_arr)
+        assert np.array_equal(res_arr, exp_arr)
+
+    def test_make_symmetric_short(self):
+        data_arr = np.array([[[1], [2]], [[0], [1]]])
+        exp_arr = np.array([[[1], [1]], [[1], [1]]])
+        res_arr = MatVector.make_symmetric(data_arr)
+        assert np.array_equal(res_arr, exp_arr)
+
+    def test_make_symmetric_long(self):
+        data_arr = np.array([[[1, 4], [2, 3]], [[0, 1], [1, 5]]])
+        exp_arr = np.array([[[1, 4], [1, 2]], [[1, 2], [1, 5]]])
+        res_arr = MatVector.make_symmetric(data_arr)
+        assert np.array_equal(res_arr, exp_arr)
+
+    def test_transpose_single(self):
+        data_arr = np.array([[[1], [2]], [[0], [1]]])
+        exp_arr = np.array([[[1], [0]], [[2], [1]]])
+        res_arr = MatVector.transpose(data_arr)
+        assert np.array_equal(res_arr, exp_arr)
+
+    def test_transpose_single_2d(self):
+        data_arr = np.array([[1, 2], [0, 1]])
+        exp_arr = np.array([[[1], [0]], [[2], [1]]])
+        res_arr = MatVector.transpose(data_arr)
+        assert np.array_equal(res_arr, exp_arr)
+
+    def test_transpose_long(self):
+        data_arr = np.array([[[1, 5], [2, 6]], [[0, 7], [1, 8]]])
+        exp_arr = np.array([[[1, 5], [0, 7]], [[2, 6], [1, 8]]])
+        res_arr = MatVector.transpose(data_arr)
+        assert np.array_equal(res_arr, exp_arr)
+
     def test_from_expression_single_no_const(self):
         # testing for a single-sized expression
         exp = "[[sin(t)]]"
