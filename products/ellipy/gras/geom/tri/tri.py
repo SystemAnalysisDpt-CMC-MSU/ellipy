@@ -1,7 +1,7 @@
 from typing import Tuple, Dict, Callable, Union, List
 import numpy as np
 from numpy import matlib as ml
-from ellipy.gen.common.common import throw_error, is_member
+from ellipy.gen.common.common import throw_error, is_member, is_numeric
 from ellipy.gras.gen.gen import sort_rows_tol
 
 
@@ -294,10 +294,15 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
     else:
         return v_mat, f_mat
 
+def normvert(x: np.ndarray) -> np.ndarray:
+    return x / ml.repmat(np.sqrt(np.sum(x*x, 1)).reshape(-1,1), 1, 3)
 
 def sphere_tri(depth: int) -> Tuple[np.ndarray, np.ndarray]:
-    pass
-
+    if not (np.size(depth) and is_numeric(np.array(depth)) and 0 <= depth == np.fix(depth)):
+        throw_error('wrongInput', 'depth is expected to be a not negative integer scalar')
+    (v_mat, f_mat) = icosahedron()
+    (v_mat, f_mat) = shrink_face_tri(v_mat, f_mat, 0, depth, normvert)
+    return v_mat, f_mat
 
 def sphere_tri_ext(n_dim: int, n_points: int) -> Tuple[np.ndarray, np.ndarray]:
     pass
