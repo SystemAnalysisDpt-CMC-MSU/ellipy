@@ -3,6 +3,7 @@ import numpy as np
 from numpy import matlib as ml
 from ellipy.gen.common.common import throw_error, is_member, is_numeric
 from ellipy.gras.gen.gen import sort_rows_tol
+from ellipy.gras.geom.geom import circle_part
 
 
 def ell_tube_2_tri(n_e_points: int, n_points: int) -> np.ndarray:
@@ -294,18 +295,18 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
     else:
         return v_mat, f_mat
 
-def normvert(x: np.ndarray) -> np.ndarray:
-    return x / ml.repmat(np.sqrt(np.sum(x*x, 1)).reshape(-1,1), 1, 3)
-
 def sphere_tri(depth: int) -> Tuple[np.ndarray, np.ndarray]:
-    if not (np.size(depth) and is_numeric(np.array(depth)) and 0 <= depth == np.fix(depth)):
-        throw_error('wrongInput', 'depth is expected to be a not negative integer scalar')
-    (v_mat, f_mat) = icosahedron()
-    (v_mat, f_mat) = shrink_face_tri(v_mat, f_mat, 0, depth, normvert)
+    if not (np.size(depth) and is_numeric(np.array(depth))
+            and 0 <= depth == np.fix(depth)):
+        throw_error('wrong_input',
+                    'depth is expected to be a not negative integer scalar')
+    v_mat, f_mat = icosahedron()
+    v_mat, f_mat = shrink_face_tri(v_mat, f_mat, 0, depth, normvert)
     return v_mat, f_mat
 
-def sphere_tri_ext(n_dim: int, n_points: int) -> Tuple[np.ndarray, np.ndarray]:
-    pass
+
+def normvert(x: np.ndarray) -> np.ndarray:
+    return x / ml.repmat(np.sqrt(np.sum(x*x, 1)).reshape(-1,1), 1, 3)
 
 
 def is_face(f_mat: np.ndarray, f_to_check_mat: np.ndarray) -> np.ndarray:
@@ -424,3 +425,60 @@ def is_tri_equal(v1_mat: np.ndarray, f1_mat: np.ndarray,
     else:
         report_str = 'numbers of vertices are different'
     return is_pos, report_str
+
+    
+def sphere_tri_ext(n_dim: int, n_points: int, return_f_grid: bool = False)\
+        -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    if not (np.isscalar(n_points) and is_numeric(np.array(n_points))
+            and 0 < n_points == np.fix(n_points)):
+        throw_error('wrong_input',
+                    'n_points is expected to be a positive integer scalar number')
+    if n_dim == 2:
+        if return_f_grid:
+            v_grid_mat, f_grid_mat = spherebndr_2d(n_points, return_f_grid)
+        else:
+            v_grid_mat = spherebndr_2d(n_points)
+            (v_grid_mat == 0).choose(v_grid_mat, np.finfo(float).eps)
+            return v_grid_mat
+    else:
+        v_grid_mat, f_grid_mat = spherebndr_3d(n_points)
+    (v_grid_mat == 0).choose(v_grid_mat, np.finfo(float).eps)
+    return v_grid_mat, f_grid_mat
+
+
+def spherebndr_2d(n_points: int, return_f_vec: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    bp_mat = circle_part(n_points)
+    if return_f_vec:
+        f_vec = np.ndarray(shape = (n_points, 2),
+                           buffer = np.array([np.arange(1, n_points),
+                                              np.arange(2, n_points + 1)]), dtype = int).T
+        f_vec[n_points - 1, 1] = 1
+        return bp_mat, f_vec
+    return bp_mat
+
+
+def spherebndr_3d(n_points: int) -> Tuple[np.ndarray, np.ndarray]:
+    sphere_triang_num = calc_depth(n_points)
+    bp_mat, f_mat = sphere_tri(sphere_triang_num)
+    return bp_mat, f_mat
+
+
+def calc_depth(n_points: int) -> int:
+    # Initial icosaeder parameters:
+    __VERTICES_NUM = 12
+    __FACES_NUM = 20
+    __EDGES_NUM = 30
+    vert_num = __VERTICES_NUM
+    face_num = __FACES_NUM
+    edge_num = __EDGES_NUM
+    #
+    cur_depth = 0
+    is_stop = False
+    while not is_stop:
+        cur_depth = cur_depth + 1
+        vert_num = vert_num + edge_num
+        edge_num = 2 * edge_num + 3 * face_num
+        face_num = 4 * face_num
+        is_stop = vert_num >= n_points
+    triang_depth = cur_depth
+    return triang_depth
