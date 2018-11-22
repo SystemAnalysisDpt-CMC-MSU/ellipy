@@ -37,7 +37,12 @@ def icosahedron() -> Tuple[np.ndarray, np.ndarray]:
 
 
 def map_face_2_edge(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    if np.size(f_mat, 1) != 3:
+    if f_mat.ndim == 1:
+        if np.shape(f_mat) != (3,):
+            throw_error('wrongInput:f_mat', 'The number of columns should be equal to 3')
+        else:
+            f_mat = np.reshape(f_mat, newshape=(1, 3))
+    elif np.size(f_mat, 1) != 3:
         throw_error('wrongInput:f_mat', 'The number of columns should be equal to 3')
     n_faces = np.size(f_mat, 0)
     ind_2_check = np.array([[0, 1], [0, 2], [1, 2]])
@@ -55,16 +60,20 @@ def map_face_2_edge(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarr
     ind_f2e_vec = np.cumsum(ind_f2e_vec) - 1
     f_mat = f_mat[ind_f_vec]
     ind_edge_num_vec = \
-        + 1 * np.all(np.equal(f_mat[:, [0, 1]], e_mat[ind_f2e_vec]), 1) \
-        - 1 * np.all(np.equal(f_mat[:, [1, 0]], e_mat[ind_f2e_vec]), 1) \
-        + 2 * np.all(np.equal(f_mat[:, [1, 2]], e_mat[ind_f2e_vec]), 1) \
-        - 2 * np.all(np.equal(f_mat[:, [2, 1]], e_mat[ind_f2e_vec]), 1) \
-        + 3 * np.all(np.equal(f_mat[:, [0, 2]], e_mat[ind_f2e_vec]), 1) \
-        - 3 * np.all(np.equal(f_mat[:, [2, 0]], e_mat[ind_f2e_vec]), 1)
+        np.reshape(+ 1 * np.all(np.equal(f_mat[:, [0, 1]], e_mat[ind_f2e_vec]), 1)
+                   - 1 * np.all(np.equal(f_mat[:, [1, 0]], e_mat[ind_f2e_vec]), 1)
+                   + 2 * np.all(np.equal(f_mat[:, [1, 2]], e_mat[ind_f2e_vec]), 1)
+                   - 2 * np.all(np.equal(f_mat[:, [2, 1]], e_mat[ind_f2e_vec]), 1)
+                   + 3 * np.all(np.equal(f_mat[:, [0, 2]], e_mat[ind_f2e_vec]), 1)
+                   - 3 * np.all(np.equal(f_mat[:, [2, 0]], e_mat[ind_f2e_vec]), 1), newshape=(3 * n_faces, ))
     ind_sort_vec = np.lexsort((ind_f_vec, np.abs(ind_edge_num_vec)-1))
     ind_f2e_vec = ind_f2e_vec[ind_sort_vec]
-    f2e_mat = np.reshape(ind_f2e_vec, newshape=(3, n_faces)).T
-    f2e_is_dir_mat = np.reshape(np.greater(ind_edge_num_vec[ind_sort_vec], 0), newshape=(3, n_faces)).T
+    if n_faces > 1:
+        f2e_mat = np.reshape(ind_f2e_vec, newshape=(3, n_faces)).T
+        f2e_is_dir_mat = np.reshape(np.greater(ind_edge_num_vec[ind_sort_vec], 0), newshape=(3, n_faces)).T
+    else:
+        f2e_mat = ind_f2e_vec
+        f2e_is_dir_mat = np.greater(ind_edge_num_vec[ind_sort_vec], 0)
     return e_mat, f2e_mat, f2e_is_dir_mat
 
 
@@ -86,9 +95,13 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
 
     # Build Face to Edges map and edge orientation map for each face
     e_mat, f2e_mat, f2e_is_dir_mat = map_face_2_edge(f_mat)
+
     n_verts = np.size(v_mat, 0)
     n_edges = np.size(e_mat, 0)
-    n_faces = np.size(f_mat, 0)
+    if f_mat.ndim == 1:
+        n_faces = 1
+    else:
+        n_faces = np.size(f_mat, 0)
 
     # Build edge distances
     d_mat = v_mat[e_mat[:, 0]] - v_mat[e_mat[:, 1]]
@@ -150,12 +163,12 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
             f_mat = f_mat[~is_f2part_vec]
             f2e_mat = f2e_mat[~is_f2part_vec]
             f2e_is_dir_mat = f2e_is_dir_mat[~is_f2part_vec]
-            is_e_kept_vec = np.array([False] * n_edges).T
+            is_e_kept_vec = np.array([False] * n_edges)
             is_e_kept_vec[f2e_mat] = True
-            ind_e_kept_vec = np.cumsum(is_e_kept_vec)
+            ind_e_kept_vec = np.cumsum(is_e_kept_vec) - 1
             if np.size(f2e_mat, 0) == 1:
                 # this is because f2e_mat becomes a column for 1 face in f2e_mat
-                f2e_mat = ind_e_kept_vec[f2e_mat].T
+                f2e_mat = ind_e_kept_vec[f2e_mat]
             else:
                 f2e_mat = ind_e_kept_vec[f2e_mat]
             e_mat = e_mat[is_e_kept_vec]

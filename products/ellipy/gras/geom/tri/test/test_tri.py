@@ -69,7 +69,7 @@ class TestTri:
 
     @staticmethod
     def aux_shrink_face_tri(v_mat, f_mat, *args):
-        v_mat, f_mat, s_stats, e_mat, f2e_mat = shrink_face_tri(v_mat, f_mat, *args)
+        v_mat, f_mat, s_stats, e_mat, f2e_mat, _ = shrink_face_tri(v_mat, f_mat, is_stat_collected=True, *args)
         n_edges = np.size(e_mat, 0)
         assert n_edges == len(np.unique(f2e_mat))
         return v_mat, f_mat, s_stats
