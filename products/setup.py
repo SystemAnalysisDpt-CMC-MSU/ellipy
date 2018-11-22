@@ -13,7 +13,7 @@ AUTHOR = "Ilya V. Roublev"
 REQUIRES_PYTHON = '>=3.6.0'
 VERSION = '1.0.0'
 
-REQUIRED = ['wheel==0.31.0', 'numpy', 'pytest', ]
+REQUIRED = ['wheel==0.31.0', 'numpy', 'pytest', 'scipy', ]
 EXTRAS = {}
 
 main_dir_name = os.path.abspath(os.path.dirname(__file__))
