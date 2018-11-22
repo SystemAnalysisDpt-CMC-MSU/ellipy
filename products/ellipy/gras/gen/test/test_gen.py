@@ -79,6 +79,22 @@ class TestGen:
         res_arr = MatVector.transpose(data_arr)
         assert np.array_equal(res_arr, exp_arr)
 
+    def test_from_formula_mat(self):
+        exp = np.array(["2 + t"])
+        t = 1.
+        res_arr = MatVector.from_formula_mat(exp, t)
+        exp_arr = np.array([[[3.]]])
+        assert np.array_equal(res_arr, exp_arr)
+        t = np.array([1, 2, 3])
+        res_arr = MatVector.from_formula_mat(exp, t)
+        exp_arr = np.array([[[3., 4., 5.]]])
+        assert np.array_equal(res_arr, exp_arr)
+        exp = np.array([['cos(t)', '-sin(t)'], ['sin(t)', '-cos(t)']])
+        t = np.array([0, np.pi])
+        res_arr = MatVector.from_formula_mat(exp, t)
+        exp_arr = np.array([[[1, -1], [0, 0]], [[0, 0], [-1, 1]]], dtype=np.float64)
+        assert np.allclose(res_arr, exp_arr)
+
     def test_from_func_point(self):
         t = 0
         exp_arr = np.array([[[1.]]])
@@ -171,6 +187,19 @@ class TestGen:
         # vector
         t = np.array([0, np.pi / 2, np.pi])
         exp_arr = np.array([[[1., 1., 1.]]], dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+
+    def test_from_expression_brackets(self):
+        # testing for a non-bracket expression
+        exp = "sin(t)"
+        # single-element array
+        t = np.array([0])
+        exp_arr = np.array([[[0]]], dtype=float)
+        res_arr = MatVector.from_expression(exp, t)
+        assert np.array_equal(res_arr, exp_arr)
+        exp = "[sin(t)]"
+        exp_arr = np.array([[[0]]], dtype=float)
         res_arr = MatVector.from_expression(exp, t)
         assert np.array_equal(res_arr, exp_arr)
 

@@ -70,8 +70,18 @@ class MatVector:
         return trans_arr
 
     @staticmethod
-    def from_formula_mat(x: np.ndarray, t_vec: np.ndarray) -> np.ndarray:
-        pass
+    def from_formula_mat(x: np.ndarray, t_vec: Union[int, float, np.ndarray]) -> np.ndarray:
+        data = np.copy(x)
+        data_shape = data.shape
+        if len(data_shape) < 2:
+            data = np.expand_dims(data, 1)
+            data_shape += (1,)
+        t = _to_array(t_vec)
+        ret_arr = np.zeros(data.shape + t.shape)
+        for i in range(data_shape[0]):
+            for j in range(data_shape[1]):
+                ret_arr[i, j, :] = MatVector.from_expression("[" + data[i, j] + "]", t_vec)[0, 0, :]
+        return ret_arr
 
     @staticmethod
     def from_func(f: Callable[[float], np.ndarray], t_vec: Union[int, float, np.ndarray]) -> np.ndarray:
@@ -125,11 +135,25 @@ class MatVector:
         return res_array
 
     @staticmethod
-    def from_expression(exp_str: str, t_vec: Union[int, float, np.ndarray]) -> np.ndarray:
+    def from_expression(expr: str, t_vec: Union[int, float, np.ndarray]) -> np.ndarray:
         exec("from numpy import *")
+        # string check
+        exp_str = expr
+        if len(exp_str) < 1:
+            throw_error('wrongInput', 'expr must be a non-empty string!')
+        if exp_str[0] != "[":
+            exp_str = "[[" + exp_str
+        elif exp_str[1] != "[":
+            exp_str = "[" + exp_str
+        if exp_str[-1] != "]":
+            exp_str = exp_str + "]]"
+        elif exp_str[-2] != "]":
+            exp_str = exp_str + "]"
         t = _to_array(t_vec)
         if len(t) == 1:
             ret_val = np.array(eval(exp_str))
+            if len(ret_val.shape) < 2:
+                ret_val = np.expand_dims(ret_val, 1)
             if len(ret_val.shape) < 3:
                 ret_val = np.expand_dims(ret_val, 2)
             return ret_val
@@ -140,9 +164,9 @@ class MatVector:
                         for j in i]
                        for i in ret_val]
             ret_val = np.array(ret_val)
-            if len(ret_val.shape) < 3:
-                ret_val = np.expand_dims(ret_val, 2)
-                ret_val = np.tile(ret_val, (1, 1, len(t)))
+            ret_shape = ret_val.shape
+            if len(ret_shape) < 3:
+                ret_val = np.expand_dims(ret_val, 0)
             return ret_val
 
     @staticmethod
@@ -154,6 +178,7 @@ class MatVector:
         n_cols = a_arr.shape[1]
         n_time_points = a_arr.shape[2]
         if use_sparse_matrix:
+            # TODO
             pass
         else:
             c_mat = np.zeros(n_rows, n_time_points)
@@ -164,6 +189,7 @@ class MatVector:
     @staticmethod
     def r_multiply(a_arr: np.ndarray, b_arr: np.ndarray, c_arr: np.array,
                    use_sparse_matrix: bool = False) -> np.ndarray:
+        # TODO
         pass
 
 
