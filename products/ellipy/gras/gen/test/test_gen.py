@@ -1,4 +1,5 @@
 from ellipy.gras.gen.gen import *
+from typing import List
 import numpy as np
 
 
@@ -77,6 +78,57 @@ class TestGen:
         exp_arr = np.array([[[1, 5], [0, 7]], [[2, 6], [1, 8]]])
         res_arr = MatVector.transpose(data_arr)
         assert np.array_equal(res_arr, exp_arr)
+
+    def test_from_func_point(self):
+        t = 0
+        exp_arr = np.array([[[1.]]])
+        res_arr = MatVector.from_func(np.cos, t)
+        assert np.allclose(res_arr, exp_arr)
+        t = 1.
+        exp_arr = np.array([[[3.5]]])
+        res_arr = MatVector.from_func(lambda a: 2 * a + 1.5, t)
+        assert np.allclose(res_arr, exp_arr)
+        t = np.array([3, 4])
+        exp_arr = np.array([[[6., 12.]]])
+        res_arr = MatVector.from_func(lambda a: a ** 2 - a, t)
+        assert np.allclose(res_arr, exp_arr)
+
+    def test_from_func_matrix(self):
+        t = np.array([[0, np.pi]])
+        exp_arr = np.array([[[0., 0.], [1., -1.]]])
+        res_arr = MatVector.from_func(lambda t: np.array([[np.sin(t), np.cos(t)]]), t)
+        assert np.allclose(res_arr, exp_arr)
+        res_arr = MatVector.from_func(lambda t: np.array([np.sin(t), np.cos(t)]), t)
+        exp_arr = np.array([[[0., 0.]], [[1., -1.]]])
+        assert np.allclose(res_arr, exp_arr)
+
+    def test_eval_func(self):
+        def mat_min(inp_arr: np.ndarray) -> np.ndarray:
+            ret_val = np.copy(inp_arr)
+            return -ret_val
+
+        def list_equal(l: List[np.ndarray], r: List[np.ndarray]) -> bool:
+            if len(l) != len(r):
+                return False
+            for i in range(len(l)):
+                if not np.array_equal(l[i], r[i]):
+                    return False
+            return True
+
+        data_vec = np.array([[[1, -1], [2, -2]], [[3, -3.], [4., -4]]], dtype=np.object)
+        # uniform keep size
+        data_vec = np.array([[[1, -1], [2, -2]], [[3, -3.], [4., -4]]], dtype=np.float64)
+        res_vec = MatVector.eval_func(mat_min, data_vec, True, True)
+        exp_vec = np.array([[[-1., 1.], [-2., 2.]], [[-3., 3.], [-4., 4.]]], dtype=np.float64)
+        assert np.array_equal(res_vec, exp_vec)
+        # uniform no keep size
+        res_vec = MatVector.eval_func(np.sum, data_vec, True, False)
+        exp_vec = np.array([10, -10])
+        assert np.array_equal(res_vec, exp_vec)
+        # not uniform
+        res_vec = MatVector.eval_func(mat_min, data_vec, False)
+        exp_vec = list([np.array([[-1., -2.], [-3., -4.]]), np.array([[1., 2.], [3., 4.]])])
+        assert list_equal(res_vec, exp_vec)
 
     def test_from_expression_single_no_const(self):
         # testing for a single-sized expression

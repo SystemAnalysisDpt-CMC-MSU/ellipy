@@ -1,4 +1,4 @@
-from typing import Tuple, Callable, Union
+from typing import Tuple, Callable, Union, List
 import numpy as np
 from ellipy.gen.common.common import throw_error
 
@@ -27,6 +27,11 @@ def sqrt_pos(inp_arr: Union[int, float, np.ndarray], abs_tol: float = 0.) -> Uni
             throw_error('wrongInput:negativeInput', 'input array contains values under -abs_tol')
         inp_arr_new[inp_arr_new < 0.] = 0.
         return np.sqrt(inp_arr_new)
+
+
+def _to_array(inp_vec: Union[int, float, np.ndarray]) -> np.ndarray:
+    ret = np.asarray(inp_vec, dtype=np.float64).flatten()
+    return ret
 
 
 class MatVector:
@@ -69,18 +74,60 @@ class MatVector:
         pass
 
     @staticmethod
-    def from_func(f: Callable[[float], np.ndarray], t_vec: np.ndarray) -> np.ndarray:
-        pass
+    def from_func(f: Callable[[float], np.ndarray], t_vec: Union[int, float, np.ndarray]) -> np.ndarray:
+        t = _to_array(t_vec)
+        n_time_points = t.size
+        first_val = f(t[0])
+        if type(first_val) != np.ndarray:
+            first_val = _to_array(first_val)
+        if len(first_val.shape) < 2:
+            first_val = np.expand_dims(first_val, 1)
+        size = first_val.shape
+        ret_val = np.zeros((size[0], size[1], n_time_points))
+        ret_val[:, :, 0] = first_val
+        f_val = 0.
+        for i in range(1, n_time_points):
+            # we have to be sure that the result is in fact a matrix
+            # in case is't a vector (that is, res.shape = (n,) we expand
+            # it into a (n, 1) vector
+            f_val = f(t[i])
+            if type(f_val) != np.ndarray:
+                f_val = _to_array(f_val)
+            if len(f_val.shape) < 2:
+                f_val = np.expand_dims(f_val, 1)
+            ret_val[:, :, i] = f_val
+        return ret_val
 
     @staticmethod
-    def eval_func(f: Callable[[np.ndarray], np.ndarray], data_arr: np.ndarray,
-                  uniform_output: bool = True, keep_size: bool = False) -> np.ndarray:
-        pass
+    def eval_func(f: Callable[[np.ndarray], np.ndarray], inp_arr: np.ndarray,
+                  uniform_output: bool = True, keep_size: bool = False) \
+            -> Union[np.ndarray, List[np.ndarray]]:
+        data_arr = np.copy(inp_arr)
+        data_shape = data_arr.shape
+        if len(data_shape) < 3:
+            data_arr = np.expand_dims(data_arr, 2)
+            data_size = 1
+        else:
+            data_size = data_shape[2]
+        if not uniform_output:
+            res_array = list()
+            for i in range(data_size):
+                res_array.append(f(data_arr[:, :, i]))
+        else:
+            if keep_size:
+                res_array = np.copy(data_arr)
+                for i in range(data_size):
+                    res_array[:, :, i] = f(data_arr[:, :, i])
+            else:
+                res_array = np.zeros((data_size), dtype=np.float64)
+                for i in range(data_size):
+                    res_array[i] = f(data_arr[:, :, i])
+        return res_array
 
     @staticmethod
     def from_expression(exp_str: str, t_vec: Union[int, float, np.ndarray]) -> np.ndarray:
         exec("from numpy import *")
-        t = np.asarray(t_vec, dtype=np.float64).flatten()
+        t = _to_array(t_vec)
         if len(t) == 1:
             ret_val = np.array(eval(exp_str))
             if len(ret_val.shape) < 3:
@@ -102,7 +149,7 @@ class MatVector:
     def r_multiply_by_vec(a_arr: np.ndarray, b_mat: np.ndarray, use_sparse_matrix: bool = True) -> np.ndarray:
         from ellipy.gen.common.common import throw_error
         if len(b_mat.shape) != 2:
-            throw_error('wrongInput', 'bMat is expected to be 2-dimensional array')
+            throw_error('wrongInput', 'b_mat is expected to be 2-dimensional array')
         n_rows = a_arr.shape[0]
         n_cols = a_arr.shape[1]
         n_time_points = a_arr.shape[2]
