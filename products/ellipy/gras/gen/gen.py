@@ -2,6 +2,7 @@ from typing import Tuple, Callable, Union
 import numpy as np
 from ellipy.gen.common.common import throw_error
 
+
 def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
     pass
 

@@ -33,7 +33,7 @@ def rho_mat(ell_shape_mat: np.ndarray, dirs_mat: np.ndarray,
         bp_mat = bp_mat + ell_center_vec
     else:
         temp_mat = sqrt_pos(np.sum(dirs_mat.T @ ell_shape_mat * dirs_mat.T,
-                                axis=1), abs_tol).T
+                                   axis=1), abs_tol).T
         sup_arr = ell_center_vec.T @ dirs_mat + temp_mat
         bp_mat = ell_shape_mat @ dirs_mat / np.tile(temp_mat, (m, 1))
         is_nan_bp_mat = np.isnan(bp_mat)
@@ -42,4 +42,3 @@ def rho_mat(ell_shape_mat: np.ndarray, dirs_mat: np.ndarray,
             bp_mat[:, is_nan_vec] = 0.
         bp_mat = bp_mat + np.tile(ell_center_vec, (1, nd))
     return sup_arr, bp_mat
-

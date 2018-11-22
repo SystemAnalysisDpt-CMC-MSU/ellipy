@@ -21,7 +21,3 @@ class TestEll:
         is_ok = np.bitwise_and((np.abs(sup_arr - 2) < __MAX_TOL).transpose(),
                                np.abs(bp_mat[0] - 2) < __MAX_TOL).flatten()[0]
         assert np.array_equal(True, is_ok)
-
-
-
-

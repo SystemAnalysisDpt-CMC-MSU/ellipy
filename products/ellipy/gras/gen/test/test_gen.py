@@ -35,4 +35,3 @@ class TestGen:
         inp_arr = np.array([[1]])
         check(inp_arr)
         check(np.array([[2]]))
-

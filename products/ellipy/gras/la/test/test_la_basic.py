@@ -3,6 +3,8 @@ from ellipy.gras.gen.gen import *
 import numpy as np
 import pytest
 from ellipy.elltool.conf.properties.Properties import Properties
+import scipy.io
+import os
 
 
 class TestLaBasic:
@@ -91,6 +93,16 @@ class TestLaBasic:
         sqrt_mat = sqrtm_pos(test_mat, __MAX_TOL)
         assert np.linalg.norm(sqrtm_pos(sqrt_test_mat, __MAX_TOL) - sqrtm_pos(sqrt_mat, __MAX_TOL)) < __MAX_TOL
 
+        loaded_info = scipy.io.loadmat(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'testSqrtm1_inp.mat'))
+        mat = loaded_info['testMat']
+        sqrt_mat = sqrtm_pos(mat, __MAX_TOL)
+        assert np.linalg.norm(sqrtm_pos(mat, __MAX_TOL) - sqrtm_pos(sqrt_mat@sqrt_mat.T, __MAX_TOL)) < __MAX_TOL
+
+        loaded_info = scipy.io.loadmat(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'testSqrtm2_inp.mat'))
+        mat = loaded_info['testMat']
+        sqrt_mat = sqrtm_pos(mat, __MAX_TOL)
+        assert np.linalg.norm(sqrtm_pos(mat, __MAX_TOL) - sqrtm_pos(sqrt_mat @ sqrt_mat.T)) < __MAX_TOL
+
         test_1_mat = np.eye(2)
         test_2_sqrt_mat = np.eye(2) + 1.01 * __MAX_TOL
         test_2_mat = test_2_sqrt_mat @ test_2_sqrt_mat.transpose()
@@ -98,7 +110,7 @@ class TestLaBasic:
 
         test_1_mat = np.eye(2)
         test_2_sqrt_mat = np.eye(2) + 0.5 * __MAX_TOL
-        test_2_mat = test_2_sqrt_mat@test_2_sqrt_mat.transpose()
+        test_2_mat = test_2_sqrt_mat@test_2_sqrt_mat.T
         assert np.linalg.norm(sqrtm_pos(test_1_mat, __MAX_TOL) - sqrtm_pos(test_2_mat, __MAX_TOL)) < __MAX_TOL
 
         test_mat = np.array([[1, 0], [0, -1]])
@@ -215,8 +227,6 @@ class TestLaBasic:
         diag_vec = [-1, 1, -2]
         check_determ(orth3mat, diag_vec, not is_pos_or_sem_def, False)
         check_determ(orth3mat, diag_vec, not is_pos_or_sem_def, True)
-
-
 
     def test_try_treat_as_real(self):
         __ERROR_MSG = 'Incorrect work a try_treat_as_real function'
