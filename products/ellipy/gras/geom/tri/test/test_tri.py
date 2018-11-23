@@ -1,4 +1,5 @@
 from ellipy.gras.geom.tri.tri import *
+from ellipy.gras.geom.geom import *
 import numpy as np
 from numpy import matlib as ml
 
@@ -67,6 +68,7 @@ class TestTri:
         [0, 2, 3]
     ])
 
+<<<<<<< HEAD
     @staticmethod
     def aux_shrink_face_tri(v_mat, f_mat, *args):
         v_mat, f_mat, s_stats, e_mat, f2e_mat, _ = shrink_face_tri(v_mat, f_mat, is_stat_collected=True, *args)
@@ -131,6 +133,50 @@ class TestTri:
         assert np.array_equal(e_mat, e_exp_mat)
         assert np.array_equal(f2e_mat, f2e_exp_mat)
         assert np.array_equal(f2e_is_dir_mat, f2e_exp_is_dir_mat)
+
+    def test_sphere_tri(self):
+        def check(depth):
+            [v0, f0] = gras.geom.tri.spheretri(depth);
+
+        checkRegress(v0, f0, depth - 1);
+        checkVert(v0);
+        [v1, f1] = gras.geom.tri.spheretri(depth + 1);
+        checkRegress(v1, f1, depth)
+        checkVert(v1)
+        [cf0, vol0] = convhull(v0)
+        [cf1, vol1] = convhull(v1)
+        mlunitext.assert_equals(true, vol1 > vol0)
+        mlunitext.assert_equals(true, vol1 < pi * 4 / 3)
+        mlunitext.assert_equals(true, size(cf0, 1) * 4 == size(cf1, 1))
+
+        def checkRegress(v1, f1, depth):
+            [vReg1, fReg1] = gras.geom.tri.test.srebuild3d(depth);
+            checkVert(vReg1)
+            vReg1 = vReg1 / repmat(realsqrt(sum(vReg1*vReg1, 2)), 1, 3)
+            [isPos, reportStr] = gras.geom.tri.istriequal(vReg1, fReg1, v1, f1, MAX_TOL)
+            mlunitext.assert_equals(true, isPos, reportStr)
+        def checkVert(v):
+            normVec = realsqrt(sum(v*v, 2))
+            isPos = max(abs(normVec - 1)) <= MAX_TOL
+            mlunitext.assert_equals(true, isPos,
+                                    'not all vertices are on the unit sphere')
+
+        __MAX_TOL = 1e-13
+        __MAX_DEPTH = 4
+        for curDepth in np.arange(1, __MAX_DEPTH + 1):
+            check(curDepth)
+
+
+    def test_sphere_tri_ext(self):
+        dim = 2
+        N_POINTS = 500
+        RIGHT_POINTS_3D = 642
+        v_mat = sphere_tri_ext(dim, N_POINTS)
+        assert _equals(size(v_mat, 1), N_POINTS)
+        dim = 3
+        v_mat = sphere_tri_ext(dim, N_POINTS)
+        mlunitext.assert_equals(size(v_mat, 1), RIGHT_POINTS_3D)
+
 
     def test_shrink_face_tri(self):
         pass

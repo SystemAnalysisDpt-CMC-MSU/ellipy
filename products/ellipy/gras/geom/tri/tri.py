@@ -433,9 +433,9 @@ def sphere_tri_ext(n_dim: int, n_points: int, return_f_grid: bool = False)\
             Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         bp_mat = circle_part(n_points)
         if return_f_vec:
-            f_vec = np.ndarray(shape=(n_points, 2),
-                               buffer=np.array([np.arange(1, n_points),
-                                                np.arange(2, n_points + 1)]), dtype=int).T
+            f_vec = np.ndarray(shape=(2, n_points),
+                               buffer=np.array([np.arange(1, n_points + 1),
+                                                np.arange(2, n_points + 2)]), dtype=int).T
             f_vec[n_points - 1, 1] = 1
             return bp_mat, f_vec
         return bp_mat
@@ -474,9 +474,9 @@ def sphere_tri_ext(n_dim: int, n_points: int, return_f_grid: bool = False)\
             v_grid_mat, f_grid_mat = spherebndr_2d(n_points, return_f_grid)
         else:
             v_grid_mat = spherebndr_2d(n_points)
-            (v_grid_mat == 0).choose(v_grid_mat, np.finfo(float).eps)
+            v_grid_mat[np.equal(v_grid_mat, 0)] = np.finfo(float).eps
             return v_grid_mat
     else:
         v_grid_mat, f_grid_mat = spherebndr_3d(n_points)
-    (v_grid_mat == 0).choose(v_grid_mat, np.finfo(float).eps)
+    v_grid_mat[np.equal(v_grid_mat, 0)] = np.finfo(float).eps
     return v_grid_mat, f_grid_mat
