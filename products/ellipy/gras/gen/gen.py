@@ -1,5 +1,6 @@
 from typing import Tuple, Callable, Union, List
 import numpy as np
+import scipy.sparse as sp
 from ellipy.gen.common.common import throw_error
 
 
@@ -178,19 +179,91 @@ class MatVector:
         n_cols = a_arr.shape[1]
         n_time_points = a_arr.shape[2]
         if use_sparse_matrix:
-            # TODO
-            pass
+            i_ind = np.arange(0, n_cols * n_time_points)
+            j_ind = np.repeat(range(n_time_points), n_cols)
+            b_sparse = sp.csc_matrix((b_mat.T.flatten(), (i_ind, j_ind)), shape=(n_cols * n_time_points, n_time_points))
+            c_mat = a_arr.reshape(n_rows, n_cols * n_time_points, order='F') @ b_sparse
         else:
-            c_mat = np.zeros(n_rows, n_time_points)
-            for i_time_point in range(0, n_time_points):
+            c_mat = np.zeros((n_rows, n_time_points))
+            for i_time_point in range(n_time_points):
                 c_mat[:, i_time_point] = a_arr[:, :, i_time_point] @ b_mat[:, i_time_point]
         return c_mat
 
     @staticmethod
-    def r_multiply(a_arr: np.ndarray, b_arr: np.ndarray, c_arr: np.array,
+    def r_multiply(a_arr: np.ndarray, b_arr: np.ndarray, c_arr: np.array = None,
                    use_sparse_matrix: bool = False) -> np.ndarray:
-        # TODO
-        pass
+        def get_sparse_mat(inp_arr: np.ndarray) -> sp.csc_matrix:
+            int_arr = inp_arr
+            inp_shape = inp_arr.shape
+            if len(inp_shape) < 3:
+                int_arr = np.tile(np.expand_dims(int_arr, 2), (1, 1, n_time_points))
+            n_rows = inp_shape[0]
+            n_cols = inp_shape[1]
+            i_mat = np.tile(np.arange(n_rows * n_time_points), (n_cols, 1))
+            i_mat = np.reshape(i_mat, (n_cols, n_rows, n_time_points), order='F')
+            i_mat = np.transpose(i_mat, (1, 0, 2))
+            i_ind = np.reshape(i_mat, (n_rows * n_cols * n_time_points), order='F')
+            j_ind = np.tile(np.arange(n_cols * n_time_points), (n_rows, 1))
+            j_ind = np.reshape(j_ind, (n_rows * n_cols * n_time_points), order='F')
+            return sp.csc_matrix((int_arr.T.flatten(), (i_ind, j_ind)),
+                                 shape=(n_rows * n_time_points, n_cols * n_time_points))
+
+        use_sparse = use_sparse_matrix
+        a_shape = a_arr.shape
+        n_a_rows = a_shape[0]
+        n_a_cols = a_shape[1]
+        n_time_points = a_shape[2]
+        b_shape = b_arr.shape
+        n_b_rows = b_shape[0]
+        n_b_cols = b_shape[1]
+        if len(b_shape) < 3:
+            b_shape += (1,)
+        if c_arr is None:
+            is_binary = True
+        else:
+            c_shape = c_arr.shape
+            n_c_rows = c_shape[0]
+            n_c_cols = c_shape[1]
+            is_binary = False
+        is_a_scalar = (n_a_cols == 1) and (n_a_rows == 1)
+        is_b_scalar = (n_b_cols == 1) and (n_b_rows == 1)
+        if is_a_scalar or is_b_scalar:
+            use_sparse = False
+        if use_sparse:
+            a_mat = np.reshape(a_arr, (n_a_rows, n_a_cols * n_time_points), order='F')
+            if is_binary:
+                d_mat = a_mat @ get_sparse_mat(b_arr)
+                d_mat = np.reshape(d_mat, (n_a_rows, n_b_cols, n_time_points), order='F')
+            else:
+                d_mat = a_mat @ get_sparse_mat(b_arr) @ get_sparse_mat(c_arr)
+                d_mat = np.reshape(d_mat, (n_a_rows, n_c_cols, n_time_points), order='F')
+        else:
+            if is_binary:
+                if is_a_scalar:
+                    d_mat = np.zeros((n_b_rows, n_b_cols, n_time_points))
+                elif is_b_scalar:
+                    d_mat = np.zeros((n_a_rows, n_a_cols, n_time_points))
+                else:
+                    d_mat = np.zeros((n_a_rows, n_b_cols, n_time_points))
+                if b_shape[2] == n_time_points:
+                    for i_time_point in range(n_time_points):
+                        d_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ b_arr[:, :, i_time_point]
+                elif b_shape[2] == 1:
+                    for i_time_point in range(n_time_points):
+                        d_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ b_arr
+                else:
+                    throw_error('wrongInput', 'Incorrect size of b_arr')
+            else:
+                if is_a_scalar and is_b_scalar:
+                    d_mat = np.zeros((n_c_rows, n_c_cols, n_time_points))
+                elif is_a_scalar:
+                    d_mat = np.zeros((n_b_rows, n_c_cols, n_time_points))
+                else:
+                    d_mat = np.zeros((n_a_rows, n_c_cols, n_time_points))
+                for i_time_point in range(n_time_points):
+                    d_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ \
+                                                b_arr[:, :, i_time_point] @ c_arr[:, :, i_time_point]
+        return d_mat
 
 
 class SquareMatVector(MatVector):
