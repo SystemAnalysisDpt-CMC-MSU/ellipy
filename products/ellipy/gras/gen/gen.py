@@ -307,6 +307,7 @@ class SquareMatVector(MatVector):
             for t in range(size_vec[2]):
                 inv_data_array[:, :, t] = np.linalg.inv(data_arr[:, :, t])
         return inv_data_array
+
     @staticmethod
     def sqrtm_pos(data_arr: np.ndarray) -> np.ndarray:
         dim_num = data_arr.ndim
@@ -320,11 +321,10 @@ class SquareMatVector(MatVector):
                     sqrt_data_array[:, :, t] = np.NaN
                 sqrt_data_array[:, :, t] = gras.la.sqrtmpos(np.squeeze(data_arr[:, :, t]))
         return sqrt_data_array
+
     @staticmethod
     def make_pos_definite_or_nan(data_arr: np.ndarray) -> np.ndarray:
         dim_num = data_arr.ndim
-        size_vec = data_arr.shape
-        res_data_arr = np.zeros(size_vec)
         if dim_num == 2:
             s_min = min(np.linalg.eigvals(data_arr)[0])
             if s_min < 0:
@@ -332,6 +332,7 @@ class SquareMatVector(MatVector):
             else:
                 res_data_arr = data_arr
         else:
+            size_vec = data_arr.shape
             res_data_arr = np.zeros(size_vec)
             for t in range(size_vec[2]):
                 if min(np.linalg.eigvals(data_arr[:, :, t])[0]) < 0:
@@ -339,23 +340,31 @@ class SquareMatVector(MatVector):
                 else:
                     res_data_arr[:, :, t] = data_arr[:, :, t]
         return res_data_arr
+
     @staticmethod
     def make_pos_definite_by_eig(data_arr: np.ndarray, value: float = 1e-12) -> np.ndarray:
+        import products.ellipy.gen.common.throw_error as th_er
+        import products.ellipy.gras.la.is_mat_symm as is_mat_symm
         dim_num = data_arr.ndim
         size_vec = data_arr.shape
         res_data_arr = np.zeros(size_vec)
         if dim_num == 2:
-            V, D = np.linalg.eig(data_arr)
-            d = np.diag(D)
-            d[d < 0] = value
-            res_data_arr = (np.matmul(V,np.diag(d)),V.transpose()).real
+            if not is_mat_symm(data_arr):
+                th_er('wrongInput:non SymmMat', 'input matrix must be symetric')
+            d, v = np.linalg.eigh(data_arr)
+            diagonal = np.diag(d)
+            diagonal[diagonal < 0] = value
+            res_data_arr = (v @ np.diag(diagonal) @ v.T).real
         else:
             for t in range(size_vec[2]):
-                V, D = np.linalg.eig(data_arr[:, :, t])
-                d = np.diag(D)
-                d[d < 0] = value
-                res_data_arr[:, :, t] = (np.matmul(V,np.diag(d)),V.transpose()).real
+                if not is_mat_symm(data_arr):
+                    th_er('wrongInput:non SymmMat', 'input matrix must be symetric')
+                d, v = np.linalg.eigh(data_arr[:, :, t])
+                diagonal = np.diag(d)
+                diagonal[diagonal < 0] = value
+                res_data_arr[:, :, t] = (v @ np.diag(diagonal) @ v.T).real
         return res_data_arr
+
     @staticmethod
     def lr_multiply(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray, flag: str = 'R') -> np.ndarray:
         import products.ellipy.gen.common.throw_error as th_er
@@ -363,43 +372,57 @@ class SquareMatVector(MatVector):
         b_size_vec = inp_b_arr.shape
         if inp_b_arr.ndim == 2:
             if flag == 'R':
-                out_array = np.matmul(np.matmul(inp_a_arr,inp_b_arr),inp_a_arr.transpose())
+                out_array = inp_a_arr@inp_b_arr@inp_a_arr.T
             elif flag == 'L':
-                out_array = np.matmul(np.matmul(inp_a_arr.transpose(),inp_b_arr),inp_a_arr)
+                out_array = inp_a_arr.T@inp_b_arr@inp_a_arr
             else:
-                th_er('wrong_input', print('flag ',flag,' is not supported'))
+                th_er('wrong_input', 'flag ' + flag + ' is not supported')
         else:
             if flag == 'R':
                 out_array = np.zeros((a_size_vec[0], a_size_vec[1], b_size_vec[2]))
                 for t in range(b_size_vec[2]):
-                    out_array[:,:,t] = np.matmul(np.matmul(inp_a_arr,inp_b_arr[:,:,t]),inp_a_arr.transpose())
+                    out_array[:, :, t] = inp_a_arr @ inp_b_arr[:, :, t] @ inp_a_arr.T
             elif flag == 'L':
                 out_array = np.zeros((a_size_vec[0], a_size_vec[1], b_size_vec[2]))
                 for t in range(b_size_vec[2]):
-                    out_array[:,:,t] = np.matmul(np.matmul(inp_a_arr.transpose(),inp_b_arr[:,:,t]),inp_a_arr)
+                    out_array[:, :, t] = inp_a_arr.T @ inp_b_arr[:, :, t] @ inp_a_arr
             else:
-                th_er('wrong_input', print('flag ',flag,' is not supported'))
+                th_er('wrong_input', print('flag ' + flag + ' is not supported'))
         return out_array
+
     @staticmethod
     def lr_multiply_by_vec(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray) -> np.ndarray:
         import products.ellipy.gen.common.throw_error as th_er
         if len(inp_a_arr.shape) == 1:
-            inp_a_arr = inp_a_arr.copy()
             inp_a_arr.shape = (inp_a_arr.size, 1)
         a_size_vec = inp_a_arr.shape
         if inp_b_arr.ndim == 2:
             out_vec = np.zeros(1, inp_a_arr.shape[1])
             for t in range(a_size_vec[1]):
-                out_vec[:, t] = inp_a_arr[:,t].transpose().dot(inp_b_arr.dot(inp_a_arr[:, t])                                                               )
+                out_vec[:, t] = inp_a_arr[:, t].T.dot(inp_b_arr.dot(inp_a_arr[:, t]))
         else:
             out_vec = np.zeros(1, inp_a_arr.shape[1])
             for t in range(a_size_vec[1]):
-                out_vec[:, t] = inp_a_arr[:,t].transpose().dot(inp_b_arr[:,:,t].dot(inp_a_arr[:, t])                                                               )
+                out_vec[:, t] = inp_a_arr[:, t].T.dot(inp_b_arr[:, :, t].dot(inp_a_arr[:, t]))
         return out_vec
+
     @staticmethod
     def lr_divide_vec(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray) -> np.ndarray:
-        pass
-
+        import products.ellipy.gen.common.throw_error as th_er
+        if len(inp_a_arr.shape) == 1:
+            inp_a_arr.shape = (inp_a_arr.size, 1)
+        if inp_b_arr.ndim == 2:
+            out_vec = inp_a_arr.T@np.linalg.lstsq(inp_b_arr, inp_a_arr)
+        else:
+            if inp_a_arr.shape[1] == 1:
+                out_vec = np.zeros(1, inp_b_arr.shape[2])
+                for t in range(inp_b_arr.shape[2]):
+                    out_vec[:, t] = inp_a_arr.T @ np.linalg.lstsq(inp_b_arr[:, :, t], inp_a_arr)
+            else:
+                out_vec = np.zeros(1, inp_a_arr.shape[1])
+                for t in range(inp_a_arr.shape[1]):
+                    out_vec[:, t] = inp_a_arr[:, t].T @ np.linalg.lstsq(inp_b_arr[:, :, t], inp_a_arr[:, t])
+        return out_vec
 
 class SymmetricMatVector(SquareMatVector):
 
