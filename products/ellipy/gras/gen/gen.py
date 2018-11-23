@@ -30,16 +30,16 @@ def sqrt_pos(inp_arr: Union[int, float, np.ndarray], abs_tol: float = 0.) -> Uni
         return np.sqrt(inp_arr_new)
 
 
-def _to_array(inp_vec: Union[int, float, np.ndarray]) -> np.ndarray:
-    ret = np.asarray(inp_vec, dtype=np.float64).flatten()
-    return ret
-
-
 class MatVector:
+    @staticmethod
+    def __to_array(inp_vec: Union[int, float, np.ndarray]) -> np.ndarray:
+        ret = np.asarray(inp_vec, dtype=np.float64).flatten()
+        return ret
+
     @staticmethod
     def triu(data_arr: np.ndarray) -> np.ndarray:
         ret_arr = np.copy(data_arr)
-        if len(data_arr.shape) == 2:
+        if data_arr.ndim == 2:
             ret_arr = np.expand_dims(ret_arr, 2)
         arr_size = ret_arr.shape[2]
         for i_elem in range(arr_size):
@@ -54,18 +54,17 @@ class MatVector:
     @staticmethod
     def pinv(data_arr: np.ndarray) -> np.ndarray:
         arr_size = data_arr.shape
-        if len(arr_size) == 2:
+        if data_arr.ndim == 2:
             arr_size = (arr_size[0], arr_size[1], 1)
-        inv_data_array = np.zeros((arr_size[1], arr_size[0], arr_size[2]))
+        inv_data_array = np.zeros((arr_size[1], arr_size[0], arr_size[2]), dtype=np.float64)
         for t in range(arr_size[2]):
             inv_data_array[:, :, t] = np.linalg.pinv(data_arr[:, :, t])
         return inv_data_array
 
     @staticmethod
     def transpose(inp_arr: np.ndarray) -> np.ndarray:
-        inp_size = inp_arr.shape
         data_arr = np.copy(inp_arr)
-        if len(inp_size) == 2:
+        if inp_arr.ndim == 2:
             data_arr = np.expand_dims(data_arr, 2)
         trans_arr = np.transpose(data_arr, (1, 0, 2))
         return trans_arr
@@ -77,7 +76,7 @@ class MatVector:
         if len(data_shape) < 2:
             data = np.expand_dims(data, 1)
             data_shape += (1,)
-        t = _to_array(t_vec)
+        t = MatVector.__to_array(t_vec)
         ret_arr = np.zeros(data.shape + t.shape)
         for i in range(data_shape[0]):
             for j in range(data_shape[1]):
@@ -86,15 +85,15 @@ class MatVector:
 
     @staticmethod
     def from_func(f: Callable[[float], np.ndarray], t_vec: Union[int, float, np.ndarray]) -> np.ndarray:
-        t = _to_array(t_vec)
+        t = MatVector.__to_array(t_vec)
         n_time_points = t.size
         first_val = f(t[0])
         if type(first_val) != np.ndarray:
-            first_val = _to_array(first_val)
-        if len(first_val.shape) < 2:
+            first_val = MatVector.__to_array(first_val)
+        if first_val.ndim < 2:
             first_val = np.expand_dims(first_val, 1)
         size = first_val.shape
-        ret_val = np.zeros((size[0], size[1], n_time_points))
+        ret_val = np.zeros((size[0], size[1], n_time_points), dtype=np.float64)
         ret_val[:, :, 0] = first_val
         for i in range(1, n_time_points):
             # we have to be sure that the result is in fact a matrix
@@ -102,8 +101,8 @@ class MatVector:
             # it into a (n, 1) vector
             f_val = f(t[i])
             if type(f_val) != np.ndarray:
-                f_val = _to_array(f_val)
-            if len(f_val.shape) < 2:
+                f_val = MatVector.__to_array(f_val)
+            if f_val.ndim < 2:
                 f_val = np.expand_dims(f_val, 1)
             ret_val[:, :, i] = f_val
         return ret_val
@@ -114,7 +113,7 @@ class MatVector:
             -> Union[np.ndarray, List[np.ndarray]]:
         data_arr = np.copy(inp_arr)
         data_shape = data_arr.shape
-        if len(data_shape) < 3:
+        if data_arr.ndim < 3:
             data_arr = np.expand_dims(data_arr, 2)
             data_size = 1
         else:
@@ -149,12 +148,12 @@ class MatVector:
             exp_str = exp_str + "]]"
         elif exp_str[-2] != "]":
             exp_str = exp_str + "]"
-        t = _to_array(t_vec)
+        t = MatVector.__to_array(t_vec)
         if len(t) == 1:
             ret_val = np.array(eval(exp_str))
-            if len(ret_val.shape) < 2:
+            if ret_val.ndim < 2:
                 ret_val = np.expand_dims(ret_val, 1)
-            if len(ret_val.shape) < 3:
+            if ret_val.ndim < 3:
                 ret_val = np.expand_dims(ret_val, 2)
             return ret_val
         else:
@@ -177,12 +176,12 @@ class MatVector:
         n_cols = a_arr.shape[1]
         n_time_points = a_arr.shape[2]
         if use_sparse_matrix:
-            i_ind = np.arange(0, n_cols * n_time_points)
-            j_ind = np.repeat(range(n_time_points), n_cols)
+            i_ind = np.arange(n_cols * n_time_points)
+            j_ind = np.repeat(np.arange(n_time_points), n_cols)
             b_sparse = sp.csc_matrix((b_mat.T.flatten(), (i_ind, j_ind)), shape=(n_cols * n_time_points, n_time_points))
             ret_mat = a_arr.reshape(n_rows, n_cols * n_time_points, order='F') @ b_sparse
         else:
-            ret_mat = np.zeros((n_rows, n_time_points))
+            ret_mat = np.zeros((n_rows, n_time_points), dtype=np.float64)
             for i_time_point in range(n_time_points):
                 ret_mat[:, i_time_point] = a_arr[:, :, i_time_point] @ b_mat[:, i_time_point]
         return ret_mat
@@ -193,7 +192,7 @@ class MatVector:
         def get_sparse_mat(inp_arr: np.ndarray) -> sp.csc_matrix:
             int_arr = inp_arr
             inp_shape = inp_arr.shape
-            if len(inp_shape) < 3:
+            if inp_arr.ndim < 3:
                 int_arr = np.tile(np.expand_dims(int_arr, 2), (1, 1, n_time_points))
             n_rows = inp_shape[0]
             n_cols = inp_shape[1]
@@ -214,7 +213,7 @@ class MatVector:
         b_shape = b_arr.shape
         n_b_rows = b_shape[0]
         n_b_cols = b_shape[1]
-        if len(b_shape) < 3:
+        if b_arr.ndim < 3:
             b_shape += (1,)
         if c_arr is None:
             is_binary = True
@@ -240,11 +239,11 @@ class MatVector:
         else:
             if is_binary:
                 if is_a_scalar:
-                    res_mat = np.zeros((n_b_rows, n_b_cols, n_time_points))
+                    res_mat = np.zeros((n_b_rows, n_b_cols, n_time_points), dtype=np.float64)
                 elif is_b_scalar:
-                    res_mat = np.zeros((n_a_rows, n_a_cols, n_time_points))
+                    res_mat = np.zeros((n_a_rows, n_a_cols, n_time_points), dtype=np.float64)
                 else:
-                    res_mat = np.zeros((n_a_rows, n_b_cols, n_time_points))
+                    res_mat = np.zeros((n_a_rows, n_b_cols, n_time_points), dtype=np.float64)
                 if b_shape[2] == n_time_points:
                     for i_time_point in range(n_time_points):
                         res_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ b_arr[:, :, i_time_point]
@@ -255,11 +254,11 @@ class MatVector:
                     throw_error('wrongInput', 'Incorrect size of b_arr')
             else:
                 if is_a_scalar and is_b_scalar:
-                    res_mat = np.zeros((n_c_rows, n_c_cols, n_time_points))
+                    res_mat = np.zeros((n_c_rows, n_c_cols, n_time_points), dtype=np.float64)
                 elif is_a_scalar:
-                    res_mat = np.zeros((n_b_rows, n_c_cols, n_time_points))
+                    res_mat = np.zeros((n_b_rows, n_c_cols, n_time_points), dtype=np.float64)
                 else:
-                    res_mat = np.zeros((n_a_rows, n_c_cols, n_time_points))
+                    res_mat = np.zeros((n_a_rows, n_c_cols, n_time_points), dtype=np.float64)
                 for i_time_point in range(n_time_points):
                     res_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ \
                                                   b_arr[:, :, i_time_point] @ c_arr[:, :, i_time_point]

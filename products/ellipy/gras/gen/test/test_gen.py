@@ -99,7 +99,7 @@ class TestGen:
     def test_from_func_point(self):
         t = 0
         exp_arr = np.array([[[1.]]])
-        res_arr = MatVector.from_func(np.cos, t)
+        res_arr = MatVector.from_func(lambda a: np.cos(a), t)
         assert np.allclose(res_arr, exp_arr)
         t = 1.
         exp_arr = np.array([[[3.5]]])
@@ -113,9 +113,9 @@ class TestGen:
     def test_from_func_matrix(self):
         t = np.array([[0, np.pi]])
         exp_arr = np.array([[[0., 0.], [1., -1.]]])
-        res_arr = MatVector.from_func(lambda t: np.array([[np.sin(t), np.cos(t)]]), t)
+        res_arr = MatVector.from_func(lambda _t: np.array([[np.sin(_t), np.cos(_t)]]), t)
         assert np.allclose(res_arr, exp_arr)
-        res_arr = MatVector.from_func(lambda t: np.array([np.sin(t), np.cos(t)]), t)
+        res_arr = MatVector.from_func(lambda _t: np.array([np.sin(_t), np.cos(_t)]), t)
         exp_arr = np.array([[[0., 0.]], [[1., -1.]]])
         assert np.allclose(res_arr, exp_arr)
 
@@ -132,7 +132,6 @@ class TestGen:
                     return False
             return True
 
-        data_vec = np.array([[[1, -1], [2, -2]], [[3, -3.], [4., -4]]], dtype=np.object)
         # uniform keep size
         data_vec = np.array([[[1, -1], [2, -2]], [[3, -3.], [4., -4]]], dtype=np.float64)
         res_vec = MatVector.eval_func(mat_min, data_vec, True, True)
@@ -299,13 +298,14 @@ class TestGen:
         assert np.array_equal(res_arr, exp_arr)
 
     def test_r_multiply_simple(self):
+        __MAX_TOL = 1e-11
         a_mat = np.random.rand(2, 2, 1)
         b_mat = np.random.rand(2, 2, 1)
         c_mat = np.random.rand(2, 2, 1)
         res_mat = MatVector.r_multiply(a_mat, b_mat, c_mat)
         exp_mat = np.zeros((2, 2, 1))
         exp_mat[:, :, 0] = a_mat[:, :, 0] @ b_mat[:, :, 0] @ c_mat[:, :, 0]
-        assert np.allclose(exp_mat - res_mat, np.zeros((2, 2, 1)))
+        assert np.allclose(exp_mat - res_mat, np.zeros((2, 2, 1)), atol=__MAX_TOL)
 
     def test_r_multiply(self):
         a_arr = np.array([[[1, 2, 3], [3, 4, 5]], [[5, 6, 7], [7, 8, 9]]], dtype=np.float64)
@@ -322,7 +322,7 @@ class TestGen:
         assert np.allclose(res_mat, exp_mat)
         with pytest.raises(Exception) as e:
             b_mat = np.array([[[1, 2, 3, 0], [3, 4, 5, 0]], [[5, 6, 7, 0], [7, 8, 9, 0]]], dtype=np.float64)
-            res_mat = MatVector.r_multiply(a_arr, b_mat)
+            _ = MatVector.r_multiply(a_arr, b_mat)
         assert 'wrongInput:Incorrect size of b_arr' in str(e.value)
 
     def test_compare_mat_vector_multiply(self):
@@ -348,6 +348,6 @@ class TestGen:
         assert np.allclose(c_arr, d_arr)
         with pytest.raises(Exception) as e:
             b_arr = np.array([1, 2]).T
-            c_arr = MatVector.r_multiply_by_vec(a_arr, b_arr, False)
-            d_arr = MatVector.r_multiply_by_vec(a_arr, b_arr, True)
+            _ = MatVector.r_multiply_by_vec(a_arr, b_arr, False)
+            _ = MatVector.r_multiply_by_vec(a_arr, b_arr, True)
         assert "wrongInput:b_mat is expected to be 2-dimensional array" in str(e.value)
