@@ -48,12 +48,17 @@ def is_mat_symm(q_mat: np.ndarray, abs_tol: float = 0.) -> bool:
 
 
 def mat_orth(src_mat: np.ndarray) -> np.ndarray:
-    pass
+    o_mat, src_r = np.linalg.qr(src_mat,'complete')
+    is_neg_diag = np.diag(src_r) < 0
+    is_neg_diag_vec = np.zeros(o_mat.shape[1],'bool')
+    is_neg_diag_vec[:len(is_neg_diag)] = is_neg_diag
+    o_mat[:, is_neg_diag_vec] = -o_mat[:, is_neg_diag_vec]
+    return o_mat
 
 
 def math_orth_col(src_mat: np.ndarray) -> np.ndarray:
-    pass
-
+    o_mat = mat_orth(src_mat)
+    return o_mat[:, :src_mat.shape[1]]
 
 def ml_orth_transl(src_mat: np.ndarray, dst_arr: np.ndarray) -> np.ndarray:
     n_elems = 1 if dst_arr.ndim <= 2 else dst_arr.shape[2]
@@ -71,33 +76,7 @@ def ml_orth_transl(src_mat: np.ndarray, dst_arr: np.ndarray) -> np.ndarray:
 
 
 def orth_transl(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
-    __ABS_TOL = 1e-7
-    n_dims = dst_vec.shape[0]
-    src_vec = try_treat_as_real(src_vec)
-    dst_vec = try_treat_as_real(dst_vec)
-    dst_squared_norm = np.sum(dst_vec * dst_vec)
-    src_squared_norm = np.sum(src_vec * src_vec)
-
-    if dst_squared_norm == 0.0:
-        throw_error('wrongInput:dst_zero', 'destination vectors are expected to be non-zero')
-    if src_squared_norm == 0.0:
-        throw_error('wrongInput:src_zero', 'source vectors are expected to be non-zero')
-
-    dst_vec = dst_vec / np.sqrt(dst_squared_norm)
-    src_vec = src_vec / np.sqrt(src_squared_norm)
-
-    scal_prod = np.sum(src_vec * dst_vec)
-    s_val = np.sqrt(np.maximum(1.0 - scal_prod * scal_prod, 0.0))
-    q_mat = np.zeros((n_dims, 2), dtype=np.float64)
-    q_mat[:, 0] = np.squeeze(dst_vec)
-    if np.abs(s_val) > __ABS_TOL:
-        q_mat[:, 1] = np.squeeze((src_vec - scal_prod * dst_vec) / s_val)
-    else:
-        q_mat[:, 1] = 0.0
-
-    s_mat = np.array([[scal_prod - 1.0, s_val], [-s_val, scal_prod - 1.0]], dtype=np.float64)
-    o_mat = np.identity(n_dims, dtype=np.float64) + q_mat @ s_mat @ q_mat.T
-    return o_mat
+    pass
 
 
 def orth_transl_haus(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
@@ -120,7 +99,24 @@ def orth_transl_haus(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
 
 def orth_transl_max_dir(src_vec: np.ndarray, dst_vec: np.ndarray,
                         src_max_vec: np.ndarray, dst_max_vec: np.ndarray) -> np.ndarray:
-    pass
+    n_dims = src_vec.size
+    if n_dims > 1:
+        o_src_mat = orth_transl(np.concatenate((np.array([1]), np.zeros(n_dims - 1))), src_vec)
+        o_dst_mat = orth_transl(np.concatenate((np.array([1]), np.zeros(n_dims - 1))), dst_vec)
+        v0 = o_src_mat[:, 1:]
+        u0 = o_dst_mat[:, 1:]
+        a = o_src_mat[:, 0]
+        b = o_dst_mat[:, 0]
+        a1 = np.transpose(v0) @ src_max_vec
+        b1 = np.transpose(u0) @ dst_max_vec
+        o1_src_mat, r1_src_mat = np.linalg.qr(a1.reshape(-1,1), 'complete')
+        o1_dst_mat, r1_dst_mat = np.linalg.qr(b1.reshape(-1,1), 'complete')
+        if np.logical_xor(r1_src_mat[0, 0] > 0, r1_dst_mat[0, 0] > 0):
+            o1_dst_mat[:, 0] = -o1_dst_mat[:, 0]
+        o_mat = u0 @ o1_dst_mat @ np.transpose(o1_src_mat) @ np.transpose(v0) + (b.reshape(-1, 1)) * a
+    else:
+        o_mat = np.sign(src_vec)*np.sign(dst_vec)
+    return o_mat
 
 
 def orth_transl_max_tr(src_vec: np.ndarray, dst_vec: np.ndarray, max_mat: np.ndarray) -> np.ndarray:
@@ -238,3 +234,14 @@ def reg_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
     s_mat = np.diag(np.maximum(s_vec, reg_tol))
     res_mat = u_mat @ s_mat @ v_mat
     return res_mat
+
+def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
+    pass
+
+
+def sqrtm_pos(q_mat: np.ndarray, abs_tol: float) -> np.ndarray:
+    pass
+
+
+def try_treat_as_real(inp_mat:  np.ndarray, tol_val: float = np.finfo(float).eps) -> np.ndarray:
+    pass
