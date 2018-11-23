@@ -151,6 +151,7 @@ class TestTri:
         check_regress(v_0, f_0, depth - 1)
         check_vert(v_0)
         v_1, f_1 = sphere_tri(depth + 1)
+
         check_regress(v_1, f_1, depth)
         check_vert(v_1)
         [cf0, vol0] = convhull(v_0)
