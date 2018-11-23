@@ -351,4 +351,3 @@ class TestGen:
             c_arr = MatVector.r_multiply_by_vec(a_arr, b_arr, False)
             d_arr = MatVector.r_multiply_by_vec(a_arr, b_arr, True)
         assert "wrongInput:b_mat is expected to be 2-dimensional array" in str(e.value)
-

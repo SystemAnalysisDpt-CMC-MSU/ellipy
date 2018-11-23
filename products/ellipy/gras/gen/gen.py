@@ -48,7 +48,7 @@ class MatVector:
 
     @staticmethod
     def make_symmetric(data_arr: np.ndarray) -> np.ndarray:
-        ret_arr = 0.5 * (data_arr + MatVector.transpose(data_arr));
+        ret_arr = 0.5 * (data_arr + MatVector.transpose(data_arr))
         return ret_arr
 
     @staticmethod
@@ -81,7 +81,7 @@ class MatVector:
         ret_arr = np.zeros(data.shape + t.shape)
         for i in range(data_shape[0]):
             for j in range(data_shape[1]):
-                ret_arr[i, j, :] = MatVector.from_expression("[" + data[i, j] + "]", t_vec)[0, 0, :]
+                ret_arr[i, j, :] = MatVector.from_expression(data[i, j], t_vec)[0, 0, :]
         return ret_arr
 
     @staticmethod
@@ -96,7 +96,6 @@ class MatVector:
         size = first_val.shape
         ret_val = np.zeros((size[0], size[1], n_time_points))
         ret_val[:, :, 0] = first_val
-        f_val = 0.
         for i in range(1, n_time_points):
             # we have to be sure that the result is in fact a matrix
             # in case is't a vector (that is, res.shape = (n,) we expand
@@ -130,7 +129,7 @@ class MatVector:
                 for i in range(data_size):
                     res_array[:, :, i] = f(data_arr[:, :, i])
             else:
-                res_array = np.zeros((data_size), dtype=np.float64)
+                res_array = np.zeros(data_size, dtype=np.float64)
                 for i in range(data_size):
                     res_array[i] = f(data_arr[:, :, i])
         return res_array
@@ -172,7 +171,6 @@ class MatVector:
 
     @staticmethod
     def r_multiply_by_vec(a_arr: np.ndarray, b_mat: np.ndarray, use_sparse_matrix: bool = True) -> np.ndarray:
-        from ellipy.gen.common.common import throw_error
         if len(b_mat.shape) != 2:
             throw_error('wrongInput', 'b_mat is expected to be 2-dimensional array')
         n_rows = a_arr.shape[0]
@@ -182,12 +180,12 @@ class MatVector:
             i_ind = np.arange(0, n_cols * n_time_points)
             j_ind = np.repeat(range(n_time_points), n_cols)
             b_sparse = sp.csc_matrix((b_mat.T.flatten(), (i_ind, j_ind)), shape=(n_cols * n_time_points, n_time_points))
-            c_mat = a_arr.reshape(n_rows, n_cols * n_time_points, order='F') @ b_sparse
+            ret_mat = a_arr.reshape(n_rows, n_cols * n_time_points, order='F') @ b_sparse
         else:
-            c_mat = np.zeros((n_rows, n_time_points))
+            ret_mat = np.zeros((n_rows, n_time_points))
             for i_time_point in range(n_time_points):
-                c_mat[:, i_time_point] = a_arr[:, :, i_time_point] @ b_mat[:, i_time_point]
-        return c_mat
+                ret_mat[:, i_time_point] = a_arr[:, :, i_time_point] @ b_mat[:, i_time_point]
+        return ret_mat
 
     @staticmethod
     def r_multiply(a_arr: np.ndarray, b_arr: np.ndarray, c_arr: np.array = None,
@@ -220,6 +218,8 @@ class MatVector:
             b_shape += (1,)
         if c_arr is None:
             is_binary = True
+            n_c_rows = None
+            n_c_cols = None
         else:
             c_shape = c_arr.shape
             n_c_rows = c_shape[0]
@@ -232,38 +232,38 @@ class MatVector:
         if use_sparse:
             a_mat = np.reshape(a_arr, (n_a_rows, n_a_cols * n_time_points), order='F')
             if is_binary:
-                d_mat = a_mat @ get_sparse_mat(b_arr)
-                d_mat = np.reshape(d_mat, (n_a_rows, n_b_cols, n_time_points), order='F')
+                res_mat = a_mat @ get_sparse_mat(b_arr)
+                res_mat = np.reshape(res_mat, (n_a_rows, n_b_cols, n_time_points), order='F')
             else:
-                d_mat = a_mat @ get_sparse_mat(b_arr) @ get_sparse_mat(c_arr)
-                d_mat = np.reshape(d_mat, (n_a_rows, n_c_cols, n_time_points), order='F')
+                res_mat = a_mat @ get_sparse_mat(b_arr) @ get_sparse_mat(c_arr)
+                res_mat = np.reshape(res_mat, (n_a_rows, n_c_cols, n_time_points), order='F')
         else:
             if is_binary:
                 if is_a_scalar:
-                    d_mat = np.zeros((n_b_rows, n_b_cols, n_time_points))
+                    res_mat = np.zeros((n_b_rows, n_b_cols, n_time_points))
                 elif is_b_scalar:
-                    d_mat = np.zeros((n_a_rows, n_a_cols, n_time_points))
+                    res_mat = np.zeros((n_a_rows, n_a_cols, n_time_points))
                 else:
-                    d_mat = np.zeros((n_a_rows, n_b_cols, n_time_points))
+                    res_mat = np.zeros((n_a_rows, n_b_cols, n_time_points))
                 if b_shape[2] == n_time_points:
                     for i_time_point in range(n_time_points):
-                        d_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ b_arr[:, :, i_time_point]
+                        res_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ b_arr[:, :, i_time_point]
                 elif b_shape[2] == 1:
                     for i_time_point in range(n_time_points):
-                        d_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ b_arr
+                        res_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ b_arr
                 else:
                     throw_error('wrongInput', 'Incorrect size of b_arr')
             else:
                 if is_a_scalar and is_b_scalar:
-                    d_mat = np.zeros((n_c_rows, n_c_cols, n_time_points))
+                    res_mat = np.zeros((n_c_rows, n_c_cols, n_time_points))
                 elif is_a_scalar:
-                    d_mat = np.zeros((n_b_rows, n_c_cols, n_time_points))
+                    res_mat = np.zeros((n_b_rows, n_c_cols, n_time_points))
                 else:
-                    d_mat = np.zeros((n_a_rows, n_c_cols, n_time_points))
+                    res_mat = np.zeros((n_a_rows, n_c_cols, n_time_points))
                 for i_time_point in range(n_time_points):
-                    d_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ \
-                                                b_arr[:, :, i_time_point] @ c_arr[:, :, i_time_point]
-        return d_mat
+                    res_mat[:, :, i_time_point] = a_arr[:, :, i_time_point] @ \
+                                                  b_arr[:, :, i_time_point] @ c_arr[:, :, i_time_point]
+        return res_mat
 
 
 class SquareMatVector(MatVector):
