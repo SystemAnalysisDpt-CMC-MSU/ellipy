@@ -166,11 +166,7 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
             is_e_kept_vec = np.array([False] * n_edges)
             is_e_kept_vec[f2e_mat] = True
             ind_e_kept_vec = np.cumsum(is_e_kept_vec) - 1
-            if np.size(f2e_mat, 0) == 1:
-                # this is because f2e_mat becomes a column for 1 face in f2e_mat
-                f2e_mat = ind_e_kept_vec[f2e_mat]
-            else:
-                f2e_mat = ind_e_kept_vec[f2e_mat]
+            f2e_mat = ind_e_kept_vec[f2e_mat]
             e_mat = e_mat[is_e_kept_vec]
             e_length_vec = e_length_vec[is_e_kept_vec]
             n_edges = np.size(e_mat, 0)
