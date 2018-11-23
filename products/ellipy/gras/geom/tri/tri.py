@@ -13,26 +13,25 @@ def ell_tube_discr_tri(n_dim: int, m_dim: int) -> np.ndarray:
 
 
 def icosahedron() -> Tuple[np.ndarray, np.ndarray]:
-    __IND_VEC = np.array(np.arange(0, 5))
-    __Z_VEC = np.array([0.5] * 5)
-    pi = np.pi
+    __IND_VEC = np.arange(0, 5)
+    __Z_VEC = np.full((5,), 0.5)
     tau = (np.sqrt(5.0) + 1) / 2
     r = tau - 0.5
-    v_mat = np.ndarray(shape=(12, 3), dtype=float, buffer=np.zeros(shape=(12, 3)))
+    v_mat = np.zeros(shape=(12, 3), dtype=np.float64)
     v_mat[0][2] = 1.0
     v_mat[11][2] = -1.0
     #
-    alpha_vec = -pi / 5 + __IND_VEC * pi/2.5
+    alpha_vec = -np.pi / 5 + __IND_VEC * np.pi / 2.5
     v_mat[1+__IND_VEC] = np.column_stack((np.cos(alpha_vec)/r, np.sin(alpha_vec)/r, __Z_VEC/r))
     #
-    alpha_vec = __IND_VEC * pi/2.5
+    alpha_vec = __IND_VEC * np.pi / 2.5
     v_mat[6+__IND_VEC] = np.column_stack((np.cos(alpha_vec)/r, np.sin(alpha_vec)/r, -__Z_VEC/r))
-    f_mat = np.ndarray(shape=(20, 3), dtype=int, buffer=np.array([
+    f_mat = np.ndarray([
         [0, 1, 2],  [0, 2, 3],  [0, 3, 4],  [0, 4, 5],   [0, 5, 1],
         [1, 6, 2],  [2, 7, 3],  [3, 8, 4],  [4, 9, 5],   [5, 10, 1],
         [6, 7, 2],  [7, 8, 3],  [8, 9, 4],  [9, 10, 5],  [10, 6, 1],
         [6, 11, 7], [7, 11, 8], [8, 11, 9], [9, 11, 10], [10, 11, 6]
-    ]))
+    ], dtype=int)
     return v_mat, f_mat
 
 
@@ -60,12 +59,12 @@ def map_face_2_edge(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarr
     ind_f2e_vec = np.cumsum(ind_f2e_vec) - 1
     f_mat = f_mat[ind_f_vec]
     ind_edge_num_vec = \
-        np.reshape(+ 1 * np.all(np.equal(f_mat[:, [0, 1]], e_mat[ind_f2e_vec]), 1)
-                   - 1 * np.all(np.equal(f_mat[:, [1, 0]], e_mat[ind_f2e_vec]), 1)
-                   + 2 * np.all(np.equal(f_mat[:, [1, 2]], e_mat[ind_f2e_vec]), 1)
-                   - 2 * np.all(np.equal(f_mat[:, [2, 1]], e_mat[ind_f2e_vec]), 1)
-                   + 3 * np.all(np.equal(f_mat[:, [0, 2]], e_mat[ind_f2e_vec]), 1)
-                   - 3 * np.all(np.equal(f_mat[:, [2, 0]], e_mat[ind_f2e_vec]), 1), newshape=(3 * n_faces, ))
+        (+ 1 * np.all(np.equal(f_mat[:, [0, 1]], e_mat[ind_f2e_vec]), 1)
+         - 1 * np.all(np.equal(f_mat[:, [1, 0]], e_mat[ind_f2e_vec]), 1)
+         + 2 * np.all(np.equal(f_mat[:, [1, 2]], e_mat[ind_f2e_vec]), 1)
+         - 2 * np.all(np.equal(f_mat[:, [2, 1]], e_mat[ind_f2e_vec]), 1)
+         + 3 * np.all(np.equal(f_mat[:, [0, 2]], e_mat[ind_f2e_vec]), 1)
+         - 3 * np.all(np.equal(f_mat[:, [2, 0]], e_mat[ind_f2e_vec]), 1)).flatten()
     ind_sort_vec = np.lexsort((ind_f_vec, np.abs(ind_edge_num_vec)-1))
     ind_f2e_vec = ind_f2e_vec[ind_sort_vec]
     if n_faces > 1:
@@ -126,7 +125,7 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
                 # this is because is_e2part_vec(f2e_mat) produces a column-vector for one face
                 is_f2part_vec = np.any(is_e2orig_part_vec[f2e_mat])
 
-            # Readjust indices of partitioned edges
+            # Read just indices of partitioned edges
             f2e_part_mat = f2e_mat[is_f2part_vec]
             f2e_is_dir_part_mat = f2e_is_dir_mat[is_f2part_vec]
             is_e2part_vec = is_e2orig_part_vec
@@ -163,7 +162,7 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
             f_mat = f_mat[~is_f2part_vec]
             f2e_mat = f2e_mat[~is_f2part_vec]
             f2e_is_dir_mat = f2e_is_dir_mat[~is_f2part_vec]
-            is_e_kept_vec = np.array([False] * n_edges)
+            is_e_kept_vec = np.zeros((n_edges,), dtype=bool)
             is_e_kept_vec[f2e_mat] = True
             ind_e_kept_vec = np.cumsum(is_e_kept_vec) - 1
             f2e_mat = ind_e_kept_vec[f2e_mat]

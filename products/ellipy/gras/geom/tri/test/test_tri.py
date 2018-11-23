@@ -95,22 +95,22 @@ class TestTri:
         assert np.array_equal(v1_mat, v1_exp_mat)
         assert np.array_equal(f1_mat, f1_exp_mat)
         f_mat = np.array([2, 1, 0])
-        _, _, _ = self.aux_shrink_face_tri(v_mat, f_mat, 0, 1)
+        _, *_ = self.aux_shrink_face_tri(v_mat, f_mat, 0, 1)
         f_mat = np.array([1, 2, 0])
-        _, _, _ = self.aux_shrink_face_tri(v_mat, f_mat, 0, 1)
+        _, *_ = self.aux_shrink_face_tri(v_mat, f_mat, 0, 1)
         f_mat = np.array([2, 0, 1])
-        _, _, _ = self.aux_shrink_face_tri(v_mat, f_mat, 0, 1)
-        _, _, _ = self.aux_shrink_face_tri(v_mat, f_mat, 0, 4)
+        _, *_ = self.aux_shrink_face_tri(v_mat, f_mat, 0, 1)
+        _, *_ = self.aux_shrink_face_tri(v_mat, f_mat, 0, 4)
 
     def test_shrink_face_tri_3_faces(self):
         v_mat = self.__TRI2_VERT
         f_mat = self.__TRI2_FACE
-        _, _, _ = self.aux_shrink_face_tri(v_mat, f_mat, 0, 2)
+        _, *_ = self.aux_shrink_face_tri(v_mat, f_mat, 0, 2)
 
     def test_shrink_face_tri_2_face_1_part(self):
         v_mat = self.__TRI31_VERT
         f_mat = self.__TRI31_FACE
-        _, _, _ = self.aux_shrink_face_tri(v_mat, f_mat, np.sqrt(2) - 0.001, 1)
+        _, *_ = self.aux_shrink_face_tri(v_mat, f_mat, np.sqrt(2) - 0.001, 1)
 
     def test_shrink_face_tri_3_face_1_part(self):
         v_mat = self.__TRI3_VERT
@@ -118,7 +118,7 @@ class TestTri:
         f_vert_adjust_func: Callable[[np.ndarray], np.ndarray] = lambda x: x + ml.repmat(np.array([0, 0, 0.2]),
                                                                                          np.size(x, 0), 1)
         v1_mat, f1_mat, _ = self.aux_shrink_face_tri(v_mat, f_mat, np.sqrt(2) - 0.001, 1, f_vert_adjust_func)
-        _, _, _ = self.aux_shrink_face_tri(v1_mat, f1_mat, 0, 3, f_vert_adjust_func)
+        _, *_ = self.aux_shrink_face_tri(v1_mat, f1_mat, 0, 3, f_vert_adjust_func)
 
     def test_map_face_2_edge(self):
         f_mat = self.__TRI3_FACE
