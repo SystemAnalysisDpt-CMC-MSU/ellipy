@@ -1,4 +1,5 @@
 from ellipy.gras.geom.tri.tri import *
+from ellipy.gen.common.common import *
 import numpy as np
 from numpy import matlib as ml
 import scipy.io as sio
@@ -149,9 +150,9 @@ class TestTri:
                 v_reg_1 = cell_mat[curr_depth - 1, 0]
                 f_reg_1 = cell_mat[curr_depth - 1, 1]
                 check_vert(v_reg_1)
-                v_reg_1 = v_reg_1 / ml.repmat(np.sqrt(np.sum(v_reg_1 * v_reg_1, axis=1)), 1, 3)
-                assert np.array_equal(v_reg_1, v_1)
-                assert np.array_equal(f_reg_1, f_1)
+                v_reg_1 = v_reg_1 / ml.repmat(np.sqrt(np.sum(v_reg_1 * v_reg_1, axis=1).reshape(-1, 1)), 1, 3)
+                assert abs_rel_compare(v_reg_1, v_1, __MAX_TOL, None, lambda x: np.abs(x))
+                assert np.array_equal(f_reg_1, f_1 + 1)
 
             v0, f0 = sphere_tri(depth)
             check_regress(v0, f0, depth)
@@ -161,10 +162,10 @@ class TestTri:
             check_regress(v1, f1, depth + 1)
             check_vert(v1)
             hull_0 = ConvexHull(v0)
-            cf0 = hull_0.vertices
+            cf0 = hull_0.simplices
             vol0 = hull_0.volume
             hull_1 = ConvexHull(v1)
-            cf1 = hull_1.vertices
+            cf1 = hull_1.simplices
             vol1 = hull_1.volume
             assert vol1 > vol0
             assert vol1 < np.pi * 4 / 3
@@ -182,8 +183,22 @@ class TestTri:
         v_mat = sphere_tri_ext(__dim, __N_POINTS)
         assert v_mat.shape[0] == __N_POINTS
         __dim = 3
-        v_mat = sphere_tri_ext(__dim, __N_POINTS)
+        v_mat, _ = sphere_tri_ext(__dim, __N_POINTS)
         assert v_mat.shape[0] == __RIGHT_POINTS_3D
+
+    def test_icosahedron(self):
+        __MAX_TOL = 1e-13
+        loaded_info = sio.loadmat(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_inp_vmat.mat'))
+        v_mat = loaded_info['vMat']
+
+        loaded_info = sio.loadmat(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_inp_fmat.mat'))
+        f_mat = loaded_info['fMat']
+
+        v_mat_py, f_mat_py = icosahedron()
+        assert abs_rel_compare(v_mat_py, v_mat, __MAX_TOL, None, lambda x: np.abs(x))
+        assert np.array_equal(f_mat, f_mat_py + 1)
 
     def test_shrink_face_tri(self):
         pass
