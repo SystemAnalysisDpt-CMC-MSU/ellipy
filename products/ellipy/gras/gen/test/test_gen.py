@@ -318,8 +318,8 @@ class TestGen:
 
         loaded_data = scipy.io.loadmat(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'matvector_data.mat'))
         a_arr = loaded_data['aArray']
-        b_mat = a_arr[:, :, 1]
-        b_arr = a_arr[:, :, 2:]
+        b_mat = a_arr[:, :, 0]
+        b_arr = a_arr[:, :, 1:]
         res_mat = MatVector.r_multiply(a_arr, a_arr)
         exp_mat = np.zeros(a_arr.shape)
         for i in range(a_arr.shape[2]):
@@ -330,8 +330,7 @@ class TestGen:
             exp_mat[:, :, i] = a_arr[:, :, i] @ b_mat
         check(res_mat, exp_mat)
         with pytest.raises(Exception) as e:
-            b_mat = np.array([[[1, 2, 3, 0], [3, 4, 5, 0]], [[5, 6, 7, 0], [7, 8, 9, 0]]], dtype=np.float64)
-            _ = MatVector.r_multiply(a_arr, b_mat)
+            _ = MatVector.r_multiply(a_arr, b_arr)
         assert 'wrongInput:Incorrect size of b_arr' in str(e.value)
 
     def test_compare_mat_vector_multiply(self):
@@ -347,16 +346,18 @@ class TestGen:
         c_arr = MatVector.r_multiply(a_arr, a_arr, use_sparse_matrix=False)
         d_arr = MatVector.r_multiply(a_arr, a_arr, use_sparse_matrix=True)
         check(c_arr, d_arr)
-        c_arr = MatVector.r_multiply(a_arr[1:5,1:6,:], a_arr[1:6,1:7,:], a_arr[1:7,1:8,:],  use_sparse_matrix=False)
-        d_arr = MatVector.r_multiply(a_arr[1:5,1:6,:], a_arr[1:6,1:7,:], a_arr[1:7,1:8,:],  use_sparse_matrix=True)
+        c_arr = MatVector.r_multiply(a_arr[0:5, 0:6, :], a_arr[0:6, 0:7, :], a_arr[0:7, 0:8, :],
+                                     use_sparse_matrix=False)
+        d_arr = MatVector.r_multiply(a_arr[0:5, 0:6, :], a_arr[0:6, 0:7, :], a_arr[0:7, 0:8, :],
+                                     use_sparse_matrix=True)
         check(c_arr, d_arr)
         c_arr = MatVector.r_multiply(a_arr, b_mat, use_sparse_matrix=False)
         d_arr = MatVector.r_multiply(a_arr, b_mat, use_sparse_matrix=True)
         check(c_arr, d_arr)
-        c_arr = MatVector.r_multiply_by_vec(a_arr[1:7, 1:10, 1:100], b_mat[1:10, 1:100], False)
-        d_arr = MatVector.r_multiply_by_vec(a_arr[1:7, 1:10, 1:100], b_mat[1:10, 1:100], True)
+        c_arr = MatVector.r_multiply_by_vec(a_arr[0:7, 0:10, 0:100], b_mat[0:10, 0:100], False)
+        d_arr = MatVector.r_multiply_by_vec(a_arr[0:7, 0:10, 0:100], b_mat[0:10, 0:100], True)
         check(c_arr, d_arr)
-        assert np.allclose(c_arr, d_arr)
+
         with pytest.raises(Exception) as e:
             b_arr = np.array([1, 2]).T
             _ = MatVector.r_multiply_by_vec(a_arr, b_arr, False)
