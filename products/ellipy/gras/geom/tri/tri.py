@@ -7,12 +7,30 @@ from ellipy.gras.geom.geom import circle_part
 
 
 def ell_tube_2_tri(n_e_points: int, n_points: int) -> np.ndarray:
-    pass
+    
+    td         = np.arange(1, n_points + 1)
+    I          = np.arange(1, n_e_points)
+    adtime     = td[:-1]
+    ttime_data = adtime*n_e_points
+    adtime     = (adtime - 1)*n_e_points
+    adtime     = np.tile(adtime, (n_e_points - 1, 1))
+    Ie         = np.cumsum(np.tile(np.ones((1, n_points - 1)), (n_e_points - 1, 1)), 0) + adtime
+    Ie         = Ie.transpose().flatten()
+
+    part1_facet_data_1 = np.vstack((Ie, Ie + 1, Ie + 1 + n_e_points)).T
+    part1_facet_data_2 = np.vstack((Ie+1+n_e_points, Ie+n_e_points, Ie)).T
+    part2_facet_data_1 = np.vstack((ttime_data, ttime_data+1-n_e_points, ttime_data+1)).T
+    part2_facet_data_2 = np.vstack((ttime_data+1, ttime_data+n_e_points, ttime_data)).T
+
+    facets             = np.vstack((part1_facet_data_1, part1_facet_data_2, part2_facet_data_1, part2_facet_data_2))
+
+  
+
 
 
 def ell_tube_discr_tri(n_dim: int, m_dim: int) -> np.ndarray:
-    pass
-
+    return np.tile(nDim * np.arange(0,mDim).T, ([nDim + 1, 1])).T + np.tile(np.hstack((np.arange(0,nDim), 0)), ([mDim, 1])) 
+    #repmat(nDim * [0:(mDim-1)].T, 1, nDim + 1) + repmat([1:nDim, 1], mDim, 1)
 
 def icosahedron() -> Tuple[np.ndarray, np.ndarray]:
     __IND_VEC = np.arange(0, 5)
