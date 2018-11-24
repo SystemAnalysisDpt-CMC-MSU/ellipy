@@ -26,7 +26,7 @@ def icosahedron() -> Tuple[np.ndarray, np.ndarray]:
     #
     alpha_vec = __IND_VEC * np.pi / 2.5
     v_mat[6+__IND_VEC] = np.column_stack((np.cos(alpha_vec)/r, np.sin(alpha_vec)/r, -__Z_VEC/r))
-    f_mat = np.ndarray([
+    f_mat = np.array([
         [0, 1, 2],  [0, 2, 3],  [0, 3, 4],  [0, 4, 5],   [0, 5, 1],
         [1, 6, 2],  [2, 7, 3],  [3, 8, 4],  [4, 9, 5],   [5, 10, 1],
         [6, 7, 2],  [7, 8, 3],  [8, 9, 4],  [9, 10, 5],  [10, 6, 1],
