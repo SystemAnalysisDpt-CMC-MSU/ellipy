@@ -1,6 +1,8 @@
 from ellipy.gras.gen.gen import *
 from typing import List
 import numpy as np
+import scipy.io
+import os
 import pytest
 
 
@@ -308,43 +310,52 @@ class TestGen:
         assert np.allclose(exp_mat - res_mat, np.zeros((2, 2, 1)), atol=__MAX_TOL)
 
     def test_r_multiply(self):
-        a_arr = np.array([[[1, 2, 3], [3, 4, 5]], [[5, 6, 7], [7, 8, 9]]], dtype=np.float64)
-        b_mat = np.array([[5, 4, 3], [2, 3, 1]], dtype=np.float64)
+        __CALC_PRECISION__ = 1e-5
+
+        def check(l_inp: np.ndarray, r_inp: np.ndarray):
+            res = l_inp - r_inp
+            assert (np.max(np.abs(res).flatten()) < __CALC_PRECISION__)
+
+        loaded_data = scipy.io.loadmat(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'matvector_data.mat'))
+        a_arr = loaded_data['aArray']
+        b_mat = a_arr[:, :, 1]
+        b_arr = a_arr[:, :, 2:]
         res_mat = MatVector.r_multiply(a_arr, a_arr)
         exp_mat = np.zeros(a_arr.shape)
         for i in range(a_arr.shape[2]):
             exp_mat[:, :, i] = a_arr[:, :, i] @ a_arr[:, :, i]
-        assert np.allclose(res_mat, exp_mat)
+        check(res_mat, exp_mat)
         res_mat = MatVector.r_multiply(a_arr, b_mat)
-        exp_mat = np.zeros((a_arr.shape[0], b_mat.shape[1], a_arr.shape[2]))
         for i in range(a_arr.shape[2]):
             exp_mat[:, :, i] = a_arr[:, :, i] @ b_mat
-        assert np.allclose(res_mat, exp_mat)
+        check(res_mat, exp_mat)
         with pytest.raises(Exception) as e:
             b_mat = np.array([[[1, 2, 3, 0], [3, 4, 5, 0]], [[5, 6, 7, 0], [7, 8, 9, 0]]], dtype=np.float64)
             _ = MatVector.r_multiply(a_arr, b_mat)
         assert 'wrongInput:Incorrect size of b_arr' in str(e.value)
 
     def test_compare_mat_vector_multiply(self):
-        a_arr = np.array([[[1, 2, 3], [3, 4, 5]], [[0, 6, 7], [7, 8, 9]]], dtype=np.float64)
-        b_arr = np.array([[[3, 2, 7], [9, 40, 0]], [[0, 0, 21], [-4, 9, 11]]], dtype=np.float64)
-        b_mat = np.array([[5, 4, 3], [2, 3, 1]], dtype=np.float64)
+        __CALC_PRECISION__ = 1e-5
+
+        def check(l_inp: np.ndarray, r_inp: np.ndarray):
+            res = l_inp - r_inp
+            assert (np.max(np.abs(res).flatten()) < __CALC_PRECISION__)
+
+        loaded_data = scipy.io.loadmat(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'matvector_data.mat'))
+        a_arr = loaded_data['aArray']
+        b_mat = a_arr[1, :, :].squeeze()
         c_arr = MatVector.r_multiply(a_arr, a_arr, use_sparse_matrix=False)
         d_arr = MatVector.r_multiply(a_arr, a_arr, use_sparse_matrix=True)
-        assert np.allclose(c_arr, d_arr)
-        c_arr = MatVector.r_multiply(a_arr, b_arr, a_arr, use_sparse_matrix=False)
-        d_arr = MatVector.r_multiply(a_arr, b_arr, a_arr, use_sparse_matrix=True)
-        assert np.allclose(c_arr, d_arr)
+        check(c_arr, d_arr)
+        c_arr = MatVector.r_multiply(a_arr[1:5,1:6,:], a_arr[1:6,1:7,:], a_arr[1:7,1:8,:],  use_sparse_matrix=False)
+        d_arr = MatVector.r_multiply(a_arr[1:5,1:6,:], a_arr[1:6,1:7,:], a_arr[1:7,1:8,:],  use_sparse_matrix=True)
+        check(c_arr, d_arr)
         c_arr = MatVector.r_multiply(a_arr, b_mat, use_sparse_matrix=False)
         d_arr = MatVector.r_multiply(a_arr, b_mat, use_sparse_matrix=True)
-        assert np.allclose(c_arr, d_arr)
-        c_arr = MatVector.r_multiply_by_vec(a_arr, b_mat, False)
-        d_arr = MatVector.r_multiply_by_vec(a_arr, b_mat, True)
-        assert np.allclose(c_arr, d_arr)
-        a_arr = np.expand_dims(a_arr[:, :, 0], 2)
-        b_arr = np.array([[1, 2]]).T
-        c_arr = MatVector.r_multiply_by_vec(a_arr, b_arr, False)
-        d_arr = MatVector.r_multiply_by_vec(a_arr, b_arr, True)
+        check(c_arr, d_arr)
+        c_arr = MatVector.r_multiply_by_vec(a_arr[1:7, 1:10, 1:100], b_mat[1:10, 1:100], False)
+        d_arr = MatVector.r_multiply_by_vec(a_arr[1:7, 1:10, 1:100], b_mat[1:10, 1:100], True)
+        check(c_arr, d_arr)
         assert np.allclose(c_arr, d_arr)
         with pytest.raises(Exception) as e:
             b_arr = np.array([1, 2]).T
