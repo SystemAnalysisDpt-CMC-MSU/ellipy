@@ -295,7 +295,7 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
     else:
         return v_mat, f_mat
 
-        
+
 def sphere_tri(depth: int) -> Tuple[np.ndarray, np.ndarray]:
     def normvert(x: np.ndarray) -> np.ndarray:
         return x / ml.repmat(np.sqrt(np.sum(x * x, 1)).reshape(-1, 1), 1, 3)
@@ -429,23 +429,23 @@ def is_tri_equal(v1_mat: np.ndarray, f1_mat: np.ndarray,
     
 def sphere_tri_ext(n_dim: int, n_points: int, return_f_grid: bool = False)\
         -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-    def spherebndr_2d(n_points: int, return_f_vec: bool = False) -> \
+    def spherebndr_2d(n_points_2d: int, return_f_vec: bool = False) -> \
             Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        bp_mat = circle_part(n_points)
+        bp_mat = circle_part(n_points_2d)
         if return_f_vec:
-            f_vec = np.ndarray(shape=(2, n_points),
-                               buffer=np.array([np.arange(1, n_points + 1),
-                                                np.arange(2, n_points + 2)]), dtype=int).T
+            f_vec = np.ndarray(shape=(2, n_points_2d),
+                               buffer=np.array([np.arange(1, n_points_2d + 1),
+                                                np.arange(2, n_points_2d + 2)]), dtype=int).T
             f_vec[n_points - 1, 1] = 1
             return bp_mat, f_vec
         return bp_mat
 
-    def spherebndr_3d(n_points: int) -> Tuple[np.ndarray, np.ndarray]:
-        sphere_triang_num = calc_depth(n_points)
+    def spherebndr_3d(n_points_3d: int) -> Tuple[np.ndarray, np.ndarray]:
+        sphere_triang_num = calc_depth(n_points_3d)
         bp_mat, f_mat = sphere_tri(sphere_triang_num)
         return bp_mat, f_mat
 
-    def calc_depth(n_points: int) -> int:
+    def calc_depth(num_points: int) -> int:
         # Initial icosaeder parameters:
         __VERTICES_NUM = 12
         __FACES_NUM = 20
@@ -461,7 +461,7 @@ def sphere_tri_ext(n_dim: int, n_points: int, return_f_grid: bool = False)\
             vert_num = vert_num + edge_num
             edge_num = 2 * edge_num + 3 * face_num
             face_num = 4 * face_num
-            is_stop = vert_num >= n_points
+            is_stop = vert_num >= num_points
         triang_depth = cur_depth
         return triang_depth
 
