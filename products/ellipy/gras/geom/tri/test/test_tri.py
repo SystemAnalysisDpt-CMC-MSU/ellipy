@@ -1,7 +1,9 @@
 from ellipy.gras.geom.tri.tri import *
-from ellipy.gras.geom.geom import *
 import numpy as np
 from numpy import matlib as ml
+import scipy.io as sio
+import os
+from scipy.spatial import ConvexHull
 
 
 class TestTri:
@@ -135,35 +137,43 @@ class TestTri:
 
     def test_sphere_tri(self):
         def check(depth):
-            v_0, f_0 = sphere_tri(depth)
-        def check_regress(v1, f1, depth):
-            [vReg1, fReg1] = gras.geom.tri.test.srebuild3d(depth);
-            check_vert(vReg1)
-            vReg1 = vReg1 / repmat(realsqrt(sum(vReg1*vReg1, 2)), 1, 3)
-            [isPos, reportStr] = gras.geom.tri.istriequal(vReg1, fReg1, v1, f1, MAX_TOL)
-            mlunitext.assert_equals(true, isPos, reportStr)
-        def check_vert(v):
-            normVec = realsqrt(sum(v*v, 2))
-            isPos = max(abs(normVec - 1)) <= MAX_TOL
-            mlunitext.assert_equals(true, isPos,
-                                    'not all vertices are on the unit sphere')
-        check_regress(v_0, f_0, depth - 1)
-        check_vert(v_0)
-        v_1, f_1 = sphere_tri(depth + 1)
+            def check_vert(v):
+                norm_vec = np.sqrt(np.sum(v * v, axis=1))
+                is_pos = np.max(np.abs(norm_vec - 1)) <= __MAX_TOL
+                assert is_pos, 'not all vertices are on the unit sphere'
 
-        check_regress(v_1, f_1, depth)
-        check_vert(v_1)
-        [cf0, vol0] = convhull(v_0)
-        [cf1, vol1] = convhull(v_1)
-        assert vol1 > vol0
-        assert vol1 < pi * 4 / 3
-        assert cf0.shape[0] * 4 == cf1.shape[0]
+            def check_regress(v_1, f_1, curr_depth):
+                loaded_info = sio.loadmat(
+                    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_input.mat'))
+                cell_mat = loaded_info['cell_mat']
+                v_reg_1 = cell_mat[curr_depth - 1, 0]
+                f_reg_1 = cell_mat[curr_depth - 1, 1]
+                check_vert(v_reg_1)
+                v_reg_1 = v_reg_1 / ml.repmat(np.sqrt(np.sum(v_reg_1 * v_reg_1, axis=1)), 1, 3)
+                assert np.array_equal(v_reg_1, v_1)
+                assert np.array_equal(f_reg_1, f_1)
+
+            v0, f0 = sphere_tri(depth)
+            check_regress(v0, f0, depth)
+            check_vert(v0)
+            #
+            v1, f1 = sphere_tri(depth + 1)
+            check_regress(v1, f1, depth + 1)
+            check_vert(v1)
+            hull_0 = ConvexHull(v0)
+            cf0 = hull_0.vertices
+            vol0 = hull_0.volume
+            hull_1 = ConvexHull(v1)
+            cf1 = hull_1.vertices
+            vol1 = hull_1.volume
+            assert vol1 > vol0
+            assert vol1 < np.pi * 4 / 3
+            assert cf0.shape[0] * 4 == cf1.shape[0]
 
         __MAX_TOL = 1e-13
         __MAX_DEPTH = 4
-        for curDepth in np.arange(1, __MAX_DEPTH + 1):
-            check(curDepth)
-
+        for cur_depth in np.arange(1, __MAX_DEPTH + 1):
+            check(cur_depth)
 
     def test_sphere_tri_ext(self):
         __dim = 2
@@ -174,7 +184,6 @@ class TestTri:
         __dim = 3
         v_mat = sphere_tri_ext(__dim, __N_POINTS)
         assert v_mat.shape[0] == __RIGHT_POINTS_3D
-
 
     def test_shrink_face_tri(self):
         pass
