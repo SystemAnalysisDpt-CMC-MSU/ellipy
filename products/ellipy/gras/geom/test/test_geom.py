@@ -1,7 +1,6 @@
 from ellipy.gras.geom.geom import *
 import numpy as np
 
-
 class TestGeom:
     def test_circle_part(self):
         __CALC_PRECISION = 1e-14
@@ -33,14 +32,15 @@ class TestGeom:
 
 
     def test_sphere_part(self):
-            CALC_PRECISION = 1e-14;
+        CALC_PRECISION = 1e-14;
+        
+        num_points = np.array([1,2,3,20,21,22,41,42,43,100]);
+        
+        for i in range(0, num_points.shape[0]):
+            p_mat = sphere_part(num_points[i])
+            norm_vec = np.sqrt(sum(p_mat * p_mat, 1))
             
-            num_points = np.array([1,2,3,20,21,22,41,42,43,100]);
+            assert p_mat.shape[0] == num_points[i]
+            assert p_mat.shape[1] == 3
+            assert all(np.abs(norm_vec - 1) < CALC_PRECISION)
             
-            for i in range(0, num_points.shape[0]):
-                p_mat = sphere_part(num_points[i])
-                norm_vec = np.sqrt(sum(p_mat * p_mat, 1))
-                
-                assert p_mat.shape[0] == num_points[i]
-                assert p_mat.shape[1] == 3
-                assert all(np.abs(norm_vec - 1) < CALC_PRECISION)
