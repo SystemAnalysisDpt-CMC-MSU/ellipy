@@ -255,11 +255,9 @@ class TestLaBasic:
         par_1 = 5.0 * np.eye(3, dtype=np.float64)
         assert np.array_equal(reg_mat(diag_mat, 5.0), par_1), __ERROR_MSG
         ress_mat = reg_mat(np.array([[3.0]]), 1.0)
-
         assert np.array_equal(ress_mat, np.array([[3.]])), __ERROR_MSG
         ress_mat = reg_mat(np.array([[3.0]]), 1.0 + np.finfo(float).eps * 1.0j / 5.0)
         assert np.array_equal(ress_mat, np.array([[3.0]])), __ERROR_MSG
-
         with pytest.raises(Exception) as e:
             reg_mat(diag_mat, -1.)
         assert 'wrongInput' in str(e.value)

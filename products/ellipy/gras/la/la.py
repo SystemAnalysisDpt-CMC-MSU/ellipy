@@ -157,7 +157,6 @@ def try_treat_as_real(inp_mat:  Union[bool, int, float, complex, np.ndarray], to
 def reg_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
     if not(np.isscalar(reg_tol) and is_numeric(reg_tol) and reg_tol > 0):
             throw_error('wrongInput:reg_tol', 'reg_tol must be a positive numeric scalar')
-
     reg_tol = try_treat_as_real(reg_tol)
     u_mat, s_mat, v_mat = np.linalg.svd(inp_mat)
     s_mat = np.diag(np.maximum(s_mat, reg_tol))
