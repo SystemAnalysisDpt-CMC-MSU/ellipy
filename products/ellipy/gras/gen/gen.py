@@ -376,7 +376,7 @@ class SymmetricMatVector(SquareMatVector):
         u_array, s_array = SymmetricMatVector.__array_svd(inp_mat_arr)
         uv_array = MatVector.r_multiply_by_vec(u_array, inp_vec_arr)
         if not np.ndim(inp_vec_arr) == 2:
-            throw_error('wronginput:inp_vec_arr ', 'inpVecArray is expected to be 2-dimensional array')
+            throw_error('wronginput:inp_vec_arr', 'inpVecArray is expected to be 2-dimensional array')
         m_size_vec = np.shape(s_array)
         v_size_vec = np.shape(uv_array)
         out_vec_array = np.zeros((m_size_vec[0], v_size_vec[1]), dtype=np.float64)
@@ -405,7 +405,7 @@ class SymmetricMatVector(SquareMatVector):
             b_inv_mat = np.diag(1 / np.diag(s_array))
             out_vec = np.sum(((b_inv_mat @ ua_array) * ua_array), axis=0)
         else:
-            out_vec = np.zeros((n_elems), dtype=np.float64)
+            out_vec = np.zeros(n_elems, dtype=np.float64)
             for i_elem in range(n_elems):
                 b_inv_mat = np.diag(1 / np.diag(s_array[:, :, i_elem]))
                 out_vec[i_elem] = (ua_array[:, i_elem].T @ (b_inv_mat @ ua_array[:, i_elem]))

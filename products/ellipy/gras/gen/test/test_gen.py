@@ -390,88 +390,29 @@ class TestGen:
         __MAX_TOL = 1e-10
         a_mat, b_mat, c_vec = TestGen.__aux_symmetric_mat_vector_arrays()
         res_vec = SymmetricMatVector.r_svd_multiply_by_vec(a_mat, c_vec)
-
-        def check():
-            size_vec = np.shape(res_vec)
-            n_points = size_vec[-1]
-            out_vec = np.zeros(size_vec, dtype=np.float64)
-            for i in range(n_points):
-                u_mat, s_mat = la.eigh(a_mat[:, :, i])
-                u_mat = np.diag(u_mat)
-                u_mat, s_mat = s_mat, u_mat
-                arg_2_mat = c_vec[:, i]
-                temp_vec = u_mat.T @ s_mat @ u_mat @ arg_2_mat
-                out_vec[:, i] = temp_vec
-            res = res_vec - out_vec
-            assert np.allclose(res, np.zeros((2, 2, 1)), atol=__MAX_TOL)
-
-        check()
+        #
+        TestGen.__aux_symmetric_mat_vector_check(lambda x: x, a_mat, c_vec, res_vec, False, 1, __MAX_TOL)
 
     def test_lr_svd_multiply(self):
         __MAX_TOL = 1e-10
         a_mat, b_mat, c_vec = TestGen.__aux_symmetric_mat_vector_arrays()
         res_vec = SymmetricMatVector.lr_svd_multiply(a_mat, b_mat)
-
-        def check():
-            size_vec = np.shape(res_vec)
-            n_points = size_vec[-1]
-            out_vec = np.zeros(size_vec, dtype=np.float64)
-            for i in range(n_points):
-                u_mat, s_mat = la.eigh(a_mat[:, :, i])
-                u_mat = np.diag(u_mat)
-                u_mat, s_mat = s_mat, u_mat
-                arg_2_mat = b_mat[:, :, i]
-                t_vec = u_mat @ arg_2_mat
-                temp_vec = t_vec.T @ s_mat @ t_vec
-                out_vec[:, :, i] = temp_vec
-            res = res_vec - out_vec
-            assert np.allclose(res, np.zeros((3, 3, 2)), atol=__MAX_TOL)
-
-        check()
+        #
+        TestGen.__aux_symmetric_mat_vector_check(lambda x: x, a_mat, b_mat, res_vec, True, 2, __MAX_TOL)
 
     def test_lr_svd_multiply_by_vec(self):
         __MAX_TOL = 1e-10
         a_mat, b_mat, c_vec = TestGen.__aux_symmetric_mat_vector_arrays()
         res_vec = SymmetricMatVector.lr_svd_multiply_by_vec(a_mat, c_vec)
-
-        def check():
-            size_vec = np.shape(res_vec)
-            n_points = size_vec[-1]
-            out_vec = np.zeros(size_vec, dtype=np.float64)
-            for i in range(n_points):
-                u_mat, s_mat = la.eigh(a_mat[:, :, i])
-                u_mat = np.diag(u_mat)
-                u_mat, s_mat = s_mat, u_mat
-                arg_2_mat = c_vec[:, i]
-                t_vec = u_mat @ arg_2_mat
-                temp_vec = t_vec.T @ s_mat @ t_vec
-                out_vec[:, i] = temp_vec
-            res = res_vec - out_vec
-            assert np.allclose(res, np.zeros((2, 1, 1)), atol=__MAX_TOL)
-
-        check()
+        #
+        TestGen.__aux_symmetric_mat_vector_check(lambda x: x, a_mat, c_vec, res_vec, True, 1, __MAX_TOL)
 
     def test_lr_svd_divide_vec(self):
         __MAX_TOL = 1e-10
         a_mat, b_mat, c_vec = TestGen.__aux_symmetric_mat_vector_arrays()
         res_vec = SymmetricMatVector.lr_svd_divide_vec(a_mat, c_vec)
-
-        def check():
-            size_vec = np.shape(res_vec)
-            n_points = size_vec[-1]
-            out_vec = np.zeros(size_vec, dtype=np.float64)
-            for i in range(n_points):
-                u_mat, s_mat = la.eigh(a_mat[:, :, i])
-                u_mat = np.diag(u_mat)
-                u_mat, s_mat = s_mat, u_mat
-                arg_2_mat = c_vec[:, i]
-                t_vec = u_mat @ arg_2_mat
-                temp_vec = t_vec.T @ la.inv(s_mat) @ t_vec
-                out_vec[i] = temp_vec
-            res = res_vec - out_vec
-            assert np.allclose(res, np.zeros((1, 2, 1)), atol=__MAX_TOL)
-
-        check()
+        #
+        TestGen.__aux_symmetric_mat_vector_check(lambda x: la.inv(x), a_mat, c_vec, res_vec, True, 3, __MAX_TOL)
 
     @staticmethod
     def __aux_symmetric_mat_vector_arrays() -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -486,3 +427,32 @@ class TestGen:
         b_mat[:, :, 0] = ([[4, 6, 1], [-6, 2, 4]])
         b_mat[:, :, 1] = ([[8, 3, 8], [4, 3, 7]])
         return a_mat, b_mat, c_vec
+
+    @staticmethod
+    def __aux_symmetric_mat_vector_check(fo_func, inp1_array, inp2_array, res_array, islr, isv, accuracy):
+        size_vec = np.shape(res_array)
+        n_points = size_vec[-1]
+        out_vec = np.zeros(size_vec, dtype=np.float64)
+        for i in range(n_points):
+            u_mat, s_mat = la.eigh(inp1_array[:, :, i])
+            u_mat = np.diag(u_mat)
+            u_mat, s_mat = s_mat, u_mat
+            if (isv == 1) or (isv == 3):
+                arg_2_mat = inp2_array[:, i]
+            else:
+                arg_2_mat = inp2_array[:, :, i]
+            #
+            if islr:
+                temp_mat = u_mat @ arg_2_mat
+                res_mat = temp_mat.T @ fo_func(s_mat) @ temp_mat
+            else:
+                res_mat = u_mat.T @ fo_func(s_mat) @ u_mat @ arg_2_mat
+            #
+            if isv == 1:
+                out_vec[:, i] = res_mat
+            elif isv == 3:
+                out_vec[i] = res_mat
+            else:
+                out_vec[:, :, i] = res_mat
+        res = out_vec - res_array
+        assert (np.max(np.abs(res).flatten()) < accuracy)
