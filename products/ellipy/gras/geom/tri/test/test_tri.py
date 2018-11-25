@@ -118,6 +118,8 @@ class TestTri:
         f_vert_adjust_func: Callable[[np.ndarray], np.ndarray] = lambda x: x + ml.repmat(np.array([0, 0, 0.2]),
                                                                                          np.size(x, 0), 1)
         v1_mat, f1_mat, _ = self.aux_shrink_face_tri(v_mat, f_mat, np.sqrt(2) - 0.001, 1, f_vert_adjust_func)
+        is_face_there_vec = is_face(f1_mat, np.array([[0, 5, 1], [0, 6, 2]]))
+        assert np.all(is_face_there_vec)
         _, *_ = self.aux_shrink_face_tri(v1_mat, f1_mat, 0, 3, f_vert_adjust_func)
 
     def test_map_face_2_edge(self):
@@ -132,3 +134,11 @@ class TestTri:
 
     def test_shrink_face_tri(self):
         pass
+
+
+    def test_is_face(self):
+        v_mat = self.__TRI3_VERT
+        f_mat = self.__TRI3_FACE
+        f_to_check_mat = np.vstack((np.array([[0, 4, 3]]), f_mat, np.array([[1, 4, 3]])))
+        is_face_there_vec = is_face(f_mat, f_to_check_mat)
+        assert np.array_equal(is_face_there_vec, np.array([False, True, True, True, False]))

@@ -1,7 +1,8 @@
-from typing import Tuple, Dict, Callable, Union
+from typing import Tuple, Dict, Callable, Union, List
 import numpy as np
 from numpy import matlib as ml
-from ellipy.gen.common.common import throw_error
+from ellipy.gen.common.common import throw_error, is_member
+from ellipy.gras.gen.gen import sort_rows_tol
 
 
 def ell_tube_2_tri(n_e_points: int, n_points: int) -> np.ndarray:
@@ -35,7 +36,7 @@ def icosahedron() -> Tuple[np.ndarray, np.ndarray]:
     return v_mat, f_mat
 
 
-def map_face_2_edge(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def get_face_edge_info(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     if f_mat.ndim == 1:
         if np.shape(f_mat) != (3,):
             throw_error('wrongInput:f_mat', 'The number of columns should be equal to 3')
@@ -52,6 +53,12 @@ def map_face_2_edge(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarr
     inv_idx = inv_idx[sort_idx_vec]
     ind_f_vec = ind_f_vec[sort_idx_vec]
     ind_shift_vec = np.bincount(inv_idx)
+    return f_mat, e_mat, ind_f_vec, ind_shift_vec
+
+
+def map_face_2_edge(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    f_mat, e_mat, ind_f_vec, ind_shift_vec = get_face_edge_info(f_mat)
+    n_faces = np.size(f_mat, 0)
     n_edges = np.size(e_mat, 0)
     ind_f2e_vec = np.zeros(shape=(np.sum(ind_shift_vec), 1), dtype=np.int32)
     ind_f2e_vec[0] = 1
@@ -294,3 +301,121 @@ def sphere_tri(depth: int) -> Tuple[np.ndarray, np.ndarray]:
 
 def sphere_tri_ext(n_dim: int, n_points: int) -> Tuple[np.ndarray, np.ndarray]:
     pass
+
+
+def is_face(f_mat: np.ndarray, f_to_check_mat: np.ndarray) -> np.ndarray:
+    def get_edge_attachements(
+            inp_f_num_list: List[np.ndarray],
+            inp_e_mat: np.ndarray, inp_check_e_mat: np.ndarray) -> List[np.ndarray]:
+        def as_void(arr):
+            arr = np.ascontiguousarray(arr)
+            return arr.view(np.dtype((np.void, arr.dtype.itemsize * arr.shape[-1])))
+
+        inp_check_e_mat = np.sort(inp_check_e_mat, axis=1)
+        void_e_mat, void_check_e_mat = map(as_void, (inp_e_mat, inp_check_e_mat))
+        is_edge_vec, ind_edge_vec = is_member(void_check_e_mat, void_e_mat)
+        out_f_num_list = list()
+        i_edge = 0
+        for i_check_edge in range(inp_check_e_mat.shape[0]):
+            if is_edge_vec[i_check_edge]:
+                out_f_num_vec = inp_f_num_list[ind_edge_vec[i_edge]]
+                i_edge += 1
+            else:
+                out_f_num_vec = np.empty((0,), dtype=np.int32)
+            out_f_num_list.append(out_f_num_vec)
+        return out_f_num_list
+
+    f_mat, e_mat, ind_f_vec, ind_shift_vec = get_face_edge_info(f_mat)
+    if ind_shift_vec.size == 1:
+        f_num_list = [ind_f_vec]
+    else:
+        f_num_list = np.split(ind_f_vec, np.cumsum(ind_shift_vec[:-1]))
+
+    f12_num_list = get_edge_attachements(f_num_list, e_mat, f_to_check_mat[:, [0, 1]])
+    f23_num_list = get_edge_attachements(f_num_list, e_mat, f_to_check_mat[:, [1, 2]])
+    f13_num_list = get_edge_attachements(f_num_list, e_mat, f_to_check_mat[:, [0, 2]])
+
+    def fnum_list_to_mat(inp_f_num_list: List[np.ndarray], def_vec: np.array) -> np.ndarray:
+        n_elems = len(inp_f_num_list)
+        l_vec = np.array([f_num_vec.size for f_num_vec in inp_f_num_list])
+        f_num_mat = np.tile(def_vec, (n_elems, 1))
+        is_one_elem_vec = l_vec == 1
+        if np.any(is_one_elem_vec):
+            f_num_mat[is_one_elem_vec, 0] = \
+                np.hstack(tuple([f_num_vec for f_num_vec, is_elem in
+                                 zip(inp_f_num_list, list(is_one_elem_vec)) if is_elem]))
+        is_two_elem_vec = l_vec == 2
+        if np.any(is_two_elem_vec):
+            f_num_mat[is_two_elem_vec, :] = \
+                np.vstack(tuple([f_num_vec for f_num_vec, is_elem in
+                                 zip(inp_f_num_list, list(is_two_elem_vec)) if is_elem]))
+        return f_num_mat
+
+    f12_num_mat = fnum_list_to_mat(f12_num_list, np.array([-121, -122]))
+    f23_num_mat = fnum_list_to_mat(f23_num_list, np.array([-231, -232]))
+    f13_num_mat = fnum_list_to_mat(f13_num_list, np.array([-131, -132]))
+
+    def intersect_mat(one_mat: np.ndarray, two_mat: np.ndarray, three_mat: np.ndarray) -> np.ndarray:
+        def flip_or_not(inp_mat: np.ndarray, is_flip: bool) -> np.ndarray:
+            if is_flip:
+                return np.fliplr(inp_mat)
+            else:
+                return inp_mat
+
+        comb_mat = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0],
+                             [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]])
+        n_combs = comb_mat.shape[0]
+        is_pos_res_vec = np.zeros((one_mat.shape[0],), dtype=bool)
+        for i_comb in range(n_combs):
+            is_flip_vec = comb_mat[i_comb]
+            flip_one_mat = flip_or_not(one_mat, is_flip_vec[0])
+            flip_two_mat = flip_or_not(two_mat, is_flip_vec[1])
+            flip_three_mat = flip_or_not(three_mat, is_flip_vec[2])
+            is_pos_res_vec = \
+                np.logical_or(
+                    is_pos_res_vec, np.any(np.logical_and(
+                        flip_one_mat == flip_two_mat, flip_two_mat == flip_three_mat), axis=1).flatten())
+        return is_pos_res_vec
+
+    return intersect_mat(f12_num_mat, f23_num_mat, f13_num_mat)
+
+
+def is_tri_equal(v1_mat: np.ndarray, f1_mat: np.ndarray,
+                 v2_mat: np.ndarray, f2_mat: np.ndarray, max_tol: float) -> Tuple[bool, str]:
+
+    n1_verts = v1_mat.shape[0]
+    n2_verts = v2_mat.shape[0]
+    is_pos = n1_verts == n2_verts
+
+    if is_pos:
+        n1_faces = f1_mat.shape[0]
+        n2_faces = f2_mat.shape[0]
+        is_pos = n1_faces == n2_faces
+        if is_pos:
+            v1_mat, _, ind_f1_vec = sort_rows_tol(v1_mat, max_tol)
+            v2_mat, _, ind_f2_vec = sort_rows_tol(v2_mat, max_tol)
+
+            f1_mat = ind_f1_vec[f1_mat]
+            f2_mat = ind_f2_vec[f2_mat]
+            real_tol = np.max(np.max(np.abs(v1_mat-v2_mat)))
+            is_pos = real_tol <= max_tol
+
+            if is_pos:
+                n_f1_unique = np.size(np.unique(f1_mat, axis=0), 0)
+                n_f2_unique = np.size(np.unique(f2_mat, axis=0), 0)
+                is_pos = n_f1_unique == n_f2_unique
+                if is_pos:
+                    is_pos = np.all(is_face(f2_mat, f1_mat))
+                    if is_pos:
+                        report_str = ''
+                    else:
+                        report_str = 'faces are different'
+                else:
+                    report_str = 'numbers of unique faces are different'
+            else:
+                report_str = 'vertices are different, real tol={}, exp tol={}'.format(real_tol, max_tol)
+        else:
+            report_str = 'number of faces is different'
+    else:
+        report_str = 'numbers of vertices are different'
+    return is_pos, report_str
