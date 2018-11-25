@@ -137,13 +137,13 @@ class TestTri:
         assert np.array_equal(f2e_is_dir_mat, f2e_exp_is_dir_mat)
 
     def test_sphere_tri(self):
-        def check(depth):
-            def check_vert(v):
+        def check(depth: int):
+            def check_vert(v: np.ndarray):
                 norm_vec = np.sqrt(np.sum(v * v, axis=1))
                 is_pos = np.max(np.abs(norm_vec - 1)) <= __MAX_TOL
                 assert is_pos, 'not all vertices are on the unit sphere'
 
-            def check_regress(v_1, f_1, curr_depth):
+            def check_regress(v_1: np.ndarray, f_1: np.ndarray, curr_depth: int):
                 loaded_info = sio.loadmat(
                     os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_input.mat'))
                 cell_mat = loaded_info['cell_mat']
@@ -200,13 +200,67 @@ class TestTri:
         assert abs_rel_compare(v_mat_py, v_mat, __MAX_TOL, None, lambda x: np.abs(x))
         assert np.array_equal(f_mat, f_mat_py + 1)
 
-    def test_shrink_face_tri(self):
-        pass
-
-
-    def test_is_face(self):
+	def test_is_face(self):
         v_mat = self.__TRI3_VERT
         f_mat = self.__TRI3_FACE
         f_to_check_mat = np.vstack((np.array([[0, 4, 3]]), f_mat, np.array([[1, 4, 3]])))
         is_face_there_vec = is_face(f_mat, f_to_check_mat)
         assert np.array_equal(is_face_there_vec, np.array([False, True, True, True, False]))
+
+    def test_shrink_face_tri(self):
+        __MAX_DIST = 0.5
+        __N_DATA_SETS = 2
+
+        def check_step_wise(v_inp_mat: np.ndarray, f_inp_mat: np.ndarray, max_tol: float, *args):
+            __MAX_TOL = 1e-14
+            v_res_mat, f_res_mat, s_stat = self.aux_shrink_face_tri(v_inp_mat, f_inp_mat, max_tol, *args)
+            n_steps = s_stat['n_steps']
+            if n_steps > 1:
+                v_1mat, f_1mat, _ = self.aux_shrink_face_tri(v_inp_mat, f_inp_mat, max_tol, n_steps - 1)
+                v2_mat, f2_mat, _ = self.aux_shrink_face_tri(v_1mat, f_1mat, max_tol, 1)
+                assert abs_rel_compare(v_res_mat, v2_mat, __MAX_TOL, None, lambda x: np.abs(x))
+                assert np.array_equal(f_res_mat, f2_mat)
+
+        def shrink(v_0_mat: np.ndarray, f_0_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+            # shrink faces
+            v_1_mat, f_1_mat, s1_stat = self.aux_shrink_face_tri(v_0_mat, f_0_mat, __MAX_DIST)
+            # Perform additional checks
+            v_2_mat, f_2_mat, s2_stat = self.aux_shrink_face_tri(v_0_mat, f_0_mat, __MAX_DIST,
+                                                                 s1_stat['n_steps'])
+            assert np.array_equal(v_1_mat, v_2_mat)
+            assert np.array_equal(f_1_mat, f_2_mat)
+            assert s1_stat.keys() == s2_stat.keys()
+            for key in s1_stat.keys():
+                np.array_equal(s1_stat[key], s2_stat[key])
+            check_step_wise(v_0_mat, f_0_mat, 0, 3)
+            check_step_wise(v_0_mat, f_0_mat, __MAX_DIST)
+            return v_1_mat, f_1_mat
+
+        for i_data_set in np.r_[__N_DATA_SETS:0:-1]:
+            loaded_info = sio.loadmat(
+                os.path.join(os.path.dirname(os.path.abspath(__file__)), 'inp%s.mat' % i_data_set))
+            v0_mat = loaded_info['v0']
+            f0_mat = loaded_info['f0']
+            v1_mat, f1_mat = shrink(v0_mat, f0_mat - 1)
+            # check that no vertices is deleted
+            is_old_verts_kept = np.all(is_member(v0_mat, v1_mat))
+            assert is_old_verts_kept
+            # check that all edges are short enough
+            ind_2_check = np.array([[0, 1], [0, 2], [1, 2]])
+            pos_edges = np.sort(np.reshape(f1_mat[:, ind_2_check], newshape=(-1, 2)))
+            e1_mat = np.unique(pos_edges, axis=0)
+            d_mat = v1_mat[e1_mat[:, 0], :] - v1_mat[e1_mat[:, 1], :]
+            max_edge_length = np.max(np.sqrt(np.sum(d_mat * d_mat, axis=1)))
+            assert max_edge_length <= __MAX_DIST
+            # regression test
+            loaded_info = sio.loadmat(
+                os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out%s.mat' % i_data_set))
+            s_out_v0 = v1_mat
+            s_out_f0 = f1_mat
+            se_out_v0 = loaded_info['v0']
+            se_out_f0 = loaded_info['f0']
+            #
+            # self.saveData(['out',num2str(iDataSet)],SOut)
+            #
+            assert np.array_equal(se_out_v0, s_out_v0)
+            assert np.array_equal(se_out_f0, s_out_f0)
