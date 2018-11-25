@@ -411,7 +411,7 @@ def is_tri_equal(v1_mat: np.ndarray, f1_mat: np.ndarray,
                 n_f2_unique = np.size(np.unique(f2_mat, axis=0), 0)
                 is_pos = n_f1_unique == n_f2_unique
                 if is_pos:
-                    is_pos = np.all(is_face(f2_mat, f1_mat)) and  np.all(is_face(f1_mat, f2_mat))
+                    is_pos = np.all(is_face(f2_mat, f1_mat)) and np.all(is_face(f1_mat, f2_mat))
                     if is_pos:
                         report_str = ''
                     else:
@@ -433,11 +433,10 @@ def sphere_tri_ext(n_dim: int, n_points: int, return_f_grid: bool = False)\
             Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         bp_mat = circle_part(n_points_2d)
         if return_f_vec:
-            f_vec = np.ndarray(shape=(2, n_points_2d),
-                               buffer=np.array([np.arange(1, n_points_2d + 1),
-                                                np.arange(2, n_points_2d + 2)]), dtype=int).T
-            f_vec[n_points - 1, 1] = 1
-            return bp_mat, f_vec
+            f_mat = np.vstack((np.arange(1, n_points_2d + 1),
+                               np.arange(2, n_points_2d + 2))).T
+            f_mat[n_points - 1, 1] = 1
+            return bp_mat, f_mat
         return bp_mat
 
     def spherebndr_3d(n_points_3d: int) -> Tuple[np.ndarray, np.ndarray]:

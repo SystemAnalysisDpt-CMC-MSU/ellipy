@@ -162,10 +162,14 @@ class TestTri:
             check_regress(v1, f1, depth + 1)
             check_vert(v1)
             hull_0 = ConvexHull(v0)
+            # noinspection PyUnresolvedReferences
             cf0 = hull_0.simplices
+            # noinspection PyUnresolvedReferences
             vol0 = hull_0.volume
             hull_1 = ConvexHull(v1)
+            # noinspection PyUnresolvedReferences
             cf1 = hull_1.simplices
+            # noinspection PyUnresolvedReferences
             vol1 = hull_1.volume
             assert vol1 > vol0
             assert vol1 < np.pi * 4 / 3
@@ -177,13 +181,13 @@ class TestTri:
             check(cur_depth)
 
     def test_sphere_tri_ext(self):
-        __dim = 2
         __N_POINTS = 500
         __RIGHT_POINTS_3D = 642
-        v_mat = sphere_tri_ext(__dim, __N_POINTS)
+        dim = 2
+        v_mat = sphere_tri_ext(dim, __N_POINTS)
         assert v_mat.shape[0] == __N_POINTS
-        __dim = 3
-        v_mat, _ = sphere_tri_ext(__dim, __N_POINTS)
+        dim = 3
+        v_mat, _ = sphere_tri_ext(dim, __N_POINTS)
         assert v_mat.shape[0] == __RIGHT_POINTS_3D
 
     def test_icosahedron(self):
@@ -263,7 +267,5 @@ class TestTri:
             se_out_v0 = loaded_info['v0']
             se_out_f0 = loaded_info['f0']
             #
-            # self.saveData(['out',num2str(iDataSet)],SOut)
-            #
-            is_pos_1, report_str_1 = is_tri_equal(se_out_v0, se_out_f0, s_out_v0, s_out_f0 + 1, 0)
-            assert is_pos_1, report_str_1
+            is_ok, rep_str = is_tri_equal(se_out_v0, se_out_f0 - 1, s_out_v0, s_out_f0, 0)
+            assert is_ok, rep_str
