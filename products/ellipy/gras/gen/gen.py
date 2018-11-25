@@ -310,7 +310,7 @@ class SquareMatVector(MatVector):
 
     @staticmethod
     def sqrtm_pos(data_arr: np.ndarray) -> np.ndarray:
-        from products.ellipy.gras.la.la import sqrtm_pos
+        from ellipy.gras.la.la import sqrtm_pos
         dim_num = data_arr.ndim
         if dim_num == 2:
             sqrt_data_array = sqrtm_pos(data_arr)
@@ -340,12 +340,11 @@ class SquareMatVector(MatVector):
                     res_data_arr[:, :, t] = np.nan
                 else:
                     res_data_arr[:, :, t] = data_arr[:, :, t]
-        print(res_data_arr)
         return res_data_arr
 
     @staticmethod
     def make_pos_definite_by_eig(data_arr: np.ndarray, value: float = 1e-12) -> np.ndarray:
-        from products.ellipy.gras.la.la import is_mat_symm
+        from ellipy.gras.la.la import is_mat_symm
         dim_num = data_arr.ndim
         size_vec = data_arr.shape
         res_data_arr = np.zeros(size_vec)
@@ -394,7 +393,7 @@ class SquareMatVector(MatVector):
                     for t in range(b_size_vec[2]):
                         out_array[:, :, t] = inp_a_arr @ inp_b_arr[:, :, t] @ inp_a_arr.T
                 else:
-                    throw_error('wrong_input', print('flag ' + flag + ' is not supported'))
+                    throw_error('wrong_input', 'flag ' + flag + ' is not supported')
             else:
                 if flag == 'R':
                     out_array = np.zeros((a_size_vec[1], a_size_vec[1], b_size_vec[2]))
@@ -405,7 +404,7 @@ class SquareMatVector(MatVector):
                     for t in range(b_size_vec[2]):
                         out_array[:, :, t] = inp_a_arr[:, :, t] @ inp_b_arr[:, :, t] @ inp_a_arr[:, :, t].T
                 else:
-                    throw_error('wrong_input', print('flag ' + flag + ' is not supported'))
+                    throw_error('wrong_input', 'flag ' + flag + ' is not supported')
         return out_array
 
     @staticmethod
