@@ -362,6 +362,7 @@ class SymmetricMatVector(SquareMatVector):
     @staticmethod
     def lr_svd_multiply(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray, flag: str = 'R') -> np.ndarray:
         u_array, s_array = SymmetricMatVector.__array_svd(inp_b_arr)
+        ua_array = None
         if flag == 'L':
             ua_array = SquareMatVector.r_multiply(u_array, MatVector.transpose(inp_a_arr))
         elif flag == 'R':
@@ -419,6 +420,6 @@ class SymmetricMatVector(SquareMatVector):
         u_array = np.zeros(size_vec, dtype=np.float64)
         s_array = np.zeros(size_vec, dtype=np.float64)
         for t in range(size_vec[2]):
-            extent, s_array[:, :, t] = la.eigh(sym_arr[:, :, t])
-            u_array[:, :, t] = np.diag(extent)
+            eig_vec, s_array[:, :, t] = la.eigh(sym_arr[:, :, t])
+            u_array[:, :, t] = np.diag(eig_vec)
         return s_array, u_array

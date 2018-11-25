@@ -391,28 +391,28 @@ class TestGen:
         a_mat, b_mat, c_vec = TestGen.__aux_symmetric_mat_vector_arrays()
         res_vec = SymmetricMatVector.r_svd_multiply_by_vec(a_mat, c_vec)
         #
-        TestGen.__aux_symmetric_mat_vector_check(lambda x: x, a_mat, c_vec, res_vec, False, 1, __MAX_TOL)
+        TestGen.__aux_symmetric_mat_vector_check(lambda x: x, a_mat, c_vec, res_vec, False, 2, __MAX_TOL)
 
     def test_lr_svd_multiply(self):
         __MAX_TOL = 1e-10
         a_mat, b_mat, c_vec = TestGen.__aux_symmetric_mat_vector_arrays()
         res_vec = SymmetricMatVector.lr_svd_multiply(a_mat, b_mat)
         #
-        TestGen.__aux_symmetric_mat_vector_check(lambda x: x, a_mat, b_mat, res_vec, True, 2, __MAX_TOL)
+        TestGen.__aux_symmetric_mat_vector_check(lambda x: x, a_mat, b_mat, res_vec, True, 3, __MAX_TOL)
 
     def test_lr_svd_multiply_by_vec(self):
         __MAX_TOL = 1e-10
         a_mat, b_mat, c_vec = TestGen.__aux_symmetric_mat_vector_arrays()
         res_vec = SymmetricMatVector.lr_svd_multiply_by_vec(a_mat, c_vec)
         #
-        TestGen.__aux_symmetric_mat_vector_check(lambda x: x, a_mat, c_vec, res_vec, True, 1, __MAX_TOL)
+        TestGen.__aux_symmetric_mat_vector_check(lambda x: x, a_mat, c_vec, res_vec, True, 2, __MAX_TOL)
 
     def test_lr_svd_divide_vec(self):
         __MAX_TOL = 1e-10
         a_mat, b_mat, c_vec = TestGen.__aux_symmetric_mat_vector_arrays()
         res_vec = SymmetricMatVector.lr_svd_divide_vec(a_mat, c_vec)
         #
-        TestGen.__aux_symmetric_mat_vector_check(lambda x: la.inv(x), a_mat, c_vec, res_vec, True, 3, __MAX_TOL)
+        TestGen.__aux_symmetric_mat_vector_check(lambda x: la.inv(x), a_mat, c_vec, res_vec, True, 1, __MAX_TOL)
 
     @staticmethod
     def __aux_symmetric_mat_vector_arrays() -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -436,7 +436,7 @@ class TestGen:
         for i in range(n_points):
             s_mat, u_mat = la.eigh(inp1_array[:, :, i])
             s_mat = np.diag(s_mat)
-            if (n_out_dims == 1) or (n_out_dims == 3):
+            if (n_out_dims == 1) or (n_out_dims == 2):
                 arg_2_mat = inp2_array[:, i]
             else:
                 arg_2_mat = inp2_array[:, :, i]
@@ -448,9 +448,9 @@ class TestGen:
                 res_mat = u_mat.T @ fo_func(s_mat) @ u_mat @ arg_2_mat
             #
             if n_out_dims == 1:
-                out_vec[:, i] = res_mat
-            elif n_out_dims == 3:
                 out_vec[i] = res_mat
+            elif n_out_dims == 2:
+                out_vec[:, i] = res_mat
             else:
                 out_vec[:, :, i] = res_mat
         res = out_vec - res_array
