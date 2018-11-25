@@ -385,3 +385,54 @@ class TestGen:
 
         check(np.array([2, 1, 0]), 1e-13, inp_mat)
         check(np.array([2, 0, 1]), 1e-15, inp_mat)
+
+    def test_r_svd_multyply_by_vec(self):
+        __MAX_TOL = 1e-10
+        a_mat = np.zeros((2, 2, 2))
+        a_mat[:, :, 0] = ([[0, 1], [1, 0]])
+        a_mat[:, :, 1] = ([[5, 2], [2, 1]])
+        sup_mat = np.array([[1], [0]])
+        c_vec = np.tile(sup_mat, [1, 2])
+        res_vec = SymmetricMatVector.r_svd_multiply_by_vec(a_mat, c_vec)
+        out_vec = np.array([[0, 5], [1, 2]])
+        res = res_vec - out_vec
+        assert np.allclose(res, np.zeros((2, 2, 1)), atol=__MAX_TOL)
+
+    def test_lr_svd_multiply(self):
+        __MAX_TOL = 1e-10
+        a_mat = np.zeros((2, 2, 2))
+        b_mat = np.zeros((2, 3, 2))
+        a_mat[:, :, 0] = ([[0, 1], [1, 0]])
+        a_mat[:, :, 1] = ([[5, 2], [2, 1]])
+        b_mat[:, :, 0] = ([[4, 6, 1], [-6, 2, 4]])
+        b_mat[:, :, 1] = ([[8, 3, 8], [4, 3, 7]])
+        res_mat = SymmetricMatVector.lr_svd_multiply(a_mat, b_mat)
+        out_mat = np.zeros((3, 3, 2))
+        out_mat[:, :, 0] = ([[-48., -28., 10.], [-28., 24., 26.], [10., 26., 8.]])
+        out_mat[:, :, 1] = ([[464., 204., 524.], [204., 90., 231.], [524., 231., 593.]])
+        res = res_mat - out_mat
+        assert np.allclose(res, np.zeros((3, 3, 2)), atol=__MAX_TOL)
+
+    def test_lr_svd_multiply_by_vec(self):
+        __MAX_TOL = 1e-10
+        a_mat = np.zeros((2, 2, 2))
+        a_mat[:, :, 0] = ([[0, 1], [1, 0]])
+        a_mat[:, :, 1] = ([[5, 2], [2, 1]])
+        sup_mat = np.array([[1], [0]])
+        c_vec = np.tile(sup_mat, [1, 2])
+        res_vec = SymmetricMatVector.lr_svd_multiply_by_vec(a_mat, c_vec)
+        out_vec = np.array([[0, 5]])
+        res = res_vec - out_vec
+        assert np.allclose(res, np.zeros((2, 1, 1)), atol=__MAX_TOL)
+
+    def test_lr_svd_divide_vec(self):
+        __MAX_TOL = 1e-10
+        a_mat = np.zeros((2, 2, 2))
+        a_mat[:, :, 0] = ([[0, 1], [1, 0]])
+        a_mat[:, :, 1] = ([[5, 2], [2, 1]])
+        sup_mat = np.array([[1], [0]])
+        c_vec = np.tile(sup_mat, [1, 2])
+        res_vec = SymmetricMatVector.lr_svd_divide_vec(a_mat, c_vec)
+        out_vec = np.array([[0, 1]])
+        res = res_vec - out_vec
+        assert np.allclose(res, np.zeros((1, 2, 1)), atol=__MAX_TOL)
