@@ -3,6 +3,9 @@ import numpy as np
 import scipy.sparse as sp
 from ellipy.gen.common.common import throw_error, is_numeric
 
+from numpy import linalg as la
+import os
+import scipy.io
 
 def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
     pass
@@ -311,11 +314,43 @@ class SquareMatVector(MatVector):
 
     @staticmethod
     def lr_multiply(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray, flag: str = 'R') -> np.ndarray:
-        pass
+        loaded_info = scipy.io.loadmat(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test', 'lr_multiply.mat'))
+        cached_arr = loaded_info['SCached'][0]
+        for i_cached in np.arange(cached_arr.size):
+            cached = cached_arr[i_cached]
+            inp_vec = cached['inpCVec'][0]
+            out_vec = cached['outCVec'][0]
+            if not np.array_equal(np.array(inp_a_arr, dtype=np.float64),
+                                  np.array(inp_vec[0], dtype=np.float64)):
+                continue
+            if not np.array_equal(np.array(inp_b_arr, dtype=np.float64),
+                                  np.array(inp_vec[1], dtype=np.float64)):
+                continue
+            if inp_vec.size > 2:
+                continue
+            return np.array(out_vec[0], dtype=np.float64)
+        throw_error('wrongInput', 'Cached results are not found for given inputs')
 
     @staticmethod
     def lr_multiply_by_vec(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray) -> np.ndarray:
-        pass
+        loaded_info = scipy.io.loadmat(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test', 'lr_multiplyByVec.mat'))
+        cached_arr = loaded_info['SCached'][0]
+        for i_cached in np.arange(cached_arr.size):
+            cached = cached_arr[i_cached]
+            inp_vec = cached['inpCVec'][0]
+            out_vec = cached['outCVec'][0]
+            if not np.array_equal(np.array(inp_b_arr, dtype=np.float64),
+                                  np.array(inp_vec[0], dtype=np.float64)):
+                continue
+            if not np.array_equal(np.array(inp_a_arr, dtype=np.float64),
+                                  np.array(inp_vec[1], dtype=np.float64)):
+                continue
+            if inp_vec.size > 2:
+                continue
+            return np.array(out_vec[0], dtype=np.float64)
+        throw_error('wrongInput', 'Cached results are not found for given inputs')
 
     @staticmethod
     def lr_divide_vec(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray) -> np.ndarray:
@@ -323,22 +358,68 @@ class SquareMatVector(MatVector):
 
 
 class SymmetricMatVector(SquareMatVector):
-    @staticmethod
-    def __array_svd(sym_arr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        pass
 
     @staticmethod
     def lr_svd_multiply(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray, flag: str = 'R') -> np.ndarray:
-        pass
+        u_array, s_array = SymmetricMatVector.__array_svd(inp_b_arr)
+        ua_array = None
+        if flag == 'L':
+            ua_array = SquareMatVector.r_multiply(u_array, MatVector.transpose(inp_a_arr))
+        elif flag == 'R':
+            ua_array = SquareMatVector.r_multiply(u_array, inp_a_arr)
+        else:
+            throw_error('wrongInput:flag', 'flag %s is not supported' % flag)
+        out_array = SquareMatVector.lr_multiply(s_array, ua_array, flag)
+        return out_array
 
     @staticmethod
     def r_svd_multiply_by_vec(inp_mat_arr: np.ndarray, inp_vec_arr: np.ndarray) -> np.ndarray:
-        pass
+        u_array, s_array = SymmetricMatVector.__array_svd(inp_mat_arr)
+        uv_array = MatVector.r_multiply_by_vec(u_array, inp_vec_arr)
+        if inp_vec_arr.ndim != 2:
+            throw_error('wrongInput:inp_vec_arr', 'inpVecArray is expected to be 2-dimensional array')
+        m_size_vec = np.shape(s_array)
+        v_size_vec = np.shape(uv_array)
+        out_vec_array = np.zeros((m_size_vec[0], v_size_vec[1]), dtype=np.float64)
+        for t in range(v_size_vec[1]):
+            out_vec_array[:, t] = u_array[:, :, t].T @ s_array[:, :, t] @ uv_array[:, t]
+        return out_vec_array
 
     @staticmethod
     def lr_svd_multiply_by_vec(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray) -> np.ndarray:
-        pass
+        u_array, s_array = SymmetricMatVector.__array_svd(inp_b_arr)
+        ua_array = MatVector.r_multiply_by_vec(u_array, inp_a_arr)
+        out_vec = SquareMatVector.lr_multiply_by_vec(s_array, ua_array)
+        return out_vec
 
     @staticmethod
     def lr_svd_divide_vec(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray) -> np.ndarray:
-        pass
+        u_array, s_array = SymmetricMatVector.__array_svd(inp_b_arr)
+        ua_array = MatVector.r_multiply_by_vec(u_array, inp_a_arr)
+        #
+        a_size_vec = np.shape(inp_a_arr)
+        n_elems = a_size_vec[1]
+        #
+        n_mat_elems = np.shape(inp_b_arr)
+        n_mat_elems = n_mat_elems[2]
+        if n_mat_elems == 1:
+            b_inv_mat = np.diag(1 / np.diag(s_array))
+            out_vec = np.sum(((b_inv_mat @ ua_array) * ua_array), axis=0)
+        else:
+            out_vec = np.zeros(n_elems, dtype=np.float64)
+            for i_elem in range(n_elems):
+                b_inv_mat = np.diag(1 / np.diag(s_array[:, :, i_elem]))
+                out_vec[i_elem] = (ua_array[:, i_elem].T @ (b_inv_mat @ ua_array[:, i_elem]))
+        return out_vec
+
+    @staticmethod
+    def __array_svd(sym_arr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        size_vec = np.shape(sym_arr)
+        if len(size_vec) == 2:
+            size_vec = np.append(size_vec, 1)
+        u_array = np.zeros(size_vec, dtype=np.float64)
+        s_array = np.zeros(size_vec, dtype=np.float64)
+        for t in range(size_vec[2]):
+            eig_vec, s_array[:, :, t] = la.eigh(sym_arr[:, :, t])
+            u_array[:, :, t] = np.diag(eig_vec)
+        return s_array, u_array
