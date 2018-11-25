@@ -6,7 +6,6 @@ import os
 import pytest
 from numpy import linalg as la
 
-
 class TestGen:
     def test_sqrt_pos(self):
         def is_not_neg(*args):
@@ -456,3 +455,68 @@ class TestGen:
                 out_vec[:, :, i] = res_mat
         res = out_vec - res_array
         assert (np.max(np.abs(res).flatten()) < accuracy)
+
+    def test_square_mat_vect_inv_3d(self):
+        data_arr = np.array([[[2, 0.5], [0, 0]], [[0, 0], [2, 0.5]]])
+        out_arr_true = np.array([[[0.5, 2], [0, 0]], [[0, 0], [0.5, 2]]])
+        out_arr = SquareMatVector.inv(data_arr)
+        assert np.array_equal(out_arr, out_arr_true)
+
+    def test_square_mat_vect_sqrtm_pos_3d(self):
+        data_arr = np.array([[[4, 9], [0, 0]], [[0, 0], [4, 9]]])
+        out_arr_true = np.array([[[2, 3], [0, 0]], [[0, 0], [2, 3]]])
+        out_arr = SquareMatVector.sqrtm_pos(data_arr)
+        assert np.array_equal(out_arr, out_arr_true)
+
+    def test_square_mat_vect_make_pos_definite_or_nan_3d(self):
+        data_arr = np.array([[[2, 9], [-3, 0]], [[-3, 0], [3, 9]]])
+        out_arr_true = np.array([[9, 0], [0,9 ]])
+        out_arr = SquareMatVector.make_pos_definite_or_nan(data_arr)
+        assert np.array_equal(out_arr[:, :, 1], out_arr_true)
+        assert np.isnan(out_arr[:, :, 0]).all()
+
+    def test_square_mat_vect_make_pos_definite_by_eig_3d(self):
+        data_arr = np.array([[[2, 9], [-3, 0]], [[-3, 0], [3, 9]]])
+        out_arr_true = np.array([[[2.315191898443441, 9], [-2.732992404789686, 0]], [[-2.732992404789687, 0], [3.226189366706670, 9]]])
+        out_arr = SquareMatVector.make_pos_definite_by_eig(data_arr)
+        assert np.isclose(out_arr, out_arr_true).all()
+
+    def test_square_mat_vect_lr_multiply(self):
+        flag = 'L'
+        inp_a_arr = np.array([[[2, 9], [-3, 0]], [[-3, 0], [3, 9]]])
+        inp_b_arr = np.array([[2, 0], [0, 2]])
+        out_arr_true = np.array([[26, -30], [-30, 36]])
+        out_arr = SquareMatVector.lr_multiply(inp_b_arr, inp_a_arr, flag)
+        assert np.array_equal(out_arr, out_arr_true)
+        flag = 'R'
+        inp_a_arr = np.array([[[1, 9], [-5, 0]], [[-3, 0], [3, 9]]])
+        inp_b_arr = np.array([[2, 0], [0, 2]])
+        out_arr_true = np.array([[20, -28], [-28, 68]])
+        out_arr = SquareMatVector.lr_multiply(inp_b_arr, inp_a_arr, flag)
+        assert np.array_equal(out_arr, out_arr_true)
+        flag = 'L'
+        inp_a_arr = np.array([[[1, 9], [-5, 0]], [[-3, 0], [3, 9]]])
+        inp_b_arr = np.array([[[3, 1], [5, 9]], [[2, 2], [7, 3]]])
+        out_arr_true = np.array([[[143, 81], [-69, 729]], [[-33, 162], [27, 243]]])
+        out_arr = SquareMatVector.lr_multiply(inp_b_arr, inp_a_arr, flag)
+        assert np.array_equal(out_arr, out_arr_true)
+        flag = 'R'
+        inp_a_arr = np.array([[[1, 9], [-5, 0]], [[-3, 0], [3, 9]]])
+        inp_b_arr = np.array([[[3, 1], [5, 9]], [[2, 2], [7, 3]]])
+        out_arr_true = np.array([[[45, 81], [-33, 729]], [[3, 162], [33, 243]]])
+        out_arr = SquareMatVector.lr_multiply(inp_b_arr, inp_a_arr, flag)
+        assert np.array_equal(out_arr, out_arr_true)
+
+    def test_square_mat_vect_lr_multiply_by_vec(self):
+        inp_a_arr = np.array([[1, -5],[-3, 3]])
+        inp_b_arr = np.array([[[3, 1], [5, 9]], [[2, 2], [7, 3]]])
+        out_arr_true = np.array([[45., -113.]])
+        out_arr = SquareMatVector.lr_multiply_by_vec(inp_b_arr, inp_a_arr)
+        assert np.array_equal(out_arr, out_arr_true)
+
+    def test_square_mat_vect_lr_divide_vec(self):
+        inp_a_arr = np.array([[1, -5],[-3, 3]])
+        inp_b_arr = np.array([[[3, 1], [5, 9]], [[2, 2], [7, 3]]])
+        out_arr_true = np.array([[5., -16.6]])
+        out_arr = SquareMatVector.lr_divide_vec(inp_b_arr, inp_a_arr)
+        assert np.isclose(out_arr, out_arr_true).all()
