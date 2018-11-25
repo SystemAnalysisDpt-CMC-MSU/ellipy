@@ -200,8 +200,7 @@ class TestTri:
         assert abs_rel_compare(v_mat_py, v_mat, __MAX_TOL, None, lambda x: np.abs(x))
         assert np.array_equal(f_mat, f_mat_py + 1)
 
-	def test_is_face(self):
-        v_mat = self.__TRI3_VERT
+    def test_is_face(self):
         f_mat = self.__TRI3_FACE
         f_to_check_mat = np.vstack((np.array([[0, 4, 3]]), f_mat, np.array([[1, 4, 3]])))
         is_face_there_vec = is_face(f_mat, f_to_check_mat)
@@ -211,6 +210,10 @@ class TestTri:
         __MAX_DIST = 0.5
         __N_DATA_SETS = 2
 
+        def as_void(arr):
+            arr = np.ascontiguousarray(arr)
+            return arr.view(np.dtype((np.void, arr.dtype.itemsize * arr.shape[-1])))
+
         def check_step_wise(v_inp_mat: np.ndarray, f_inp_mat: np.ndarray, max_tol: float, *args):
             __MAX_TOL = 1e-14
             v_res_mat, f_res_mat, s_stat = self.aux_shrink_face_tri(v_inp_mat, f_inp_mat, max_tol, *args)
@@ -218,8 +221,8 @@ class TestTri:
             if n_steps > 1:
                 v_1mat, f_1mat, _ = self.aux_shrink_face_tri(v_inp_mat, f_inp_mat, max_tol, n_steps - 1)
                 v2_mat, f2_mat, _ = self.aux_shrink_face_tri(v_1mat, f_1mat, max_tol, 1)
-                assert abs_rel_compare(v_res_mat, v2_mat, __MAX_TOL, None, lambda x: np.abs(x))
-                assert np.array_equal(f_res_mat, f2_mat)
+                is_pos, report_str = is_tri_equal(v_res_mat, f_res_mat, v2_mat, f2_mat, __MAX_TOL)
+                assert is_pos, report_str
 
         def shrink(v_0_mat: np.ndarray, f_0_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
             # shrink faces
@@ -243,8 +246,8 @@ class TestTri:
             f0_mat = loaded_info['f0']
             v1_mat, f1_mat = shrink(v0_mat, f0_mat - 1)
             # check that no vertices is deleted
-            is_old_verts_kept = np.all(is_member(v0_mat, v1_mat))
-            assert is_old_verts_kept
+            void_v0_mat, void_v1_mat = map(as_void, (v0_mat, v1_mat))
+            assert np.all(np.in1d(void_v0_mat, void_v1_mat))
             # check that all edges are short enough
             ind_2_check = np.array([[0, 1], [0, 2], [1, 2]])
             pos_edges = np.sort(np.reshape(f1_mat[:, ind_2_check], newshape=(-1, 2)))
@@ -262,5 +265,5 @@ class TestTri:
             #
             # self.saveData(['out',num2str(iDataSet)],SOut)
             #
-            assert np.array_equal(se_out_v0, s_out_v0)
-            assert np.array_equal(se_out_f0, s_out_f0)
+            is_pos_1, report_str_1 = is_tri_equal(se_out_v0, se_out_f0, s_out_v0, s_out_f0 + 1, 0)
+            assert is_pos_1, report_str_1

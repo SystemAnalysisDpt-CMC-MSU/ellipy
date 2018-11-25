@@ -411,7 +411,7 @@ def is_tri_equal(v1_mat: np.ndarray, f1_mat: np.ndarray,
                 n_f2_unique = np.size(np.unique(f2_mat, axis=0), 0)
                 is_pos = n_f1_unique == n_f2_unique
                 if is_pos:
-                    is_pos = np.all(is_face(f2_mat, f1_mat))
+                    is_pos = np.all(is_face(f2_mat, f1_mat)) and  np.all(is_face(f1_mat, f2_mat))
                     if is_pos:
                         report_str = ''
                     else:
