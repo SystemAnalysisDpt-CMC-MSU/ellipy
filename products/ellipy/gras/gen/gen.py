@@ -1,7 +1,7 @@
 from typing import Tuple, Callable, Union, List
 import numpy as np
 import scipy.sparse as sp
-from ellipy.gen.common.common import throw_error
+from ellipy.gen.common.common import throw_error, is_numeric
 
 
 def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
@@ -9,7 +9,34 @@ def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
 
 
 def sort_rows_tol(inp_mat: np.ndarray, tol: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    pass
+    if tol < 0.:
+        throw_error('wrongInput:tol', 'tol is expected to be a positive number')
+    if not (inp_mat.ndim == 2 and is_numeric(inp_mat)):
+        throw_error('wrongInput:inp_mat', 'input is expected to be a numeric matrix')
+    copy_inp_mat = np.copy(inp_mat)
+    n_cols = np.size(copy_inp_mat, 1)
+    n_rows = np.size(copy_inp_mat, 0)
+    if n_rows > 0:
+        res_mat = np.copy(copy_inp_mat)
+
+        for i_col in range(n_cols):
+            ind_col_sort_vec = np.argsort(copy_inp_mat[:, i_col])
+            col_vec = copy_inp_mat[ind_col_sort_vec, i_col]
+            col_diff_vec = np.diff(col_vec)
+            is_less_vec = np.abs(col_diff_vec) <= tol
+            col_diff_vec[is_less_vec] = 0.
+            col_vec = np.cumsum(np.hstack((col_vec[0], col_diff_vec)))
+            ind_col_rev_sort_vec = np.argsort(ind_col_sort_vec)
+            copy_inp_mat[:, i_col] = col_vec[ind_col_rev_sort_vec]
+
+        ind_sort_vec = np.lexsort(np.fliplr(copy_inp_mat).T)
+        res_mat = res_mat[ind_sort_vec]
+    else:
+        res_mat = copy_inp_mat
+        ind_sort_vec = np.empty((0, ), dtype=np.float64)
+
+    ind_rev_sort_vec = np.argsort(ind_sort_vec)
+    return res_mat, ind_sort_vec, ind_rev_sort_vec
 
 
 def sqrt_pos(inp_arr: Union[int, float, np.ndarray], abs_tol: float = 0.) -> Union[float, np.ndarray]:

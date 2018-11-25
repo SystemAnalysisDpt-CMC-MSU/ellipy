@@ -1,11 +1,15 @@
 from typing import Tuple
 import numpy as np
+from scipy.special import gamma
 from ellipy.elltool.conf.properties.Properties import Properties
 from ellipy.gras.gen.gen import sqrt_pos
 
 
 def ell_volume(q_mat: np.ndarray) -> float:
-    pass
+    n_dims = q_mat.shape[0]
+    vol_val = np.pi ** (n_dims * 0.5) * \
+              np.sqrt(np.linalg.det(q_mat)) / gamma(0.5 * n_dims + 1)
+    return vol_val
 
 
 def inv_mat(q_mat: np.ndarray) -> np.ndarray:

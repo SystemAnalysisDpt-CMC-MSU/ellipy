@@ -363,3 +363,25 @@ class TestGen:
             _ = MatVector.r_multiply_by_vec(a_arr, b_arr, False)
             _ = MatVector.r_multiply_by_vec(a_arr, b_arr, True)
         assert "wrongInput:b_mat is expected to be 2-dimensional array" in str(e.value)
+
+    def test_sort_rows_tol(self):
+
+        def check_int(res_mat: np.ndarray, checkint_inp_mat: np.ndarray, ind_vec: np.ndarray, ind_sort_vec: np.ndarray):
+            assert np.allclose(res_mat, checkint_inp_mat[ind_vec.flatten()])
+            assert np.allclose(ind_sort_vec, ind_vec.flatten())
+
+        def check(ind_vec: np.ndarray, tol: float, check_inp_mat: np.ndarray):
+            res_mat, ind_sort_vec, _ = sort_rows_tol(check_inp_mat, tol)
+            check_int(res_mat, check_inp_mat, ind_vec, ind_sort_vec)
+            res_mat, ind_sort_vec, ind_rev_sort_vec = sort_rows_tol(check_inp_mat, tol)
+            check_int(res_mat, check_inp_mat, ind_vec, ind_sort_vec)
+            assert np.allclose(res_mat[ind_rev_sort_vec, :], check_inp_mat)
+
+        inp_mat = np.array([[1, 2], [1 + 1e-14, 1]], dtype=np.float64)
+        check(np.array([0, 1]), 1e-16, inp_mat)
+        check(np.array([1, 0]), 1e-14, inp_mat)
+
+        inp_mat = np.array([[1, 2], [1 + 1e-14, 1], [1 - 1e-14, 0]], dtype=np.float64)
+
+        check(np.array([2, 1, 0]), 1e-13, inp_mat)
+        check(np.array([2, 0, 1]), 1e-15, inp_mat)

@@ -108,10 +108,6 @@ def orth_transl_qr(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
     pass
 
 
-def reg_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
-    pass
-
-
 def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
     if not(np.isscalar(reg_tol) and is_numeric(reg_tol) and np.real(reg_tol) > 0.0):
         throw_error('wrongInput:reg_tol', 'reg_tol must be a positive numeric scalar')
@@ -157,3 +153,13 @@ def try_treat_as_real(inp_mat:  Union[bool, int, float, complex, np.ndarray], to
             throw_error('wrongInput:inp_mat',
                         'Norm of imaginary part of source object = {}. It can not be more then tol_val = {}.'
                         .format(norm_value, tol_val))
+
+
+def reg_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
+    if not(np.isscalar(reg_tol) and is_numeric(reg_tol) and reg_tol > 0.):
+            throw_error('wrongInput:reg_tol', 'reg_tol must be a positive numeric scalar')
+    reg_tol = try_treat_as_real(reg_tol)
+    u_mat, s_vec, v_mat = np.linalg.svd(inp_mat)
+    s_mat = np.diag(np.maximum(s_vec, reg_tol))
+    res_mat = u_mat @ s_mat @ v_mat
+    return res_mat
