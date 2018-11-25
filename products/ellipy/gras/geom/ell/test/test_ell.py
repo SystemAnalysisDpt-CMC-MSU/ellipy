@@ -21,3 +21,12 @@ class TestEll:
         is_ok = np.bitwise_and((np.abs(sup_arr - 2) < __MAX_TOL).transpose(),
                                np.abs(bp_mat[0] - 2) < __MAX_TOL).flatten()[0]
         assert np.array_equal(True, is_ok)
+
+    def test_ell_volume(self):
+        __MAX_TOL = 1e-14
+        e_vec = np.array([1., 2., 3.])
+        q_mat = np.diag(e_vec)
+        res_vol = ell_volume(q_mat)
+        exp_vol = np.sqrt(np.prod(e_vec)) * np.pi * (4 / 3)
+        is_ok = np.abs(exp_vol - res_vol) < __MAX_TOL
+        assert np.array_equal(True, is_ok)
