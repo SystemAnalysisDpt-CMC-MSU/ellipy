@@ -367,7 +367,7 @@ class SymmetricMatVector(SquareMatVector):
         elif flag == 'R':
             ua_array = SquareMatVector.r_multiply(u_array, inp_a_arr)
         else:
-            throw_error('wronginput:flag', 'flag is not supported')
+            throw_error('wronginput:flag', 'flag %s is not supported' % flag)
         out_array = SquareMatVector.lr_multiply(s_array, ua_array, flag)
         return out_array
 
@@ -376,12 +376,12 @@ class SymmetricMatVector(SquareMatVector):
         u_array, s_array = SymmetricMatVector.__array_svd(inp_mat_arr)
         uv_array = MatVector.r_multiply_by_vec(u_array, inp_vec_arr)
         if not np.ndim(inp_vec_arr) == 2:
-            throw_error('wronginput:inp_vec_arr ', 'is not matrix')
+            throw_error('wronginput:inp_vec_arr ', 'inpVecArray is expected to be 2-dimensional array')
         m_size_vec = np.shape(s_array)
         v_size_vec = np.shape(uv_array)
         out_vec_array = np.zeros((m_size_vec[0], v_size_vec[1]), dtype=np.float64)
         for t in range(v_size_vec[1]):
-            out_vec_array[:, t] = np.transpose(u_array[:, :, t])@ s_array[:, :, t] @ uv_array[:, t]
+            out_vec_array[:, t] = u_array[:, :, t].T @ s_array[:, :, t] @ uv_array[:, t]
         return out_vec_array
 
     @staticmethod
@@ -405,20 +405,20 @@ class SymmetricMatVector(SquareMatVector):
             b_inv_mat = np.diag(1 / np.diag(s_array))
             out_vec = np.sum(((b_inv_mat @ ua_array) * ua_array), axis=0)
         else:
-            out_vec = np.zeros((1, n_elems), dtype=np.float64)
+            out_vec = np.zeros((n_elems), dtype=np.float64)
             for i_elem in range(n_elems):
                 b_inv_mat = np.diag(1 / np.diag(s_array[:, :, i_elem]))
-                out_vec[0, i_elem] = (np.transpose(ua_array[:, i_elem]) @ (b_inv_mat @ ua_array[:, i_elem]))
+                out_vec[i_elem] = (ua_array[:, i_elem].T @ (b_inv_mat @ ua_array[:, i_elem]))
         return out_vec
 
     @staticmethod
     def __array_svd(sym_arr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         size_vec = np.shape(sym_arr)
-        if np.shape(size_vec)[0] == 2:
+        if len(size_vec) == 2:
             size_vec = np.append(size_vec, 1)
         u_array = np.zeros(size_vec, dtype=np.float64)
         s_array = np.zeros(size_vec, dtype=np.float64)
         for t in range(size_vec[2]):
-            u_array[:, :, t], s_array[:, :, t] = la.eigh(sym_arr[:, :, t])
-            u_array[:, :, t] = np.diag(np.diag(u_array[:, :, t]))
+            temp, s_array[:, :, t] = la.eigh(sym_arr[:, :, t])
+            u_array[:, :, t] = np.diag(temp)
         return s_array, u_array
