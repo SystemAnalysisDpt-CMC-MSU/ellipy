@@ -6,6 +6,7 @@ import os
 import pytest
 from numpy import linalg as la
 
+
 class TestGen:
     def test_sqrt_pos(self):
         def is_not_neg(*args):
