@@ -367,7 +367,7 @@ class SymmetricMatVector(SquareMatVector):
         elif flag == 'R':
             ua_array = SquareMatVector.r_multiply(u_array, inp_a_arr)
         else:
-            throw_error('wronginput:flag', 'flag %s is not supported' % flag)
+            throw_error('wrongInput:flag', 'flag %s is not supported' % flag)
         out_array = SquareMatVector.lr_multiply(s_array, ua_array, flag)
         return out_array
 
@@ -375,8 +375,8 @@ class SymmetricMatVector(SquareMatVector):
     def r_svd_multiply_by_vec(inp_mat_arr: np.ndarray, inp_vec_arr: np.ndarray) -> np.ndarray:
         u_array, s_array = SymmetricMatVector.__array_svd(inp_mat_arr)
         uv_array = MatVector.r_multiply_by_vec(u_array, inp_vec_arr)
-        if not np.ndim(inp_vec_arr) == 2:
-            throw_error('wronginput:inp_vec_arr', 'inpVecArray is expected to be 2-dimensional array')
+        if inp_vec_arr.ndim != 2:
+            throw_error('wrongInput:inp_vec_arr', 'inpVecArray is expected to be 2-dimensional array')
         m_size_vec = np.shape(s_array)
         v_size_vec = np.shape(uv_array)
         out_vec_array = np.zeros((m_size_vec[0], v_size_vec[1]), dtype=np.float64)
@@ -419,6 +419,6 @@ class SymmetricMatVector(SquareMatVector):
         u_array = np.zeros(size_vec, dtype=np.float64)
         s_array = np.zeros(size_vec, dtype=np.float64)
         for t in range(size_vec[2]):
-            temp, s_array[:, :, t] = la.eigh(sym_arr[:, :, t])
-            u_array[:, :, t] = np.diag(temp)
+            extent, s_array[:, :, t] = la.eigh(sym_arr[:, :, t])
+            u_array[:, :, t] = np.diag(extent)
         return s_array, u_array

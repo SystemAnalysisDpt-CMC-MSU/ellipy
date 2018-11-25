@@ -429,28 +429,27 @@ class TestGen:
         return a_mat, b_mat, c_vec
 
     @staticmethod
-    def __aux_symmetric_mat_vector_check(fo_func, inp1_array, inp2_array, res_array, islr, isv, accuracy):
+    def __aux_symmetric_mat_vector_check(fo_func, inp1_array, inp2_array, res_array, is_lr_op, n_out_dims, accuracy):
         size_vec = np.shape(res_array)
         n_points = size_vec[-1]
         out_vec = np.zeros(size_vec, dtype=np.float64)
         for i in range(n_points):
-            u_mat, s_mat = la.eigh(inp1_array[:, :, i])
-            u_mat = np.diag(u_mat)
-            u_mat, s_mat = s_mat, u_mat
-            if (isv == 1) or (isv == 3):
+            s_mat, u_mat = la.eigh(inp1_array[:, :, i])
+            s_mat = np.diag(s_mat)
+            if (n_out_dims == 1) or (n_out_dims == 3):
                 arg_2_mat = inp2_array[:, i]
             else:
                 arg_2_mat = inp2_array[:, :, i]
             #
-            if islr:
-                temp_mat = u_mat @ arg_2_mat
-                res_mat = temp_mat.T @ fo_func(s_mat) @ temp_mat
+            if is_lr_op:
+                extra_mat = u_mat @ arg_2_mat
+                res_mat = extra_mat.T @ fo_func(s_mat) @ extra_mat
             else:
                 res_mat = u_mat.T @ fo_func(s_mat) @ u_mat @ arg_2_mat
             #
-            if isv == 1:
+            if n_out_dims == 1:
                 out_vec[:, i] = res_mat
-            elif isv == 3:
+            elif n_out_dims == 3:
                 out_vec[i] = res_mat
             else:
                 out_vec[:, :, i] = res_mat
