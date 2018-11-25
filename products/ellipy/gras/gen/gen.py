@@ -8,30 +8,30 @@ def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
 
 
 def sort_rows_tol(inp_mat: np.ndarray, tol: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    if tol < 0:
-        throw_error('wrongInput', 'tol is expected to be a positive number')
+    if tol < 0.:
+        throw_error('wrongInput:tol', 'tol is expected to be a positive number')
     if not (len(inp_mat.shape) == 2 and is_numeric(inp_mat)):
-        throw_error('wrongInput', 'input is expected to be a numeric matrix')
-    inp_mat_1 = np.copy(inp_mat)
-    n_cols = np.size(inp_mat_1, 1)
-    n_rows = np.size(inp_mat_1, 0)
+        throw_error('wrongInput:inp_mat', 'input is expected to be a numeric matrix')
+    copy_inp_mat = np.copy(inp_mat)
+    n_cols = np.size(copy_inp_mat, 1)
+    n_rows = np.size(copy_inp_mat, 0)
     if n_rows > 0:
-        res_mat = np.copy(inp_mat_1)
+        res_mat = np.copy(copy_inp_mat)
 
         for i_col in range(n_cols):
-            col_vec = np.sort(inp_mat_1[:, i_col])
-            ind_col_sort_vec = np.argsort(inp_mat_1[:, i_col])
+            col_vec = np.sort(copy_inp_mat[:, i_col])
+            ind_col_sort_vec = np.argsort(copy_inp_mat[:, i_col])
             col_diff_vec = np.diff(col_vec)
             is_less_vec = np.abs(col_diff_vec) <= tol
             col_diff_vec[is_less_vec] = 0
             col_vec = np.cumsum(np.append(col_vec[0], col_diff_vec))
             ind_col_rev_sort_vec = np.argsort(ind_col_sort_vec)
-            inp_mat_1[:, i_col] = col_vec[ind_col_rev_sort_vec]
+            copy_inp_mat[:, i_col] = col_vec[ind_col_rev_sort_vec]
 
-        ind_sort_vec = np.lexsort(np.fliplr(inp_mat_1).T)
+        ind_sort_vec = np.lexsort(np.fliplr(copy_inp_mat).T)
         res_mat = res_mat[ind_sort_vec]
     else:
-        res_mat = inp_mat_1
+        res_mat = copy_inp_mat
         ind_sort_vec = np.array([], dtype=np.float64)
 
     ind_rev_sort_vec = np.argsort(ind_sort_vec)

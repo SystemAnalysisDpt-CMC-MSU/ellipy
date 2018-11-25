@@ -252,15 +252,15 @@ class TestLaBasic:
     def test_reg_mat(self):
         __ERROR_MSG = 'Incorrect work a reg_mat function'
         diag_mat = np.eye(3, dtype=np.float64) * 3.0
-        par_1 = 5.0 * np.eye(3, dtype=np.float64)
-        assert np.array_equal(reg_mat(diag_mat, 5.0), par_1), __ERROR_MSG
+        par_mat = 5.0 * np.eye(3, dtype=np.float64)
+        assert np.array_equal(reg_mat(diag_mat, 5.0), par_mat), __ERROR_MSG
         ress_mat = reg_mat(np.array([[3.0]]), 1.0)
         assert np.array_equal(ress_mat, np.array([[3.]])), __ERROR_MSG
         ress_mat = reg_mat(np.array([[3.0]]), 1.0 + np.finfo(float).eps * 1.0j / 5.0)
         assert np.array_equal(ress_mat, np.array([[3.0]])), __ERROR_MSG
         with pytest.raises(Exception) as e:
             reg_mat(diag_mat, -1.)
-        assert 'wrongInput' in str(e.value)
+        assert 'wrongInput:tol' in str(e.value)
         with pytest.raises(Exception) as e:
             reg_mat(diag_mat, 2.0 + np.finfo(float).eps * 1.0j * 2.0)
         assert 'wrongInput:inp_mat' in str(e.value)
