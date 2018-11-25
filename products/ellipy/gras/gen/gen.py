@@ -5,7 +5,7 @@ from ellipy.gen.common.common import throw_error, is_numeric
 from numpy import linalg as la
 import os
 import scipy.io
-
+from ellipy.gras.la.la import is_mat_symm, sqrtm_pos
 
 def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
     pass
@@ -310,7 +310,6 @@ class SquareMatVector(MatVector):
 
     @staticmethod
     def sqrtm_pos(data_arr: np.ndarray) -> np.ndarray:
-        from ellipy.gras.la.la import sqrtm_pos
         dim_num = data_arr.ndim
         if dim_num == 2:
             sqrt_data_array = sqrtm_pos(data_arr)
@@ -344,7 +343,6 @@ class SquareMatVector(MatVector):
 
     @staticmethod
     def make_pos_definite_by_eig(data_arr: np.ndarray, value: float = 1e-12) -> np.ndarray:
-        from ellipy.gras.la.la import is_mat_symm
         dim_num = data_arr.ndim
         size_vec = data_arr.shape
         res_data_arr = np.zeros(size_vec)
@@ -374,14 +372,14 @@ class SquareMatVector(MatVector):
                 elif flag == 'L':
                     out_array = inp_a_arr@inp_b_arr@inp_a_arr.T
                 else:
-                    throw_error('wrong_input', 'flag ' + flag + ' is not supported')
+                    throw_error('wrong_input', 'flag {} is not supported'.format(flag))
             else:
                 if flag == 'R':
                     out_array = inp_a_arr[:, :, 0].T@inp_b_arr@inp_a_arr[:, :, 0]
                 elif flag == 'L':
                     out_array = inp_a_arr[:, :, 0]@inp_b_arr@inp_a_arr[:, :, 0].T
                 else:
-                    throw_error('wrong_input', 'flag ' + flag + ' is not supported')
+                    throw_error('wrong_input', 'flag {} is not supported'.format(flag))
         else:
             if len(inp_a_arr.shape) <= 2:
                 if flag == 'R':
@@ -393,7 +391,7 @@ class SquareMatVector(MatVector):
                     for t in range(b_size_vec[2]):
                         out_array[:, :, t] = inp_a_arr @ inp_b_arr[:, :, t] @ inp_a_arr.T
                 else:
-                    throw_error('wrong_input', 'flag ' + flag + ' is not supported')
+                    throw_error('wrong_input', 'flag {} is not supported'.format(flag))
             else:
                 if flag == 'R':
                     out_array = np.zeros((a_size_vec[1], a_size_vec[1], b_size_vec[2]))
@@ -404,7 +402,7 @@ class SquareMatVector(MatVector):
                     for t in range(b_size_vec[2]):
                         out_array[:, :, t] = inp_a_arr[:, :, t] @ inp_b_arr[:, :, t] @ inp_a_arr[:, :, t].T
                 else:
-                    throw_error('wrong_input', 'flag ' + flag + ' is not supported')
+                    throw_error('wrong_input', 'flag {} is not supported'.format(flag))
         return out_array
 
     @staticmethod
@@ -427,16 +425,16 @@ class SquareMatVector(MatVector):
         if len(inp_a_arr.shape) == 1:
             inp_a_arr.shape = (inp_a_arr.size, 1)
         if inp_b_arr.ndim == 2:
-            out_vec = inp_a_arr.T@np.linalg.lstsq(inp_b_arr, inp_a_arr)[0]
+            out_vec = inp_a_arr.T@np.linalg.lstsq(inp_b_arr, inp_a_arr, -1)[0]
         else:
             if inp_a_arr.shape[1] == 1:
                 out_vec = np.zeros((inp_b_arr.shape[2],))
                 for t in range(inp_b_arr.shape[2]):
-                    out_vec[t] = inp_a_arr.T @ np.linalg.lstsq(inp_b_arr[:, :, t], inp_a_arr)[0]
+                    out_vec[t] = inp_a_arr.T @ np.linalg.lstsq(inp_b_arr[:, :, t], inp_a_arr, -1)[0]
             else:
                 out_vec = np.zeros((inp_a_arr.shape[1],))
                 for t in range(inp_a_arr.shape[1]):
-                    out_vec[t] = inp_a_arr[:, t].T @ np.linalg.lstsq(inp_b_arr[:, :, t], inp_a_arr[:, t])[0]
+                    out_vec[t] = inp_a_arr[:, t].T @ np.linalg.lstsq(inp_b_arr[:, :, t], inp_a_arr[:, t], -1)[0]
         return out_vec
 
 
