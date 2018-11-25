@@ -321,10 +321,10 @@ class SquareMatVector(MatVector):
             cached = cached_arr[i_cached]
             inp_vec = cached['inpCVec'][0]
             out_vec = cached['outCVec'][0]
-            if not np.array_equal(np.array(inp_b_arr, dtype=np.float64),
+            if not np.array_equal(np.array(inp_a_arr, dtype=np.float64),
                                   np.array(inp_vec[0], dtype=np.float64)):
                 continue
-            if not np.array_equal(np.array(inp_a_arr, dtype=np.float64),
+            if not np.array_equal(np.array(inp_b_arr, dtype=np.float64),
                                   np.array(inp_vec[1], dtype=np.float64)):
                 continue
             if inp_vec.size > 2:
@@ -381,7 +381,7 @@ class SymmetricMatVector(SquareMatVector):
         v_size_vec = np.shape(uv_array)
         out_vec_array = np.zeros((m_size_vec[0], v_size_vec[1]), dtype=np.float64)
         for t in range(v_size_vec[1]):
-            out_vec_array[:, t] = (np.transpose(u_array[:, :, t])@ s_array[:, :, t]) @ uv_array[:, t]
+            out_vec_array[:, t] = np.transpose(u_array[:, :, t])@ s_array[:, :, t] @ uv_array[:, t]
         return out_vec_array
 
     @staticmethod
@@ -403,12 +403,12 @@ class SymmetricMatVector(SquareMatVector):
         n_mat_elems = n_mat_elems[2]
         if n_mat_elems == 1:
             b_inv_mat = np.diag(1 / np.diag(s_array))
-            out_vec = np.sum(((b_inv_mat @ ua_array) @ ua_array), axis=0)
+            out_vec = np.sum(((b_inv_mat @ ua_array) * ua_array), axis=0)
         else:
             out_vec = np.zeros((1, n_elems), dtype=np.float64)
-            for i_elem in range(0, n_elems):
+            for i_elem in range(n_elems):
                 b_inv_mat = np.diag(1 / np.diag(s_array[:, :, i_elem]))
-                out_vec[i_elem] = (MatVector.transpose(ua_array[:, i_elem]) @ (b_inv_mat @ ua_array[:, i_elem]))
+                out_vec[0, i_elem] = (np.transpose(ua_array[:, i_elem]) @ (b_inv_mat @ ua_array[:, i_elem]))
         return out_vec
 
     @staticmethod
