@@ -3,6 +3,8 @@ import numpy as np
 from scipy.special import gamma
 from ellipy.elltool.conf.properties.Properties import Properties
 from ellipy.gras.gen.gen import sqrt_pos
+from numpy.linalg import inv, solve
+from ellipy.gen.common.common import throw_error
 
 
 def ell_volume(q_mat: np.ndarray) -> float:
@@ -13,11 +15,10 @@ def ell_volume(q_mat: np.ndarray) -> float:
 
 
 def inv_mat(q_mat: np.ndarray) -> np.ndarray:
-    pass
+    (q_mat_dim_m, q_mat_dim_n) = np.shape(q_mat)
 
-
-def quad_mat(q_mat: np.ndarray, x_vec: np.ndarray, c_vec: np.ndarray = np.array([0.]), mode: str = 'plain') -> float:
-    pass
+    if q_mat_dim_m != q_mat_dim_n:
+        throw_error('wrongInput', 'ELL_INV: matrix must be square.')
 
 
 def rho_mat(ell_shape_mat: np.ndarray, dirs_mat: np.ndarray,

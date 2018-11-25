@@ -1,8 +1,48 @@
 from ellipy.gras.geom.ell.ell import *
 import numpy as np
+from numpy.linalg import norm
+from scipy.linalg import hilbert as hilb
+from scipy.linalg import invhilbert as invhilb
+from numpy.linalg import inv
 
 
 class TestEll:
+    def test_inv_mat(self):
+        __EPS = 1e-15
+        norm_diff_vec = np.array(range(2, 12))
+        for x in range(2, 12):
+            norm_diff_vec[x - 2] = norm(invhilb(x) - inv_mat(hilb(x)))
+            - norm(invhilb(x) - inv(hilb(x)))
+        is_ok = abs(np.prod(norm_diff_vec)) < __EPS
+        assert np.array_equal(True, is_ok)
+
+    def test_quad_mat(self):
+        __MAX_TOL = 1e-10
+        q_mat = np.array([[2, 5, 7], [6, 3, 4], [5, -2, -3]])
+        x_vec = np.array([7, 8, 9]).transpose()
+        c_vec = np.array([1, 0, 1])
+        calc_mode = 'plain'
+        __ANALYTICAL_RESULT_1 = 1304
+        __ANALYTICAL_RESULT_2 = 1563
+        __ANALYTICAL_RESULT_3 = -364
+
+        def check(analytical_result, calc_mode, c_vec):
+            quad_res = quad_mat(q_mat, x_vec, c_vec, calc_mode)
+            is_ok = (abs(quad_res - analytical_result) < __MAX_TOL)
+            assert np.array_equal(True, is_ok)
+
+        check(__ANALYTICAL_RESULT_1, calc_mode, c_vec)
+        c_vec = 0
+        check(__ANALYTICAL_RESULT_2, calc_mode, c_vec)
+        calc_mode = 'InvAdv'
+        c_vec = np.array([1, 0, 1])
+        check(__ANALYTICAL_RESULT_3, calc_mode, c_vec)
+        calc_mode = 'INV'
+        check(__ANALYTICAL_RESULT_3, calc_mode, c_vec)
+
+    def test_quad_mat_negative(self):
+        pass
+
     def test_rho_mat(self):
         __MAX_TOL = 1e-14
         __ABS_TOL = 1e-7
