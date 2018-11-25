@@ -7,8 +7,8 @@ from ellipy.gras.gen.gen import sqrt_pos
 
 def ell_volume(q_mat: np.ndarray) -> float:
     n_dims = q_mat.shape[0]
-    k = np.sqrt(np.linalg.det(q_mat)) / gamma(0.5 * n_dims + 1)
-    vol_val = np.pi ** (n_dims * 0.5) * k
+    vol_val = np.pi ** (n_dims * 0.5) * \
+              np.sqrt(np.linalg.det(q_mat)) / gamma(0.5 * n_dims + 1)
     return vol_val
 
 

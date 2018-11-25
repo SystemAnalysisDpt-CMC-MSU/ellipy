@@ -260,7 +260,7 @@ class TestLaBasic:
         assert np.array_equal(ress_mat, np.array([[3.0]])), __ERROR_MSG
         with pytest.raises(Exception) as e:
             reg_mat(diag_mat, -1.)
-        assert 'wrongInput:tol' in str(e.value)
+        assert 'wrongInput:reg_tol' in str(e.value)
         with pytest.raises(Exception) as e:
             reg_mat(diag_mat, 2.0 + np.finfo(float).eps * 1.0j * 2.0)
         assert 'wrongInput:inp_mat' in str(e.value)

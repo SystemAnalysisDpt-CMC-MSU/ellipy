@@ -107,6 +107,7 @@ def orth_transl_max_tr(src_vec: np.ndarray, dst_vec: np.ndarray, max_mat: np.nda
 def orth_transl_qr(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
     pass
 
+
 def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
     if not(np.isscalar(reg_tol) and is_numeric(reg_tol) and np.real(reg_tol) > 0.0):
         throw_error('wrongInput:reg_tol', 'reg_tol must be a positive numeric scalar')

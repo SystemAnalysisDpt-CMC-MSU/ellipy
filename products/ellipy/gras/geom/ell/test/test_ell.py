@@ -29,4 +29,4 @@ class TestEll:
         res_vol = ell_volume(q_mat)
         exp_vol = np.sqrt(np.prod(e_vec)) * np.pi * (4 / 3)
         is_ok = np.abs(exp_vol - res_vol) < __MAX_TOL
-        assert np.array_equal(True, is_ok)
+        assert is_ok
