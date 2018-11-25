@@ -367,7 +367,7 @@ class TestGen:
     def test_sort_rows_tol(self):
 
         def check_int(res_mat: np.ndarray, checkint_inp_mat: np.ndarray, ind_vec: np.ndarray, ind_sort_vec: np.ndarray):
-            assert np.allclose(res_mat,checkint_inp_mat[ind_vec.flatten()])
+            assert np.allclose(res_mat, checkint_inp_mat[ind_vec.flatten()])
             assert np.allclose(ind_sort_vec, ind_vec.flatten())
 
         def check(ind_vec: np.ndarray, tol: float, check_inp_mat: np.ndarray):
