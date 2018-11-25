@@ -132,9 +132,17 @@ class TestOrthTransl:
                 is_pos = real_tol <= self.__MAX_TOL
                 assert is_pos, 'when comparing {} and {} real tol {}>{}'.format(
                     f_prod, f_test, real_tol, self.__MAX_TOL)
+                return check_o_mat
 
-            def calc_trace(inp_o_mat, inp_a_mat):
-                return np.trace(inp_o_mat @ inp_a_mat)
+            def calc_trace(o_mat):
+                if (np.size(o_mat) > 1) and (np.size(a_mat) > 1):
+                    return np.trace(o_mat @ a_mat)
+                elif np.size(o_mat) > 1:
+                    return np.trace(o_mat) * a_mat
+                elif np.size(a_mat) > 1:
+                    return np.trace(a_mat) * o_mat
+                else:
+                    return o_mat * a_mat
 
             def calc_dir(o_mat):
                 if np.size(o_mat) > 1:
@@ -153,13 +161,18 @@ class TestOrthTransl:
             n_dims_max_tr = np.size(src_vec)
             a_sqrt_mat = np.random.rand(n_dims_max_tr, n_dims_max_tr)
             a_mat = a_sqrt_mat @ a_sqrt_mat.transpose()
-            check(orth_transl_max_tr, orth_transl_max_tr, calc_trace, src_vec, dst_vec, a_mat)
+            o_max_tr_mat = check(orth_transl_max_tr, orth_transl_max_tr, calc_trace, src_vec, dst_vec, a_mat)
 
             # Test MAX Dir functions
             src_max_vec = src_mat[:, 1]
             dst_max_vec = dst_mat[:, 1]
             o_max_dir_mat = check(orth_transl_max_dir, orth_transl_max_dir, calc_dir, src_vec, dst_vec, src_max_vec, dst_max_vec)
             o_plain_mat = orth_transl(src_vec, dst_vec)
+
+            check_metric(calc_trace, o_max_tr_mat, o_max_dir_mat)
+            check_metric(calc_dir, o_max_dir_mat, o_max_tr_mat)
+            check_metric(calc_dir, o_max_dir_mat, o_plain_mat)
+            check_metric(calc_trace, o_max_tr_mat, o_plain_mat)
 
         master_check(self.__SRC_TL_MAT, self.__DST_TL_MAT)
 
