@@ -1,5 +1,6 @@
 from ellipy.gen.common.common import throw_error, abs_rel_compare, is_numeric
 from typing import Callable, Union
+import scipy.io
 import numpy as np
 from numpy import linalg
 
@@ -48,9 +49,9 @@ def is_mat_symm(q_mat: np.ndarray, abs_tol: float = 0.) -> bool:
 
 
 def mat_orth(src_mat: np.ndarray) -> np.ndarray:
-    o_mat, src_r = np.linalg.qr(src_mat,'complete')
+    o_mat, src_r = np.linalg.qr(src_mat, 'complete')
     is_neg_diag = np.diag(src_r) < 0
-    is_neg_diag_vec = np.zeros(o_mat.shape[1],'bool')
+    is_neg_diag_vec = np.zeros(o_mat.shape[1], 'bool')
     is_neg_diag_vec[:len(is_neg_diag)] = is_neg_diag
     o_mat[:, is_neg_diag_vec] = -o_mat[:, is_neg_diag_vec]
     return o_mat
@@ -59,6 +60,7 @@ def mat_orth(src_mat: np.ndarray) -> np.ndarray:
 def math_orth_col(src_mat: np.ndarray) -> np.ndarray:
     o_mat = mat_orth(src_mat)
     return o_mat[:, :src_mat.shape[1]]
+
 
 def ml_orth_transl(src_mat: np.ndarray, dst_arr: np.ndarray) -> np.ndarray:
     n_elems = 1 if dst_arr.ndim <= 2 else dst_arr.shape[2]
@@ -76,7 +78,33 @@ def ml_orth_transl(src_mat: np.ndarray, dst_arr: np.ndarray) -> np.ndarray:
 
 
 def orth_transl(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
-    pass
+    __ABS_TOL = 1e-7
+    n_dims = dst_vec.shape[0]
+    src_vec = try_treat_as_real(src_vec)
+    dst_vec = try_treat_as_real(dst_vec)
+    dst_squared_norm = np.sum(dst_vec * dst_vec)
+    src_squared_norm = np.sum(src_vec * src_vec)
+
+    if dst_squared_norm == 0.0:
+        throw_error('wrongInput:dst_zero', 'destination vectors are expected to be non-zero')
+    if src_squared_norm == 0.0:
+        throw_error('wrongInput:src_zero', 'source vectors are expected to be non-zero')
+
+    dst_vec = dst_vec / np.sqrt(dst_squared_norm)
+    src_vec = src_vec / np.sqrt(src_squared_norm)
+
+    scal_prod = np.sum(src_vec * dst_vec)
+    s_val = np.sqrt(np.maximum(1.0 - scal_prod * scal_prod, 0.0))
+    q_mat = np.zeros((n_dims, 2), dtype=np.float64)
+    q_mat[:, 0] = np.squeeze(dst_vec)
+    if np.abs(s_val) > __ABS_TOL:
+        q_mat[:, 1] = np.squeeze((src_vec - scal_prod * dst_vec) / s_val)
+    else:
+        q_mat[:, 1] = 0.0
+
+    s_mat = np.array([[scal_prod - 1.0, s_val], [-s_val, scal_prod - 1.0]], dtype=np.float64)
+    o_mat = np.identity(n_dims, dtype=np.float64) + q_mat @ s_mat @ q_mat.T
+    return o_mat
 
 
 def orth_transl_haus(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
@@ -94,8 +122,6 @@ def orth_transl_haus(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
         r_mult = 2 / w_norm
 
     o_mat = np.eye(np.size(src_vec)) - r_mult * (w_vec @ w_vec.T)
-    return o_mat
-
 
 def orth_transl_max_dir(src_vec: np.ndarray, dst_vec: np.ndarray,
                         src_max_vec: np.ndarray, dst_max_vec: np.ndarray) -> np.ndarray:
@@ -109,8 +135,8 @@ def orth_transl_max_dir(src_vec: np.ndarray, dst_vec: np.ndarray,
         b = o_dst_mat[:, 0]
         a1 = np.transpose(v0) @ src_max_vec
         b1 = np.transpose(u0) @ dst_max_vec
-        o1_src_mat, r1_src_mat = np.linalg.qr(a1.reshape(-1,1), 'complete')
-        o1_dst_mat, r1_dst_mat = np.linalg.qr(b1.reshape(-1,1), 'complete')
+        o1_src_mat, r1_src_mat = np.linalg.qr(a1.reshape(-1, 1), 'complete')
+        o1_dst_mat, r1_dst_mat = np.linalg.qr(b1.reshape(-1, 1), 'complete')
         if np.logical_xor(r1_src_mat[0, 0] > 0, r1_dst_mat[0, 0] > 0):
             o1_dst_mat[:, 0] = -o1_dst_mat[:, 0]
         o_mat = u0 @ o1_dst_mat @ np.transpose(o1_src_mat) @ np.transpose(v0) + (b.reshape(-1, 1)) * a

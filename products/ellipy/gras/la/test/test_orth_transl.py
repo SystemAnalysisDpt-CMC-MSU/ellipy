@@ -1,6 +1,7 @@
 from ellipy.gras.la.la import *
 import pytest
 import numpy as np
+import scipy.io
 from timeit import default_timer as timer
 
 
