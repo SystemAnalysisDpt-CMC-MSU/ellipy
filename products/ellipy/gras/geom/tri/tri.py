@@ -191,7 +191,7 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
 
             # Build face-to-edge map for the first group of new edges and faces
             f2e1_new_mat = (ml.repmat(ind_new_e_vec, 3, 1).T +
-                            np.ones(shape=(n_shrinked_faces, 1)) @ (np.matrix([0, 2, 1]) * n_shrinked_faces))
+                            np.ones(shape=(n_shrinked_faces, 1)) @ (np.array([[0, 2, 1]]) * n_shrinked_faces))
 
             # Build face-to-edge directions for the first group of new edges and faces
             f2e1_is_dir_new_mat = np.ones(shape=np.shape(f2e1_new_mat), dtype=bool)
