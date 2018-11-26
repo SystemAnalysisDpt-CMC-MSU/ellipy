@@ -136,6 +136,7 @@ def orth_transl_max_tr(src_vec: np.ndarray, dst_vec: np.ndarray, max_mat: np.nda
 
     return o_mat
 
+
 def orth_transl_qr(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
 
     src_vec = try_treat_as_real(src_vec)
@@ -223,4 +224,3 @@ def reg_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
     s_mat = np.diag(np.maximum(s_vec, reg_tol))
     res_mat = u_mat @ s_mat @ v_mat
     return res_mat
-

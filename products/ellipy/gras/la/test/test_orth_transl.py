@@ -3,7 +3,6 @@ import ellipy.gras.la.la as mod_la
 import pytest
 import numpy as np
 from timeit import default_timer as timer
-from ellipy.gen.common.common import throw_error, abs_rel_compare, is_numeric
 
 
 class TestOrthTransl:
@@ -113,17 +112,17 @@ class TestOrthTransl:
         def calc_trace(o_mat, a_mat):
             return np.trace(o_mat @ a_mat)
 
-        def master_check(src_mat, dst_mat):
-            src_vec = src_mat[:, 0]
-            dst_vec = dst_mat[:, 0]
+        def master_check(src_mat_mas_ch, dst_mat_mas_ch):
+            src_vec = src_mat_mas_ch[:, 0]
+            dst_vec = dst_mat_mas_ch[:, 0]
 
             # Test Hausholder function
             o_mat = orth_transl_haus(src_vec, dst_vec)
             self.aux_check_orth(o_mat, src_vec, dst_vec, orth_transl_haus)
 
             # Test MAX Trace functions
-            n_dims = np.size(src_vec)
-            a_sqrt_mat = np.random.rand(n_dims, n_dims)
+            n_dims_max_tr = np.size(src_vec)
+            a_sqrt_mat = np.random.rand(n_dims_max_tr, n_dims_max_tr)
             a_mat = a_sqrt_mat @ a_sqrt_mat.transpose()
             check('orth_transl_max_tr', 'orth_transl_max_tr', calc_trace, src_vec, dst_vec, a_mat)
 
@@ -132,15 +131,15 @@ class TestOrthTransl:
         for n_dims in __DIM_VEC.flat:
             for i_Test in range(1, __N_RANDOM_CASES + 1):
 
-                 src_mat = np.random.rand(n_dims, 2)
-                 dst_mat = np.random.rand(n_dims, 2)
+                src_mat = np.random.rand(n_dims, 2)
+                dst_mat = np.random.rand(n_dims, 2)
 
-                 master_check(src_mat, dst_mat)
+                master_check(src_mat, dst_mat)
 
-                 master_check(src_mat, src_mat)
+                master_check(src_mat, src_mat)
 
-                 dst_alt_mat = src_mat + (np.random.rand(n_dims, 2)) * __ALT_TOL
-                 master_check(src_mat, dst_alt_mat)
+                dst_alt_mat = src_mat + (np.random.rand(n_dims, 2)) * __ALT_TOL
+                master_check(src_mat, dst_alt_mat)
 
     def test_orth_transl_qr(self):
         __CALC_PRECISION = 1e-10
@@ -153,15 +152,12 @@ class TestOrthTransl:
             diff_vec = np.abs(dst_vec / dst_vec[ind] - got_vec / got_vec[ind])
             assert all(diff_vec < __CALC_PRECISION)
 
-
         check(np.array([1]), np.array([-1]))
         check(np.array([10]), np.array([2]))
-        check(np.array([[1],[0]]), np.array([[0],[1]]))
+        check(np.array([[1], [0]]), np.array([[0], [1]]))
         check(self.__SRC_TL_MAT[:, 0], self.__DST_TL_MAT[:, 0])
         check(self.__SRC_TL_MAT[:, 1], self.__DST_TL_MAT[:, 1])
-        o_imag_mat = check(np.array([[complex(2, eps)], [complex(5, eps)]]), np.array([[complex(1, eps)], [complex(2, eps)]]))
-        o_real_mat = check(np.array([[2], [5]]), np.array([[1], [2]]))
+        o_imag_mat = orth_transl_qr(np.array([[complex(2, eps)], [complex(5, eps)]]), np.array([[complex(1, eps)],
+                                                                                                [complex(2, eps)]]))
+        o_real_mat = orth_transl_qr(np.array([[2], [5]]), np.array([[1], [2]]))
         assert np.array_equal(o_imag_mat, o_real_mat), 'Incorrect work orth_transl function'
-
-
-
