@@ -92,7 +92,19 @@ def orth_transl(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
 
 
 def orth_transl_haus(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
-    pass
+
+    __MAX_TOL = 1e-14
+    src_norm_vec = src_vec / np.sqrt(src_vec @ src_vec.transpose())
+    dst_norm_vec = dst_vec / np.sqrt(dst_vec @ dst_vec.transpose())
+    w_vec = src_norm_vec - dst_norm_vec
+    w_norm = w_vec @ w_vec.transpose()
+    if w_norm < __MAX_TOL:
+        r_mult = 0
+    else:
+        r_mult = 2 / w_norm
+
+    o_mat = np.eye(np.size(src_vec)) - r_mult * (np.multiply(w_vec[:, None], w_vec))
+    return o_mat
 
 
 def orth_transl_max_dir(src_vec: np.ndarray, dst_vec: np.ndarray,
@@ -101,11 +113,59 @@ def orth_transl_max_dir(src_vec: np.ndarray, dst_vec: np.ndarray,
 
 
 def orth_transl_max_tr(src_vec: np.ndarray, dst_vec: np.ndarray, max_mat: np.ndarray) -> np.ndarray:
-    pass
 
+    n_dims = np.size(src_vec)
+    if n_dims == 1:
+        o_mat = np.ones((1, 1))
+
+    else:
+
+        o_src_mat = orth_transl(np.array([np.concatenate(([1], np.zeros(n_dims - 1)), 0)], dtype=np.float64), src_vec)
+        o_dst_mat = orth_transl(np.array([np.concatenate(([1], np.zeros(n_dims - 1)), 0)], dtype=np.float64), dst_vec)
+
+        v_0 = o_src_mat.T[1:, :]
+        u_0 = o_dst_mat[:, 1:]
+
+        src_nvec = o_src_mat[:, 0]
+        dst_nvec = o_dst_mat[:, 0]
+
+        k = v_0 @ max_mat @ u_0
+        m_mat, s_mat, n_mat = np.linalg.svd(k, full_matrices=True)
+        sline_mat = (m_mat @ n_mat).T
+        o_mat = u_0 @ sline_mat @ v_0 + np.multiply(dst_nvec[:, None], src_nvec)
+
+    return o_mat
 
 def orth_transl_qr(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
-    pass
+
+    src_vec = try_treat_as_real(src_vec)
+
+    dst_vec = try_treat_as_real(dst_vec)
+    dst_squared_norm = np.sum(dst_vec * dst_vec)
+
+    src_squared_norm = np.sum(src_vec * src_vec)
+
+    if dst_squared_norm == 0.0:
+        throw_error('wrongInput:dst_zero', 'destination vectors are expected to be non-zero')
+    if src_squared_norm == 0.0:
+        throw_error('wrongInput:src_zero', 'source vectors are expected to be non-zero')
+
+    n_dims = src_vec.shape[0]
+    if n_dims == 1:
+        o_mat = np.sign([src_vec @ dst_vec])
+        return np.array([o_mat])
+    else:
+        q_mat, r_mat = np.linalg.qr(np.c_[dst_vec, src_vec])
+        cos_val = dst_vec.T @ src_vec / np.sqrt(dst_squared_norm * src_squared_norm)
+        sin_val = -np.sqrt(1 - cos_val * cos_val)
+        if r_mat[0, 0] * r_mat[1, 1] < 0:
+            sin_val = -sin_val
+
+        qs_mat = np.zeros((n_dims, 2), dtype=np.float64)
+        qs_mat[:, 0] = q_mat[:, 0] * (cos_val - 1) + q_mat[:, 1] * sin_val
+        qs_mat[:, 1] = -q_mat[:, 0] * sin_val + q_mat[:, 1] * (cos_val - 1)
+        o_mat = np.identity(n_dims, dtype=np.float64) + qs_mat @ q_mat.T
+        return o_mat
 
 
 def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
@@ -163,3 +223,4 @@ def reg_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
     s_mat = np.diag(np.maximum(s_vec, reg_tol))
     res_mat = u_mat @ s_mat @ v_mat
     return res_mat
+
