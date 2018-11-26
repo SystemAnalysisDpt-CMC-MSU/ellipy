@@ -8,6 +8,9 @@ from numpy import linalg as la
 
 
 class TestGen:
+    __SQUARE_MAT_VEC_DATA = scipy.io.loadmat(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'square_mat_vec_data.mat'))['res_struct']
+
     def test_sqrt_pos(self):
         def is_not_neg(*args):
             try:
@@ -456,3 +459,60 @@ class TestGen:
                 out_vec[:, :, i] = res_mat
         res = out_vec - res_array
         assert (np.max(np.abs(res).flatten()) < accuracy)
+
+    def test_square_mat_vect_inv_3d(self):
+        load_data = TestGen.__SQUARE_MAT_VEC_DATA['inv'].flatten()[0]
+        data_arr = load_data['input'][0][0][0][0]
+        exp_out_arr = load_data['output'][0][0][0][0]
+        out_arr = SquareMatVector.inv(data_arr)
+        assert np.array_equal(out_arr, exp_out_arr)
+
+    def test_square_mat_vect_sqrtm_pos_3d(self):
+        load_data = TestGen.__SQUARE_MAT_VEC_DATA['sqrtm_pos'].flatten()[0]
+        data_arr = load_data['input'][0][0][0][0]
+        exp_out_arr = load_data['output'][0][0][0][0]
+        out_arr = SquareMatVector.sqrtm_pos(data_arr)
+        assert np.array_equal(out_arr, exp_out_arr)
+
+    def test_square_mat_vect_make_pos_definite_or_nan_3d(self):
+        load_data = TestGen.__SQUARE_MAT_VEC_DATA['make_pos_definite_or_nan'].flatten()[0]
+        data_arr = load_data['input'][0][0][0][0]
+        exp_out_arr = load_data['output'][0][0][0][0][:, :, 1]
+        out_arr = SquareMatVector.make_pos_definite_or_nan(data_arr)
+        assert np.array_equal(out_arr[:, :, 1], exp_out_arr)
+        assert np.isnan(out_arr[:, :, 0]).all()
+
+    def test_square_mat_vect_make_pos_definite_by_eig_3d(self):
+        load_data = TestGen.__SQUARE_MAT_VEC_DATA['make_pos_definite_by_eig'].flatten()[0]
+        data_arr = load_data['input'][0][0][0][0]
+        exp_out_arr = load_data['output'][0][0][0][0]
+        out_arr = SquareMatVector.make_pos_definite_by_eig(data_arr)
+        assert np.isclose(out_arr, exp_out_arr).all()
+
+    def test_square_mat_vect_lr_multiply(self):
+        load_data = TestGen.__SQUARE_MAT_VEC_DATA['lr_multiply'].flatten()[0]
+        data_inp_arr = load_data['input'][0][0][0]
+        exp_data_out_arr = load_data['output'][0][0][0]
+        for i in range(len(data_inp_arr)):
+            flag = data_inp_arr[i][0][2][0]
+            inp_a_arr = data_inp_arr[i][0][0]
+            inp_b_arr = data_inp_arr[i][0][1]
+            out_arr_true = exp_data_out_arr[i]
+            out_arr = SquareMatVector.lr_multiply(inp_b_arr, inp_a_arr, flag)
+            assert np.array_equal(out_arr, out_arr_true)
+
+    def test_square_mat_vect_lr_multiply_by_vec(self):
+        load_data = TestGen.__SQUARE_MAT_VEC_DATA['lr_multiply_by_vec'].flatten()[0]
+        inp_a_arr = load_data['input'][0][0][0][0]
+        inp_b_arr = load_data['input'][0][0][0][1]
+        exp_out_arr = load_data['output'][0][0][0][0]
+        out_arr = SquareMatVector.lr_multiply_by_vec(inp_b_arr, inp_a_arr)
+        assert np.array_equal(out_arr, exp_out_arr)
+
+    def test_square_mat_vect_lr_divide_vec(self):
+        load_data = TestGen.__SQUARE_MAT_VEC_DATA['lr_divide_vec'].flatten()[0]
+        inp_a_arr = load_data['input'][0][0][0][0]
+        inp_b_arr = load_data['input'][0][0][0][1]
+        exp_out_arr = load_data['output'][0][0][0][0]
+        out_arr = SquareMatVector.lr_divide_vec(inp_b_arr, inp_a_arr)
+        assert np.isclose(out_arr, exp_out_arr).all()

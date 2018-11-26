@@ -3,8 +3,7 @@ import numpy as np
 import scipy.sparse as sp
 from ellipy.gen.common.common import throw_error, is_numeric
 from numpy import linalg as la
-import os
-import scipy.io
+from ellipy.gras.la.la import is_mat_symm, sqrtm_pos
 
 
 def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
@@ -298,67 +297,146 @@ class MatVector:
 class SquareMatVector(MatVector):
     @staticmethod
     def inv(data_arr: np.ndarray) -> np.ndarray:
-        pass
+        dim_num = data_arr.ndim
+        if dim_num == 2:
+            inv_data_array = np.linalg.inv(data_arr)
+        else:
+            size_vec = data_arr.shape
+            inv_data_array = np.zeros(size_vec, dtype=np.float64)
+            for t in range(size_vec[2]):
+                inv_data_array[:, :, t] = np.linalg.inv(data_arr[:, :, t])
+        return inv_data_array
 
     @staticmethod
     def sqrtm_pos(data_arr: np.ndarray) -> np.ndarray:
-        pass
+        dim_num = data_arr.ndim
+        if dim_num == 2:
+            sqrt_data_array = sqrtm_pos(data_arr)
+        else:
+            size_vec = data_arr.shape
+            sqrt_data_array = np.zeros(size_vec, dtype=np.float64)
+            for t in range(size_vec[2]):
+                if np.isnan(data_arr[:, :, t]).any():
+                    sqrt_data_array[:, :, t] = np.NaN
+                sqrt_data_array[:, :, t] = sqrtm_pos(np.squeeze(data_arr[:, :, t]))
+        return sqrt_data_array
 
     @staticmethod
     def make_pos_definite_or_nan(data_arr: np.ndarray) -> np.ndarray:
-        pass
+        if data_arr.ndim == 2:
+            s_min = min(np.linalg.eigvalsh(data_arr))
+            if s_min < 0.:
+                res_data_arr = np.nan
+            else:
+                res_data_arr = data_arr
+        else:
+            size_vec = data_arr.shape
+            res_data_arr = np.zeros(size_vec)
+            for t in range(size_vec[2]):
+                if min(np.linalg.eigvalsh(data_arr[:, :, t])) < 0.:
+                    res_data_arr[:, :, t] = np.nan
+                else:
+                    res_data_arr[:, :, t] = data_arr[:, :, t]
+        return res_data_arr
 
     @staticmethod
     def make_pos_definite_by_eig(data_arr: np.ndarray, value: float = 1e-12) -> np.ndarray:
-        pass
+        size_vec = data_arr.shape
+        res_data_arr = np.zeros(size_vec)
+        if data_arr.ndim == 2:
+            if not is_mat_symm(data_arr):
+                throw_error('wrongInput:non SymmMat', 'input matrix must be symetric')
+            d_vec, v_mat = np.linalg.eigh(data_arr)
+            d_vec[d_vec < 0.] = value
+            res_data_arr = (v_mat @ np.diag(d_vec) @ v_mat.T).real
+        else:
+            for t in range(size_vec[2]):
+                if not is_mat_symm(data_arr[:, :, t]):
+                    throw_error('wrongInput:non SymmMat', 'input matrix must be symetric')
+                d_vec, v_mat = np.linalg.eigh(data_arr[:, :, t])
+                d_vec[d_vec < 0.] = value
+                res_data_arr[:, :, t] = (v_mat @ np.diag(d_vec) @ v_mat.T).real
+        return res_data_arr
 
     @staticmethod
     def lr_multiply(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray, flag: str = 'R') -> np.ndarray:
-        loaded_info = scipy.io.loadmat(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test', 'lr_multiply.mat'))
-        cached_arr = loaded_info['SCached'][0]
-        for i_cached in np.arange(cached_arr.size):
-            cached = cached_arr[i_cached]
-            inp_vec = cached['inpCVec'][0]
-            out_vec = cached['outCVec'][0]
-            if not np.array_equal(np.array(inp_a_arr, dtype=np.float64),
-                                  np.array(inp_vec[0], dtype=np.float64)):
-                continue
-            if not np.array_equal(np.array(inp_b_arr, dtype=np.float64),
-                                  np.array(inp_vec[1], dtype=np.float64)):
-                continue
-            if inp_vec.size > 2:
-                continue
-            return np.array(out_vec[0], dtype=np.float64)
-        throw_error('wrongInput', 'Cached results are not found for given inputs')
+        a_size_vec = inp_a_arr.shape
+        b_size_vec = inp_b_arr.shape
+        out_array = None
+        if inp_b_arr.ndim == 2:
+            if inp_a_arr.ndim <= 2:
+                if flag == 'R':
+                    out_array = inp_a_arr.T @ inp_b_arr @ inp_a_arr
+                elif flag == 'L':
+                    out_array = inp_a_arr @ inp_b_arr @ inp_a_arr.T
+                else:
+                    throw_error('wrong_input', 'flag {} is not supported'.format(flag))
+            else:
+                if flag == 'R':
+                    out_array = inp_a_arr[:, :, 0].T @ inp_b_arr @ inp_a_arr[:, :, 0]
+                elif flag == 'L':
+                    out_array = inp_a_arr[:, :, 0] @ inp_b_arr @ inp_a_arr[:, :, 0].T
+                else:
+                    throw_error('wrong_input', 'flag {} is not supported'.format(flag))
+        else:
+            if inp_a_arr.ndim <= 2:
+                if flag == 'R':
+                    out_array = np.zeros((a_size_vec[1], a_size_vec[1], b_size_vec[2]), dtype=np.float64)
+                    for t in range(b_size_vec[2]):
+                        out_array[:, :, t] = inp_a_arr.T @ inp_b_arr[:, :, t] @ inp_a_arr
+                elif flag == 'L':
+                    out_array = np.zeros((a_size_vec[0], a_size_vec[0], b_size_vec[2]))
+                    for t in range(b_size_vec[2]):
+                        out_array[:, :, t] = inp_a_arr @ inp_b_arr[:, :, t] @ inp_a_arr.T
+                else:
+                    throw_error('wrong_input', 'flag {} is not supported'.format(flag))
+            else:
+                if flag == 'R':
+                    out_array = np.zeros((a_size_vec[1], a_size_vec[1], b_size_vec[2]))
+                    for t in range(b_size_vec[2]):
+                        out_array[:, :, t] = inp_a_arr[:, :, t].T @ inp_b_arr[:, :, t] @ inp_a_arr[:, :, t]
+                elif flag == 'L':
+                    out_array = np.zeros((a_size_vec[0], a_size_vec[0], b_size_vec[2]))
+                    for t in range(b_size_vec[2]):
+                        out_array[:, :, t] = inp_a_arr[:, :, t] @ inp_b_arr[:, :, t] @ inp_a_arr[:, :, t].T
+                else:
+                    throw_error('wrong_input', 'flag {} is not supported'.format(flag))
+        return out_array
 
     @staticmethod
     def lr_multiply_by_vec(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray) -> np.ndarray:
-        loaded_info = scipy.io.loadmat(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test', 'lr_multiplyByVec.mat'))
-        cached_arr = loaded_info['SCached'][0]
-        for i_cached in np.arange(cached_arr.size):
-            cached = cached_arr[i_cached]
-            inp_vec = cached['inpCVec'][0]
-            out_vec = cached['outCVec'][0]
-            if not np.array_equal(np.array(inp_b_arr, dtype=np.float64),
-                                  np.array(inp_vec[0], dtype=np.float64)):
-                continue
-            if not np.array_equal(np.array(inp_a_arr, dtype=np.float64),
-                                  np.array(inp_vec[1], dtype=np.float64)):
-                continue
-            if inp_vec.size > 2:
-                continue
-            return np.array(out_vec[0], dtype=np.float64)
-        throw_error('wrongInput', 'Cached results are not found for given inputs')
+        if inp_a_arr.ndim == 1:
+            inp_a_arr.shape = (inp_a_arr.size, 1)
+        a_size_vec = inp_a_arr.shape
+        if inp_b_arr.ndim == 2:
+            out_vec = np.zeros((1, inp_a_arr.shape[1]))
+            for t in range(a_size_vec[1]):
+                out_vec[:, t] = inp_a_arr[:, t].T @ inp_b_arr @ inp_a_arr[:, t]
+        else:
+            out_vec = np.zeros((1, inp_a_arr.shape[1]))
+            for t in range(a_size_vec[1]):
+                out_vec[:, t] = inp_a_arr[:, t].T @ inp_b_arr[:, :, t] @ inp_a_arr[:, t]
+        return out_vec
 
     @staticmethod
     def lr_divide_vec(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray) -> np.ndarray:
-        pass
+        if inp_a_arr.ndim == 1:
+            inp_a_arr.shape = (inp_a_arr.size, 1)
+        if inp_b_arr.ndim == 2:
+            out_vec = inp_a_arr.T @ np.linalg.lstsq(inp_b_arr, inp_a_arr, -1)[0]
+        else:
+            if inp_a_arr.shape[1] == 1:
+                out_vec = np.zeros((inp_b_arr.shape[2],), dtype=np.float64)
+                for t in range(inp_b_arr.shape[2]):
+                    out_vec[t] = inp_a_arr.T @ np.linalg.lstsq(inp_b_arr[:, :, t], inp_a_arr, -1)[0]
+            else:
+                out_vec = np.zeros((inp_a_arr.shape[1],), dtype=np.float64)
+                for t in range(inp_a_arr.shape[1]):
+                    out_vec[t] = inp_a_arr[:, t].T @ np.linalg.lstsq(inp_b_arr[:, :, t], inp_a_arr[:, t], -1)[0]
+        return out_vec
 
 
 class SymmetricMatVector(SquareMatVector):
-
     @staticmethod
     def lr_svd_multiply(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray, flag: str = 'R') -> np.ndarray:
         u_array, s_array = SymmetricMatVector.__array_svd(inp_b_arr)
