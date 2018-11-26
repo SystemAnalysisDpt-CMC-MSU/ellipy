@@ -3,9 +3,8 @@ import numpy as np
 import scipy.sparse as sp
 from ellipy.gen.common.common import throw_error, is_numeric
 from numpy import linalg as la
-import os
-import scipy.io
 from ellipy.gras.la.la import is_mat_symm, sqrtm_pos
+
 
 def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
     pass
@@ -365,6 +364,7 @@ class SquareMatVector(MatVector):
     def lr_multiply(inp_b_arr: np.ndarray, inp_a_arr: np.ndarray, flag: str = 'R') -> np.ndarray:
         a_size_vec = inp_a_arr.shape
         b_size_vec = inp_b_arr.shape
+        out_array = np.zeros((1, 1))
         if inp_b_arr.ndim == 2:
             if len(inp_a_arr.shape) <= 2:
                 if flag == 'R':

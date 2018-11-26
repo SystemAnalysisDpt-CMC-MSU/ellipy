@@ -8,7 +8,9 @@ from numpy import linalg as la
 
 
 class TestGen:
-    __SQUARE_MAT_VEC_DATA = scipy.io.loadmat(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'square_mat_vec_data.mat'))['res_struct']
+    __SQUARE_MAT_VEC_DATA = scipy.io.loadmat(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'square_mat_vec_data.mat'))['res_struct']
+
     def test_sqrt_pos(self):
         def is_not_neg(*args):
             try:
