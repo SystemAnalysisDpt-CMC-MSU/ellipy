@@ -38,7 +38,7 @@ class TestGeom:
         
         for i in range(0, num_points.shape[0]):
             p_mat = sphere_part(num_points[i])
-            norm_vec = np.sqrt(sum(p_mat * p_mat, 1))
+            norm_vec = np.sqrt(np.sum(p_mat * p_mat, 1))
             
             assert p_mat.shape[0] == num_points[i]
             assert p_mat.shape[1] == 3

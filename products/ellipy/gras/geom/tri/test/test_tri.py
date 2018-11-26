@@ -288,11 +288,11 @@ class TestTri:
                                [ 7,  4,  8],
                                [ 4,  7,  3],
                                [ 8, 11,  7]])
-        assert np.max(np.abs(facets - exp_result)) == 0
+        assert np.array_equal(facets, exp_result)
 
     def test_ell_tube_discr_tri(self):         
         facets = ell_tube_discr_tri(4, 3) + 1
         exp_result = np.array([[0, 1,  2,  3, 0],
                                [4, 5,  6,  7, 4],
                                [8, 9, 10, 11, 8]])
-        assert np.max(np.abs(facets - exp_result)) == 0
+        assert np.array_equal(facets, exp_result)

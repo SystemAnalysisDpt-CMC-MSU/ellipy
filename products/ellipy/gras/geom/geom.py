@@ -48,7 +48,7 @@ def sphere_part(n_points: int) -> np.ndarray:
     else:
         depth = math.ceil(np.log2((n_points - 1.) / 5) / 2)
         
-    p_mat = unique_directions(sphere_tri(depth), 1e-8)
+    p_mat = unique_directions(sphere_tri(depth)[0], 1e-8)
 
     x_dist_vec = sphere_distance(p_mat, np.array([1, 0, 0]))
     y_dist_vec = sphere_distance(p_mat, np.array([0, 1, 0]))
