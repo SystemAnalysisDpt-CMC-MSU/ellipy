@@ -4,8 +4,17 @@ import numpy as np
 from numpy import linalg
 
 
-def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float) -> bool:
-    pass
+def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float = 0.0) -> bool:
+    if abs_tol < 0.0:
+        throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
+    if abs_tol == 0.0:
+        return True
+    else:
+        min_sing = np.min(np.linalg.svd(q_mat)[1])
+        if min_sing < abs_tol:
+            return False
+        else:
+            return True
 
 
 def is_mat_pos_def(q_mat: np.ndarray, abs_tol: float = 0., is_flag_sem_def_on: bool = False) -> bool:
