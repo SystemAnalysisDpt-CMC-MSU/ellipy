@@ -2,7 +2,7 @@ from typing import Tuple, Union
 import numpy as np
 import math
 from ellipy.gen.common.common import throw_error
-from ellipy.gras.geom.tri import sphere_tri
+from ellipy.gras.geom.tri.tri import sphere_tri
 
 def circle_part(n_points: int, return_apart: bool = False,
                 angle_range_vec: np.ndarray = None) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
