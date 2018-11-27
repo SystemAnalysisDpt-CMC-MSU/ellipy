@@ -119,22 +119,21 @@ def orth_transl_max_tr(src_vec: np.ndarray, dst_vec: np.ndarray, max_mat: np.nda
     n_dims = src_vec.shape[0]
     if n_dims == 1:
         return np.ones((1, 1))
-
     else:
+        e_vec = np.append(np.ones((1, ), dtype=np.float64), np.zeros((n_dims - 1, ), dtype=np.float64))
+        o_src_mat = orth_transl(e_vec, src_vec)
+        o_dst_mat = orth_transl(e_vec, dst_vec)
 
-        o_src_mat = orth_transl(np.array([np.concatenate(([1], np.zeros(n_dims - 1)), 0)], dtype=np.float64), src_vec)
-        o_dst_mat = orth_transl(np.array([np.concatenate(([1], np.zeros(n_dims - 1)), 0)], dtype=np.float64), dst_vec)
+        v_0_mat = o_src_mat.T[1:, :]
+        u_0_mat = o_dst_mat[:, 1:]
 
-        v_0 = o_src_mat.T[1:, :]
-        u_0 = o_dst_mat[:, 1:]
+        src_n_vec = np.expand_dims(o_src_mat[:, 0], 1)
+        dst_n_vec = np.expand_dims(o_dst_mat[:, 0], 1)
 
-        src_nvec = o_src_mat[:, 0]
-        dst_nvec = o_dst_mat[:, 0]
-
-        k = v_0 @ max_mat @ u_0
-        m_mat, s_mat, n_mat = np.linalg.svd(k, full_matrices=True)
+        k_mat = v_0_mat @ max_mat @ u_0_mat
+        m_mat, _, n_mat = np.linalg.svd(k_mat, full_matrices=True)
         sline_mat = (m_mat @ n_mat).T
-        o_mat = u_0 @ sline_mat @ v_0 + dst_nvec[:, None] * src_nvec
+        o_mat = u_0_mat @ sline_mat @ v_0_mat + dst_n_vec @ src_n_vec.T
         return o_mat
 
 
@@ -152,15 +151,20 @@ def orth_transl_qr(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
     if src_squared_norm == 0.0:
         throw_error('wrongInput:src_zero', 'source vectors are expected to be non-zero')
 
+    if src_vec.ndim == 1:
+        src_vec = np.expand_dims(src_vec, 1)
+    if dst_vec.ndim == 1:
+        dst_vec = np.expand_dims(dst_vec, 1)
+
     n_dims = src_vec.shape[0]
     if n_dims == 1:
-        o_mat = np.sign([src_vec @ dst_vec])
-        return np.array([o_mat])
+        o_mat = np.sign(src_vec @ dst_vec)
+        return o_mat
     else:
-        q_mat, r_mat = np.linalg.qr(np.c_[dst_vec, src_vec])
+        q_mat, r_mat = np.linalg.qr(np.hstack((dst_vec, src_vec)))
         cos_val = dst_vec.T @ src_vec / np.sqrt(dst_squared_norm * src_squared_norm)
         sin_val = -np.sqrt(1 - cos_val * cos_val)
-        if r_mat[0, 0] * r_mat[1, 1] < 0:
+        if r_mat[0, 0] * r_mat[1, 1] < 0.:
             sin_val = -sin_val
 
         qs_mat = np.zeros((n_dims, 2), dtype=np.float64)

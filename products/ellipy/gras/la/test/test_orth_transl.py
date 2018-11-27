@@ -14,7 +14,9 @@ class TestOrthTransl:
         def check(check_src_vec, check_dst_vec, exp_error_tag):
             with pytest.raises(Exception) as e:
                 orth_transl(check_src_vec, check_dst_vec)
-                orth_transl_qr(check_src_vec, check_dst_vec)
+            assert exp_error_tag in str(e.value)
+            with pytest.raises(Exception) as e:
+                    orth_transl_qr(check_src_vec, check_dst_vec)
             assert exp_error_tag in str(e.value)
 
         src_vec = np.array([0, 0], dtype=np.float64)
@@ -33,7 +35,7 @@ class TestOrthTransl:
         check(src_vec, dst_vec, 'wrongInput:inp_mat')
 
         src_vec = np.array([[2], [5]], dtype=np.float64)
-        dst_vec = np.array([[1], [2 + 1.0j * np.finfo(float).eps/2]], dtype=complex)
+        dst_vec = np.array([[1], [2 + 1.0j * np.finfo(float).eps/2]], dtype=np.complex128)
 
         oimag_mat = orth_transl(src_vec, dst_vec)
         dst_vec = np.array([[1], [2]], dtype=np.float64)
