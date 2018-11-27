@@ -293,6 +293,6 @@ class TestTri:
     def test_ell_tube_discr_tri(self):
         facets = ell_tube_discr_tri(4, 3) + 1
         exp_result = np.array([[0, 1, 2, 3, 0],
-                               [4, 5, 6, 7, 4],
-                               [8, 9, 10, 11, 8]])
+                               [3, 4, 5, 6, 3],
+                               [7, 8, 9, 10, 7]])
         assert np.array_equal(facets, exp_result)
