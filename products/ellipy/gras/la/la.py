@@ -94,16 +94,18 @@ def orth_transl(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
 def orth_transl_haus(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
 
     __MAX_TOL = 1e-14
-    src_norm_vec = src_vec / np.sqrt(src_vec @ src_vec.transpose())
-    dst_norm_vec = dst_vec / np.sqrt(dst_vec @ dst_vec.transpose())
+    src_norm_vec = src_vec / np.sqrt(np.sum(src_vec ** 2))
+    dst_norm_vec = dst_vec / np.sqrt(np.sum(dst_vec ** 2))
     w_vec = src_norm_vec - dst_norm_vec
-    w_norm = w_vec @ w_vec.transpose()
+    if w_vec.ndim == 1:
+        w_vec = np.expand_dims(w_vec, 1)
+    w_norm = np.sum(w_vec ** 2)
     if w_norm < __MAX_TOL:
         r_mult = 0
     else:
         r_mult = 2 / w_norm
 
-    o_mat = np.eye(np.size(src_vec)) - r_mult * (np.multiply(w_vec[:, None], w_vec))
+    o_mat = np.eye(np.size(src_vec)) - r_mult * (w_vec @ w_vec.T)
     return o_mat
 
 
