@@ -116,9 +116,9 @@ def orth_transl_max_dir(src_vec: np.ndarray, dst_vec: np.ndarray,
 
 def orth_transl_max_tr(src_vec: np.ndarray, dst_vec: np.ndarray, max_mat: np.ndarray) -> np.ndarray:
 
-    n_dims = np.size(src_vec)
+    n_dims = src_vec.shape[0]
     if n_dims == 1:
-        o_mat = np.ones((1, 1))
+        return np.ones((1, 1))
 
     else:
 
@@ -134,9 +134,8 @@ def orth_transl_max_tr(src_vec: np.ndarray, dst_vec: np.ndarray, max_mat: np.nda
         k = v_0 @ max_mat @ u_0
         m_mat, s_mat, n_mat = np.linalg.svd(k, full_matrices=True)
         sline_mat = (m_mat @ n_mat).T
-        o_mat = u_0 @ sline_mat @ v_0 + np.multiply(dst_nvec[:, None], src_nvec)
-
-    return o_mat
+        o_mat = u_0 @ sline_mat @ v_0 + dst_nvec[:, None] * src_nvec
+        return o_mat
 
 
 def orth_transl_qr(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:

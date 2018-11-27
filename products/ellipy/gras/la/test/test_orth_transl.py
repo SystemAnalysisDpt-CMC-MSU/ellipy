@@ -14,6 +14,7 @@ class TestOrthTransl:
         def check(check_src_vec, check_dst_vec, exp_error_tag):
             with pytest.raises(Exception) as e:
                 orth_transl(check_src_vec, check_dst_vec)
+                orth_transl_qr(check_src_vec, check_dst_vec)
             assert exp_error_tag in str(e.value)
 
         src_vec = np.array([0, 0], dtype=np.float64)
@@ -94,27 +95,27 @@ class TestOrthTransl:
         __DIM_VEC = np.array([[1, 2, 3, 5]], dtype=np.int64)
         __ALT_TOL = 1e-10
 
-        def check(f_prod_handle, f_test_handle, f_comp_handle, *varargin):
+        def check(f_prod, f_test, f_comp, *args):
 
-            src_vec, dst_vec, a_mat = varargin
-            o_mat = getattr(mod_la, f_prod_handle)(*varargin)
-            self.aux_check_orth(o_mat, src_vec, dst_vec, '{}'.format(f_prod_handle))
+            src_vec, dst_vec, a_mat = args
+            o_mat = f_prod(*args)
+            self.aux_check_orth(o_mat, src_vec, dst_vec, '{}'.format(f_prod))
 
-            o_exp_mat = getattr(mod_la, f_test_handle)(*varargin)
-            self.aux_check_orth(o_exp_mat, src_vec, dst_vec, '{}'.format(f_test_handle))
-            comp_val = f_comp_handle(o_mat, a_mat)
-            comp_exp_val = f_comp_handle(o_exp_mat, a_mat)
+            o_exp_mat = f_test(*args)
+            self.aux_check_orth(o_exp_mat, src_vec, dst_vec, '{}'.format(f_test))
+            comp_val = f_comp(o_mat, a_mat)
+            comp_exp_val = f_comp(o_exp_mat, a_mat)
             real_tol = np.max(np.abs(comp_val - comp_exp_val))
             is_pos = real_tol <= self.__MAX_TOL
             assert is_pos, 'when comparing {} and {} real tol {}>{}' \
-                .format(f_prod_handle, f_test_handle, real_tol, self.__MAX_TOL)
+                .format(f_prod, f_test, real_tol, self.__MAX_TOL)
 
         def calc_trace(o_mat, a_mat):
             return np.trace(o_mat @ a_mat)
 
-        def master_check(src_mat_mas_ch, dst_mat_mas_ch):
-            src_vec = src_mat_mas_ch[:, 0]
-            dst_vec = dst_mat_mas_ch[:, 0]
+        def master_check(mas_ch_src_mat, mas_ch_dst_mat):
+            src_vec = mas_ch_src_mat[:, 0]
+            dst_vec = mas_ch_dst_mat[:, 0]
 
             # Test Hausholder function
             o_mat = orth_transl_haus(src_vec, dst_vec)
@@ -124,7 +125,7 @@ class TestOrthTransl:
             n_dims_max_tr = np.size(src_vec)
             a_sqrt_mat = np.random.rand(n_dims_max_tr, n_dims_max_tr)
             a_mat = a_sqrt_mat @ a_sqrt_mat.transpose()
-            check('orth_transl_max_tr', 'orth_transl_max_tr', calc_trace, src_vec, dst_vec, a_mat)
+            check(orth_transl_max_tr, orth_transl_max_tr, calc_trace, src_vec, dst_vec, a_mat)
 
         master_check(self.__SRC_TL_MAT, self.__DST_TL_MAT)
 
@@ -143,7 +144,7 @@ class TestOrthTransl:
 
     def test_orth_transl_qr(self):
         __CALC_PRECISION = 1e-10
-        eps = 1e-17
+        __EPS = 1e-17
 
         def check(src_vec, dst_vec):
             ind = np.where(dst_vec != 0)[0][0]
@@ -157,7 +158,6 @@ class TestOrthTransl:
         check(np.array([[1], [0]]), np.array([[0], [1]]))
         check(self.__SRC_TL_MAT[:, 0], self.__DST_TL_MAT[:, 0])
         check(self.__SRC_TL_MAT[:, 1], self.__DST_TL_MAT[:, 1])
-        o_imag_mat = orth_transl_qr(np.array([[complex(2, eps)], [complex(5, eps)]]), np.array([[complex(1, eps)],
-                                                                                                [complex(2, eps)]]))
+        o_imag_mat = orth_transl_qr(np.array([[2+1j*__EPS/10], [5]]), np.array([[1], [2+1j*__EPS/2]]))
         o_real_mat = orth_transl_qr(np.array([[2], [5]]), np.array([[1], [2]]))
         assert np.array_equal(o_imag_mat, o_real_mat), 'Incorrect work orth_transl function'
