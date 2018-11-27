@@ -272,27 +272,27 @@ class TestTri:
 
     def test_ell_tube_2_tri(self):
         facets = ell_tube_2_tri(4, 3)
-        exp_result = np.array([[ 0,  1,  5],
-                               [ 1,  2,  6],
-                               [ 2,  3,  7],
-                               [ 4,  5, 9 ],
-                               [ 5,  6, 10],
-                               [ 6,  7, 11],
-                               [ 5,  4,  0],
-                               [ 6,  5,  1],
-                               [ 7,  6,  2],
-                               [9,   8,  4],
-                               [10,  9,  5],
-                               [11, 10,  6],
-                               [ 3,  0,  4],
-                               [ 7,  4,  8],
-                               [ 4,  7,  3],
-                               [ 8, 11,  7]])
+        exp_result = np.array([[0, 1, 5],
+                               [1, 2, 6],
+                               [2, 3, 7],
+                               [4, 5, 9],
+                               [5, 6, 10],
+                               [6, 7, 11],
+                               [5, 4, 0],
+                               [6, 5, 1],
+                               [7, 6, 2],
+                               [9, 8, 4],
+                               [10, 9, 5],
+                               [11, 10, 6],
+                               [3, 0, 4],
+                               [7, 4, 8],
+                               [4, 7, 3],
+                               [8, 11, 7]])
         assert np.array_equal(facets, exp_result)
 
-    def test_ell_tube_discr_tri(self):         
+    def test_ell_tube_discr_tri(self):
         facets = ell_tube_discr_tri(4, 3) + 1
-        exp_result = np.array([[0, 1,  2,  3, 0],
-                               [4, 5,  6,  7, 4],
+        exp_result = np.array([[0, 1, 2, 3, 0],
+                               [4, 5, 6, 7, 4],
                                [8, 9, 10, 11, 8]])
         assert np.array_equal(facets, exp_result)

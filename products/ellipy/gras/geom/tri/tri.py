@@ -7,29 +7,27 @@ from ellipy.gras.geom.geom import circle_part
 
 
 def ell_tube_2_tri(n_e_points: int, n_points: int) -> np.ndarray:
-    
     td = np.arange(1, n_points + 1)
     adtime = td[:-1]
-    ttime_data = adtime*n_e_points
-    adtime = (adtime - 1)*n_e_points
+    ttime_data = adtime * n_e_points
+    adtime = (adtime - 1) * n_e_points
     adtime = np.tile(adtime, (n_e_points - 1, 1))
     Ie = np.cumsum(np.tile(np.ones((1, n_points - 1)), (n_e_points - 1, 1)), 0) + adtime
     Ie = Ie.transpose().flatten()
 
     part1_facet_data_1 = np.vstack((Ie, Ie + 1, Ie + 1 + n_e_points)).T
-    part1_facet_data_2 = np.vstack((Ie+1+n_e_points, Ie+n_e_points, Ie)).T
-    part2_facet_data_1 = np.vstack((ttime_data, ttime_data+1-n_e_points, ttime_data+1)).T
-    part2_facet_data_2 = np.vstack((ttime_data+1, ttime_data+n_e_points, ttime_data)).T
+    part1_facet_data_2 = np.vstack((Ie + 1 + n_e_points, Ie + n_e_points, Ie)).T
+    part2_facet_data_1 = np.vstack((ttime_data, ttime_data + 1 - n_e_points, ttime_data + 1)).T
+    part2_facet_data_2 = np.vstack((ttime_data + 1, ttime_data + n_e_points, ttime_data)).T
 
     return np.vstack((part1_facet_data_1, part1_facet_data_2, part2_facet_data_1, part2_facet_data_2)) - 1
 
-  
-
-
 
 def ell_tube_discr_tri(n_dim: int, m_dim: int) -> np.ndarray:
-    return np.tile(n_dim * np.arange(0,m_dim).T, ([n_dim + 1, 1])).T + np.tile(np.hstack((np.arange(0,n_dim), 0)), ([m_dim, 1])) 
-    
+    return np.tile(n_dim * np.arange(0, m_dim).T, ([n_dim + 1, 1])).T + np.tile(np.hstack((np.arange(0, n_dim), 0)),
+                                                                                ([m_dim, 1]))
+
+
 def icosahedron() -> Tuple[np.ndarray, np.ndarray]:
     __IND_VEC = np.arange(0, 5)
     __Z_VEC = np.full((5,), 0.5)
@@ -40,14 +38,14 @@ def icosahedron() -> Tuple[np.ndarray, np.ndarray]:
     v_mat[11][2] = -1.0
     #
     alpha_vec = -np.pi / 5 + __IND_VEC * np.pi / 2.5
-    v_mat[1+__IND_VEC] = np.column_stack((np.cos(alpha_vec)/r, np.sin(alpha_vec)/r, __Z_VEC/r))
+    v_mat[1 + __IND_VEC] = np.column_stack((np.cos(alpha_vec) / r, np.sin(alpha_vec) / r, __Z_VEC / r))
     #
     alpha_vec = __IND_VEC * np.pi / 2.5
-    v_mat[6+__IND_VEC] = np.column_stack((np.cos(alpha_vec)/r, np.sin(alpha_vec)/r, -__Z_VEC/r))
+    v_mat[6 + __IND_VEC] = np.column_stack((np.cos(alpha_vec) / r, np.sin(alpha_vec) / r, -__Z_VEC / r))
     f_mat = np.array([
-        [0, 1, 2],  [0, 2, 3],  [0, 3, 4],  [0, 4, 5],   [0, 5, 1],
-        [1, 6, 2],  [2, 7, 3],  [3, 8, 4],  [4, 9, 5],   [5, 10, 1],
-        [6, 7, 2],  [7, 8, 3],  [8, 9, 4],  [9, 10, 5],  [10, 6, 1],
+        [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 5], [0, 5, 1],
+        [1, 6, 2], [2, 7, 3], [3, 8, 4], [4, 9, 5], [5, 10, 1],
+        [6, 7, 2], [7, 8, 3], [8, 9, 4], [9, 10, 5], [10, 6, 1],
         [6, 11, 7], [7, 11, 8], [8, 11, 9], [9, 11, 10], [10, 11, 6]
     ], dtype=int)
     return v_mat, f_mat
@@ -79,7 +77,7 @@ def map_face_2_edge(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarr
     n_edges = np.size(e_mat, 0)
     ind_f2e_vec = np.zeros(shape=(np.sum(ind_shift_vec), 1), dtype=np.int32)
     ind_f2e_vec[0] = 1
-    ind_f2e_vec[np.cumsum(ind_shift_vec[:-1])] = np.ones(shape=(n_edges-1, 1))
+    ind_f2e_vec[np.cumsum(ind_shift_vec[:-1])] = np.ones(shape=(n_edges - 1, 1))
     ind_f2e_vec = np.cumsum(ind_f2e_vec) - 1
     f_mat = f_mat[ind_f_vec]
     ind_edge_num_vec = \
@@ -89,7 +87,7 @@ def map_face_2_edge(f_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarr
          - 2 * np.all(np.equal(f_mat[:, [2, 1]], e_mat[ind_f2e_vec]), 1)
          + 3 * np.all(np.equal(f_mat[:, [0, 2]], e_mat[ind_f2e_vec]), 1)
          - 3 * np.all(np.equal(f_mat[:, [2, 0]], e_mat[ind_f2e_vec]), 1)).flatten()
-    ind_sort_vec = np.lexsort((ind_f_vec, np.abs(ind_edge_num_vec)-1))
+    ind_sort_vec = np.lexsort((ind_f_vec, np.abs(ind_edge_num_vec) - 1))
     ind_f2e_vec = ind_f2e_vec[ind_sort_vec]
     if n_faces > 1:
         f2e_mat = np.reshape(ind_f2e_vec, newshape=(3, n_faces)).T
@@ -238,15 +236,16 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
                                       )))
 
             f2e2_new_mat = n_edges + \
-                np.hstack([(ml.repmat(ind_shift_edge_vec, 1, 3) +
-                          np.kron(np.array([1, 0, 2]) * n_shrinked_faces, np.ones(shape=(1, n_shrinked_faces)))).T,
-                          3 * n_shrinked_faces - n_verts + dir_mat * n_new_verts +
-                          np.vstack([
-                              np.column_stack([ind_vf13_vec, ind_vf12_vec]),
-                              np.column_stack([ind_vf12_vec, ind_vf23_vec]),
-                              np.column_stack([ind_vf23_vec, ind_vf13_vec])
-                          ])
-                          ])
+                           np.hstack([(ml.repmat(ind_shift_edge_vec, 1, 3) +
+                                       np.kron(np.array([1, 0, 2]) * n_shrinked_faces,
+                                               np.ones(shape=(1, n_shrinked_faces)))).T,
+                                      3 * n_shrinked_faces - n_verts + dir_mat * n_new_verts +
+                                      np.vstack([
+                                          np.column_stack([ind_vf13_vec, ind_vf12_vec]),
+                                          np.column_stack([ind_vf12_vec, ind_vf23_vec]),
+                                          np.column_stack([ind_vf23_vec, ind_vf13_vec])
+                                      ])
+                                      ])
 
             f2e2_is_dir_new_mat = np.array(np.hstack([(np.kron(np.array([1, 0, 0]),
                                                                np.ones(shape=(1, n_shrinked_faces)))).T,
@@ -404,7 +403,6 @@ def is_face(f_mat: np.ndarray, f_to_check_mat: np.ndarray) -> np.ndarray:
 
 def is_tri_equal(v1_mat: np.ndarray, f1_mat: np.ndarray,
                  v2_mat: np.ndarray, f2_mat: np.ndarray, max_tol: float) -> Tuple[bool, str]:
-
     n1_verts = v1_mat.shape[0]
     n2_verts = v2_mat.shape[0]
     is_pos = n1_verts == n2_verts
@@ -419,7 +417,7 @@ def is_tri_equal(v1_mat: np.ndarray, f1_mat: np.ndarray,
 
             f1_mat = ind_f1_vec[f1_mat]
             f2_mat = ind_f2_vec[f2_mat]
-            real_tol = np.max(np.max(np.abs(v1_mat-v2_mat)))
+            real_tol = np.max(np.max(np.abs(v1_mat - v2_mat)))
             is_pos = real_tol <= max_tol
 
             if is_pos:
@@ -442,8 +440,8 @@ def is_tri_equal(v1_mat: np.ndarray, f1_mat: np.ndarray,
         report_str = 'numbers of vertices are different'
     return is_pos, report_str
 
-    
-def sphere_tri_ext(n_dim: int, n_points: int, return_f_grid: bool = False)\
+
+def sphere_tri_ext(n_dim: int, n_points: int, return_f_grid: bool = False) \
         -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     def spherebndr_2d(n_points_2d: int, return_f_vec: bool = False) -> \
             Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
