@@ -1,25 +1,25 @@
 from ellipy.gras.geom.ell.ell import *
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm, inv
 from scipy.linalg import hilbert as hilb
 from scipy.linalg import invhilbert as invhilb
-from numpy.linalg import inv
+from ellipy.gen.common.common import throw_error, is_numeric
 
 
 class TestEll:
     def test_inv_mat(self):
         __EPS = 1e-15
-        norm_diff_vec = np.array(range(2, 12))
+        tmp = 1.
         for x in range(2, 12):
-            norm_diff_vec[x - 2] = norm(invhilb(x) - inv_mat(hilb(x)))
-            - norm(invhilb(x) - inv(hilb(x)))
-        is_ok = abs(np.prod(norm_diff_vec)) < __EPS
+            tmp = tmp * (norm(invhilb(x) - inv_mat(hilb(x))) -
+                         norm(invhilb(x) - inv(hilb(x))))
+        is_ok = abs(tmp) < __EPS
         assert np.array_equal(True, is_ok)
 
     def test_quad_mat(self):
         __MAX_TOL = 1e-10
         q_mat = np.array([[2, 5, 7], [6, 3, 4], [5, -2, -3]])
-        x_vec = np.array([7, 8, 9]).transpose()
+        x_vec = np.array([7, 8, 9]).T
         c_vec = np.array([1, 0, 1])
         calc_mode = 'plain'
         __ANALYTICAL_RESULT_1 = 1304
