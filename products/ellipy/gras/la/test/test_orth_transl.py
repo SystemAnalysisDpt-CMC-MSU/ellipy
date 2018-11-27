@@ -1,5 +1,4 @@
 from ellipy.gras.la.la import *
-import ellipy.gras.la.la as mod_la
 import pytest
 import numpy as np
 from timeit import default_timer as timer
@@ -45,14 +44,14 @@ class TestOrthTransl:
     def test_ml_orth_transl(self):
         self.aux_test_qorth(ml_orth_transl, orth_transl)
 
-    def aux_test_qorth(self, f_handle, f_handle_single) -> float:
+    def aux_test_qorth(self, f, f_single) -> float:
         def check(o_mat, src_vec, dst_exp_vec):
-            self.aux_check_orth(o_mat, src_vec, dst_exp_vec, '{}'.format(f_handle))
-            o_exp_mat = f_handle_single(src_vec, dst_exp_vec)
+            self.aux_check_orth(o_mat, src_vec, dst_exp_vec, '{}'.format(f))
+            o_exp_mat = f_single(src_vec, dst_exp_vec)
             real_tol = np.max(np.max(np.abs(o_mat - o_exp_mat)))
             is_pos = real_tol <= self.__MAX_TOL
             assert is_pos, 'when comparing {} and {} real tol {}>{}'\
-                .format(f_handle, f_handle_single, real_tol, self.__MAX_TOL)
+                .format(f, f_single, real_tol, self.__MAX_TOL)
 
         __N_ELEMS = 1000
         src_mat = self.__SRC_TL_MAT
@@ -60,7 +59,7 @@ class TestOrthTransl:
         dst_array = np.tile(dst_mat[:, :, np.newaxis], (1, 1, __N_ELEMS))
         n_vecs = np.size(src_mat, 1)
         t_start = timer()
-        o_array = f_handle(src_mat, dst_array)
+        o_array = f(src_mat, dst_array)
         t_elapsed = timer() - t_start
         for i_elem in range(__N_ELEMS):
             for i_vec in range(n_vecs):
@@ -94,28 +93,27 @@ class TestOrthTransl:
 
     def test_orth_transl_max(self):
         __N_RANDOM_CASES = 10
-        __DIM_VEC = np.array([[1, 2, 3, 5]], dtype=np.int64)
+        __DIM_VEC = np.array([[1, 2, 3, 5]], dtype=np.int32)
         __ALT_TOL = 1e-10
 
-        def check(f_prod, f_test, f_comp, *args):
-
-            src_vec, dst_vec, a_mat = args
-            o_mat = f_prod(*args)
-            self.aux_check_orth(o_mat, src_vec, dst_vec, '{}'.format(f_prod))
-
-            o_exp_mat = f_test(*args)
-            self.aux_check_orth(o_exp_mat, src_vec, dst_vec, '{}'.format(f_test))
-            comp_val = f_comp(o_mat, a_mat)
-            comp_exp_val = f_comp(o_exp_mat, a_mat)
-            real_tol = np.max(np.abs(comp_val - comp_exp_val))
-            is_pos = real_tol <= self.__MAX_TOL
-            assert is_pos, 'when comparing {} and {} real tol {}>{}' \
-                .format(f_prod, f_test, real_tol, self.__MAX_TOL)
-
-        def calc_trace(o_mat, a_mat):
-            return np.trace(o_mat @ a_mat)
-
         def master_check(mas_ch_src_mat, mas_ch_dst_mat):
+            def check(f_prod, f_test, f_comp, *args):
+                check_src_vec, check_dst_vec, check_a_mat = args
+                check_o_mat = f_prod(*args)
+                self.aux_check_orth(check_o_mat, check_src_vec, check_dst_vec, '{}'.format(f_prod))
+
+                o_exp_mat = f_test(*args)
+                self.aux_check_orth(o_exp_mat, check_src_vec, check_dst_vec, '{}'.format(f_test))
+                comp_val = f_comp(check_o_mat, check_a_mat)
+                comp_exp_val = f_comp(o_exp_mat, check_a_mat)
+                real_tol = np.max(np.abs(comp_val - comp_exp_val))
+                is_pos = real_tol <= self.__MAX_TOL
+                assert is_pos, 'when comparing {} and {} real tol {}>{}'.format(
+                    f_prod, f_test, real_tol, self.__MAX_TOL)
+
+            def calc_trace(inp_o_mat, inp_a_mat):
+                return np.trace(inp_o_mat @ inp_a_mat)
+
             src_vec = mas_ch_src_mat[:, 0]
             dst_vec = mas_ch_dst_mat[:, 0]
 
@@ -133,7 +131,6 @@ class TestOrthTransl:
 
         for n_dims in __DIM_VEC.flat:
             for i_Test in range(1, __N_RANDOM_CASES + 1):
-
                 src_mat = np.random.rand(n_dims, 2)
                 dst_mat = np.random.rand(n_dims, 2)
 
@@ -149,11 +146,11 @@ class TestOrthTransl:
         __EPS = 1e-17
 
         def check(src_vec, dst_vec):
-            ind = np.where(dst_vec != 0)[0][0]
+            ind = np.flatnonzero(dst_vec)[0]
             o_mat = orth_transl_qr(src_vec, dst_vec)
             got_vec = o_mat @ src_vec
             diff_vec = np.abs(dst_vec / dst_vec[ind] - got_vec / got_vec[ind])
-            assert all(diff_vec < __CALC_PRECISION)
+            assert np.all(diff_vec < __CALC_PRECISION)
 
         check(np.array([1]), np.array([-1]))
         check(np.array([10]), np.array([2]))
