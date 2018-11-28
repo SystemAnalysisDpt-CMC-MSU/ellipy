@@ -12,11 +12,11 @@ def ell_tube_2_tri(n_e_points: int, n_points: int) -> np.ndarray:
     ttime_data = adtime * n_e_points
     adtime = (adtime - 1) * n_e_points
     adtime = np.tile(adtime, (n_e_points - 1, 1))
-    Ie = np.cumsum(np.tile(np.ones((1, n_points - 1)), (n_e_points - 1, 1)), 0) + adtime
-    Ie = Ie.transpose().flatten()
+    ie = np.cumsum(np.tile(np.ones((1, n_points - 1)), (n_e_points - 1, 1)), 0) + adtime
+    ie = ie.transpose().flatten()
 
-    part1_facet_data_1 = np.vstack((Ie, Ie + 1, Ie + 1 + n_e_points)).T
-    part1_facet_data_2 = np.vstack((Ie + 1 + n_e_points, Ie + n_e_points, Ie)).T
+    part1_facet_data_1 = np.vstack((ie, ie + 1, ie + 1 + n_e_points)).T
+    part1_facet_data_2 = np.vstack((ie + 1 + n_e_points, ie + n_e_points, ie)).T
     part2_facet_data_1 = np.vstack((ttime_data, ttime_data + 1 - n_e_points, ttime_data + 1)).T
     part2_facet_data_2 = np.vstack((ttime_data + 1, ttime_data + n_e_points, ttime_data)).T
 
@@ -236,16 +236,15 @@ def shrink_face_tri(v_mat: np.ndarray, f_mat: np.ndarray,
                                       )))
 
             f2e2_new_mat = n_edges + \
-                           np.hstack([(ml.repmat(ind_shift_edge_vec, 1, 3) +
-                                       np.kron(np.array([1, 0, 2]) * n_shrinked_faces,
-                                               np.ones(shape=(1, n_shrinked_faces)))).T,
-                                      3 * n_shrinked_faces - n_verts + dir_mat * n_new_verts +
-                                      np.vstack([
-                                          np.column_stack([ind_vf13_vec, ind_vf12_vec]),
-                                          np.column_stack([ind_vf12_vec, ind_vf23_vec]),
-                                          np.column_stack([ind_vf23_vec, ind_vf13_vec])
-                                      ])
-                                      ])
+                np.hstack([(ml.repmat(ind_shift_edge_vec, 1, 3) +
+                          np.kron(np.array([1, 0, 2]) * n_shrinked_faces, np.ones(shape=(1, n_shrinked_faces)))).T,
+                          3 * n_shrinked_faces - n_verts + dir_mat * n_new_verts +
+                          np.vstack([
+                              np.column_stack([ind_vf13_vec, ind_vf12_vec]),
+                              np.column_stack([ind_vf12_vec, ind_vf23_vec]),
+                              np.column_stack([ind_vf23_vec, ind_vf13_vec])
+                          ])
+                          ])
 
             f2e2_is_dir_new_mat = np.array(np.hstack([(np.kron(np.array([1, 0, 0]),
                                                                np.ones(shape=(1, n_shrinked_faces)))).T,
