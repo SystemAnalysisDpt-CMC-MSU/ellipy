@@ -10,6 +10,9 @@ class TestSym:
         assert not is_dependent(np.array([['cos(t)', 'sin(t)'], ['-sin(t)', 'cost(t)']], dtype='str'), is_discrete=True)
         assert is_dependent(np.array([['cos(k)', 'k'], ['-sin(k)', 'cos(k)']], dtype='str'), is_discrete=True)
         assert not is_dependent(np.array([['cos(k)', 'k'], ['-sin(k)', 'cos(k)']], dtype='str'))
+        assert is_dependent(np.array([['4*k + 6', 5], [6, 10]], dtype='str'), is_discrete=True)
+        assert is_dependent(np.array([['k', 5], [6, 10]], dtype='str'), is_discrete=True)
+        assert not is_dependent(np.array([[3, 5], [5.9, 'z']], dtype='str'))
 
     def test_var_replace_int(self):
         m_mat = np.array([['t+t^2+t^3+sin(t)', 't^(1/2)+t*t*17'],
@@ -131,7 +134,7 @@ class TestSym:
         cor_mat = np.array([['0.01']])
         assert np.array_equal(cor_mat, res_mat)
 
-    def test_var_replace_real_mat(self):  # если взять 150 не строку, а просто число, то не работает. почему..
+    def test_var_replace_real_mat(self):
         m_mat = np.array([[150.001, 1.11,  2.54],
                           [-10.453, 30.01, 100.45],
                           [1.3242,   0.342,  -190.901]])

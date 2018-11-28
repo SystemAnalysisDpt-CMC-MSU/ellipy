@@ -6,9 +6,9 @@ from ellipy.gen.common.common import throw_error
 def is_dependent(m_mat: np.ndarray, is_discrete: bool = False) -> bool:
     m_mat = np.vectorize(str)(m_mat)
     if is_discrete:
-        reg_arr = np.vectorize(re.search)(r'\W' + 'k' + r'\W', m_mat)
+        reg_arr = np.vectorize(re.search)(r'\W' + 'k' + r'\W' + r'|' + r'^' + 'k' + r'|' + 'k' + r'$', m_mat)
     else:
-        reg_arr = np.vectorize(re.search)(r'\W' + 't' + r'\W', m_mat)
+        reg_arr = np.vectorize(re.search)(r'\W' + 't' + r'\W' + r'|' + r'^' + 't' + r'|' + 't' + r'$', m_mat)
     if reg_arr.any():
         is_depend = True
     else:
