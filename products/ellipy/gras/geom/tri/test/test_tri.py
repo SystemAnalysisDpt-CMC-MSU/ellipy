@@ -269,3 +269,17 @@ class TestTri:
             #
             is_ok, rep_str = is_tri_equal(se_out_v0, se_out_f0 - 1, s_out_v0, s_out_f0, 0)
             assert is_ok, rep_str
+
+    def test_ell_tube_2_tri(self):
+        facets = ell_tube_2_tri(4, 3)
+        loaded_info = sio.loadmat(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res_ell_tube_2_tri.mat'))
+        exp_result = loaded_info['res']
+        assert np.array_equal(facets, exp_result)
+
+    def test_ell_tube_discr_tri(self):
+        facets = ell_tube_discr_tri(4, 3)
+        loaded_info = sio.loadmat(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res_ell_tube_discr_tri.mat'))
+        exp_result = loaded_info['res']
+        assert np.array_equal(facets, exp_result)
