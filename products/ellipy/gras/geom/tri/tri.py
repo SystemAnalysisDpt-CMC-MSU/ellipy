@@ -7,24 +7,24 @@ from ellipy.gras.geom.geom import circle_part
 
 
 def ell_tube_2_tri(n_e_points: int, n_points: int) -> np.ndarray:
-    td = np.arange(1, n_points + 1)
-    adtime = td[:-1]
-    ttime_data = adtime * n_e_points
-    adtime = (adtime - 1) * n_e_points
-    adtime = np.tile(adtime, (n_e_points - 1, 1))
-    ie = np.cumsum(np.tile(np.ones((1, n_points - 1)), (n_e_points - 1, 1)), 0) + adtime
-    ie = ie.transpose().flatten()
+    td_vec = np.arange(1, n_points + 1)
+    adtime_vec = td_vec[:-1]
+    ttime_data_vec = adtime_vec * n_e_points
+    adtime_vec = (adtime_vec - 1) * n_e_points
+    adtime_vec = np.tile(adtime_vec, (n_e_points - 1, 1))
+    ie_mat = np.cumsum(np.tile(np.ones((1, n_points - 1)), (n_e_points - 1, 1)), 0) + adtime_vec
+    ie_mat = ie_mat.T.flatten()
 
-    part1_facet_data_1 = np.vstack((ie, ie + 1, ie + 1 + n_e_points)).T
-    part1_facet_data_2 = np.vstack((ie + 1 + n_e_points, ie + n_e_points, ie)).T
-    part2_facet_data_1 = np.vstack((ttime_data, ttime_data + 1 - n_e_points, ttime_data + 1)).T
-    part2_facet_data_2 = np.vstack((ttime_data + 1, ttime_data + n_e_points, ttime_data)).T
+    part1_facet_data_1 = np.vstack((ie_mat, ie_mat + 1, ie_mat + 1 + n_e_points)).T
+    part1_facet_data_2 = np.vstack((ie_mat + 1 + n_e_points, ie_mat + n_e_points, ie_mat)).T
+    part2_facet_data_1 = np.vstack((ttime_data_vec, ttime_data_vec + 1 - n_e_points, ttime_data_vec + 1)).T
+    part2_facet_data_2 = np.vstack((ttime_data_vec + 1, ttime_data_vec + n_e_points, ttime_data_vec)).T
 
     return np.vstack((part1_facet_data_1, part1_facet_data_2, part2_facet_data_1, part2_facet_data_2)) - 1
 
 
 def ell_tube_discr_tri(n_dim: int, m_dim: int) -> np.ndarray:
-    return np.tile(n_dim * np.arange(0, m_dim).T, ([n_dim + 1, 1])).T + np.tile(np.hstack((np.arange(0, n_dim), 0)),
+    return np.tile(n_dim * np.arange(m_dim).T, ([n_dim + 1, 1])).T + np.tile(np.hstack((np.arange(n_dim), 0.)),
                                                                                 ([m_dim, 1]))
 
 

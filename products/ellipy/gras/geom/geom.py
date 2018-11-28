@@ -22,17 +22,18 @@ def sphere_part(n_points: int) -> np.ndarray:
 
     def unique_directions(a_mat: np.ndarray, tol: float) -> np.ndarray:
         n_rows = a_mat.shape[0]
-        ind_remove_vec = np.zeros(n_rows, dtype=bool)
+        is_remove_vec = np.zeros(n_rows, dtype=bool)
         
         for i_row in range(0, n_rows-1):
             diff_mat = a_mat[-(n_rows - i_row - 1):, :] + np.tile(a_mat[i_row, :], ([n_rows - i_row - 1, 1]))
             diff_norm_vec = np.sqrt(np.sum(diff_mat*diff_mat, 1))
-            if np.nonzero(diff_norm_vec < tol)[0].size > 0:
+            ind_remove_vec = np.nonzero(diff_norm_vec < tol)[0]
+            if ind_remove_vec.size > 0:
                 if np.sum(a_mat[i_row, :]) < 0:
-                    ind_remove_vec[i_row + np.nonzero(diff_norm_vec < tol)[0][0] + 1] = 1
+                    is_remove_vec[i_row + ind_remove_vec[0] + 1] = True
                 else:
-                    ind_remove_vec[i_row] = 1
-        return a_mat[ind_remove_vec, :]
+                    is_remove_vec[i_row] = True
+        return a_mat[is_remove_vec, :]
 
     def sphere_distance(a_mat: np.ndarray, b_vec: np.ndarray) -> np.ndarray:
         dot_prod_vec = np.sum(a_mat * np.tile(b_vec, ([a_mat.shape[0], 1])), 1)
@@ -52,8 +53,8 @@ def sphere_part(n_points: int) -> np.ndarray:
     y_dist_vec = sphere_distance(p_mat, np.array([0, 1, 0]))
     z_dist_vec = sphere_distance(p_mat, np.array([0, 0, 1]))
     
-    r_mat = np.zeros(shape=(n_points, 3))
-    for i_point in range(0, n_points):
+    r_mat = np.zeros(shape=(n_points, 3), dtype=np.float64)
+    for i_point in range(n_points):
         mod_i = np.mod(i_point, 3)
         if mod_i == 1:
             i_min = np.argmin(x_dist_vec)
