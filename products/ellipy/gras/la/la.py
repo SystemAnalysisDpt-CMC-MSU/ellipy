@@ -1,6 +1,5 @@
 from ellipy.gen.common.common import throw_error, abs_rel_compare, is_numeric
 from typing import Callable, Union
-import scipy.io
 import numpy as np
 from numpy import linalg
 
@@ -52,7 +51,7 @@ def mat_orth(src_mat: np.ndarray) -> np.ndarray:
     o_mat, src_r = np.linalg.qr(src_mat, 'complete')
     is_neg_diag = np.diag(src_r) < 0
     is_neg_diag_vec = np.zeros(o_mat.shape[1], 'bool')
-    is_neg_diag_vec[:len(is_neg_diag)] = is_neg_diag
+    is_neg_diag_vec[:is_neg_diag.size] = is_neg_diag
     o_mat[:, is_neg_diag_vec] = -o_mat[:, is_neg_diag_vec]
     return o_mat
 
@@ -122,6 +121,8 @@ def orth_transl_haus(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
         r_mult = 2 / w_norm
 
     o_mat = np.eye(np.size(src_vec)) - r_mult * (w_vec @ w_vec.T)
+    return o_mat
+
 
 def orth_transl_max_dir(src_vec: np.ndarray, dst_vec: np.ndarray,
                         src_max_vec: np.ndarray, dst_max_vec: np.ndarray) -> np.ndarray:
@@ -260,14 +261,3 @@ def reg_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
     s_mat = np.diag(np.maximum(s_vec, reg_tol))
     res_mat = u_mat @ s_mat @ v_mat
     return res_mat
-
-def reg_pos_def_mat(inp_mat: np.ndarray, reg_tol: float) -> np.ndarray:
-    pass
-
-
-def sqrtm_pos(q_mat: np.ndarray, abs_tol: float) -> np.ndarray:
-    pass
-
-
-def try_treat_as_real(inp_mat:  np.ndarray, tol_val: float = np.finfo(float).eps) -> np.ndarray:
-    pass
