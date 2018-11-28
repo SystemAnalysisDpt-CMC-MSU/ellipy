@@ -24,8 +24,8 @@ def ell_tube_2_tri(n_e_points: int, n_points: int) -> np.ndarray:
 
 
 def ell_tube_discr_tri(n_dim: int, m_dim: int) -> np.ndarray:
-    return np.tile(n_dim * np.arange(m_dim).T, ([n_dim + 1, 1])).T + np.tile(np.hstack((np.arange(n_dim), 0.)),
-                                                                                ([m_dim, 1]))
+    return np.tile(n_dim * np.arange(m_dim).T, ([n_dim + 1, 1])).T + \
+           np.tile(np.hstack((np.arange(n_dim), 0.)), ([m_dim, 1]))
 
 
 def icosahedron() -> Tuple[np.ndarray, np.ndarray]:
