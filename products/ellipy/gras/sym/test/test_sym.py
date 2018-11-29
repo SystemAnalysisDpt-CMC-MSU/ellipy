@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from products.ellipy.gras.sym.sym import is_dependent
-from products.ellipy.gras.sym.sym import var_replace
+from ellipy.gras.sym.sym import is_dependent
+from ellipy.gras.sym.sym import var_replace
 
 
 class TestSym:

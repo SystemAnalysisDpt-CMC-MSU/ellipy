@@ -7,7 +7,20 @@ from ellipy.gras.la.la import is_mat_symm, sqrtm_pos
 
 
 def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
-    pass
+    mat_sum = 0
+    res_arr = 0
+    size = np.shape(inp_arr1)
+    if not (np.shape(inp_arr2) == size):
+        throw_error('wrongInput:size', 'input matrices have the different size')
+    if not (size[0] == size[1]):
+        throw_error('wrongInput:not_square', 'input matrices aren''t square matrices or square matrix arrays')
+    d = np.zeros(size[0])
+    for i in range(len(inp_arr1)):
+        for j in range(len(inp_arr1[i])):
+            d[i] += inp_arr1[i][j] * inp_arr2[i][j]
+        mat_sum += d[i]
+    res_arr = mat_sum / len(inp_arr1)
+    return res_arr
 
 
 def sort_rows_tol(inp_mat: np.ndarray, tol: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
