@@ -6,11 +6,11 @@ from numpy import linalg
 
 def is_mat_not_deg(q_mat: np.ndarray, abs_tol: float = 0.0) -> bool:
     if abs_tol < 0.0:
-        throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be not-negative')
+        throw_error('wrongInput:abs_tolNegative', 'abs_tol is expected to be non-negative')
     if abs_tol == 0.0:
         return True
     else:
-        min_sing = np.min(np.linalg.svd(q_mat)[1])
+        min_sing = np.min(np.linalg.svd(q_mat, compute_uv=False))
         if min_sing < abs_tol:
             return False
         else:

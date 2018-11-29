@@ -12,7 +12,7 @@ class TestLaBasic:
         def check(inp_mat, abs_tol, is_ok):
             test_is_ok = is_mat_not_deg(inp_mat, abs_tol)
             assert test_is_ok == is_ok
-        q_mat = np.array([[-55, 165], [-20, 60]])
+        q_mat = np.array([[-55, 165], [-20, 60]], dtype=np.float64)
         check(q_mat, 1e-15, False)
         check(q_mat, 1e-17, True)
 
