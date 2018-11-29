@@ -13,9 +13,9 @@ class TestLaBasic:
         def check(inp_mat, abs_tol, is_ok):
             test_is_ok = is_mat_not_deg(inp_mat, abs_tol)
             assert test_is_ok == is_ok
-        q_mat = np.dot(np.dot(np.array([[3,11],[1,4]]), np.diag([1e-7,5])),np.array([[4,-11],[-1,3]]))
-        check(q_mat, 1e-5, False)
-        check(q_mat, 1e-10, True)
+        q_mat = np.array([[-55, 165], [-20, 60]])
+        check(q_mat, 1e-15, False)
+        check(q_mat, 1e-17, True)
 
 
     def test_sqrt_m_compare(self):
