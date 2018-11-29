@@ -8,7 +8,6 @@ import os
 
 
 class TestLaBasic:
-
     def test_is_mat_not_deg(self):
         def check(inp_mat, abs_tol, is_ok):
             test_is_ok = is_mat_not_deg(inp_mat, abs_tol)
@@ -16,7 +15,6 @@ class TestLaBasic:
         q_mat = np.array([[-55, 165], [-20, 60]])
         check(q_mat, 1e-15, False)
         check(q_mat, 1e-17, True)
-
 
     def test_sqrt_m_compare(self):
         def check(inp_mat_f, l_tol, r_tol, is_ex_ok):
