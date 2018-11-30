@@ -125,54 +125,79 @@ def abs_rel_compare(left_arr: np.ndarray, right_arr: np.ndarray,
     if not callable(f_norm_op):
         throw_error('wrongInput:wrongNormOp', 'f_norm_op must be a function')
 
-    diff_arr = f_norm_op(left_arr - right_arr)
-    if diff_arr.size == 0:
-        abs_diff = np.array([])
-        abs_r_diff = abs_diff
-        is_equal = True
+    is_equal = np.array_equal(np.isnan(left_arr), np.isnan(right_arr))
+    report_str = ''
+    if is_equal:
+        is_equal = np.array_equal(np.isfinite(left_arr), np.isfinite(right_arr))
+        if is_equal:
+            is_equal = np.array_equal(left_arr == np.inf, right_arr == np.inf) and \
+                       np.array_equal(left_arr == -np.inf, right_arr == -np.inf)
+            if not is_equal:
+                report_str = 'infinite values do not coincide'
+        else:
+            report_str = 'finite values are on different places'
     else:
-        abs_diff = np.amax(diff_arr)
-        abs_r_diff = abs_diff
-        is_equal = abs_r_diff <= abs_tol
-
-    rel_diff = np.array([])
-    abs_m_rel_diff = rel_diff
-
-    if rel_tol is not None and diff_arr.size > 0:
-        is_rel_diff_triggered_arr = diff_arr > abs_tol
-        is_rel_diff_triggered = np.any(is_rel_diff_triggered_arr)
-        if is_rel_diff_triggered:
-            arg_sum_norm_arr = f_norm_op(left_arr) + f_norm_op(right_arr)
-            is_rel_diff_triggered_arr = np.logical_and(is_rel_diff_triggered_arr, arg_sum_norm_arr > abs_tol)
-            is_rel_diff_triggered = np.any(is_rel_diff_triggered_arr)
-            if is_rel_diff_triggered:
-                temp_arr = np.zeros(diff_arr.shape, dtype=np.float64)
-                temp_2_arr = np.array(temp_arr, copy=True)
-                temp_arr[is_rel_diff_triggered_arr] = \
-                    2. * diff_arr[is_rel_diff_triggered_arr] / \
-                    arg_sum_norm_arr[is_rel_diff_triggered_arr]
-                rel_diff = np.amax(temp_arr)
-                temp_2_arr[temp_arr == rel_diff] = diff_arr[temp_arr == rel_diff]
-                abs_m_rel_diff = np.amax(temp_2_arr)
-                temp_arr = np.zeros(diff_arr.shape, dtype=np.float64)
-                isn_rel_diff_triggered_arr = np.logical_not(is_rel_diff_triggered_arr)
-                temp_arr[isn_rel_diff_triggered_arr] = diff_arr[isn_rel_diff_triggered_arr]
-                abs_r_diff = np.amax(temp_arr)
-        if rel_diff.size > 0:
-            is_equal = abs_r_diff <= abs_tol and rel_diff <= rel_tol
-    else:
-        is_rel_diff_triggered = False
+        report_str = 'nans are on different places'
 
     if is_equal:
-        report_str = ''
-    else:
-        if is_rel_diff_triggered:
-            report_str = (('relative difference (FORMAT_SPEC) is greater' +
-                           ' than the specified tolerance (FORMAT_SPEC); absolute' +
-                           ' difference (FORMAT_SPEC), absolute tolerance (FORMAT_SPEC)').replace(
-                'FORMAT_SPEC', __FORMAT_SPEC) % (rel_diff, rel_tol, abs_m_rel_diff, abs_tol))
+        isn_finite_mat = ~np.isfinite(left_arr)
+        if np.any(isn_finite_mat.flatten()):
+            left_arr = np.array(left_arr, dtype=np.float64, copy=True)
+            right_arr = np.array(right_arr, dtype=np.float64, copy=True)
+            left_arr[isn_finite_mat] = 0.
+            right_arr[isn_finite_mat] = 0.
+
+        diff_arr = f_norm_op(left_arr - right_arr)
+        if diff_arr.size == 0:
+            abs_diff = np.array([])
+            abs_r_diff = abs_diff
+            is_equal = True
         else:
-            report_str = (('absolute difference (FORMAT_SPEC) is greater' +
-                           ' than the specified tolerance (FORMAT_SPEC)').replace(
-                'FORMAT_SPEC', __FORMAT_SPEC) % (abs_diff, abs_tol))
+            abs_diff = np.amax(diff_arr)
+            abs_r_diff = abs_diff
+            is_equal = abs_r_diff <= abs_tol
+
+        rel_diff = np.array([])
+        abs_m_rel_diff = rel_diff
+
+        if rel_tol is not None and diff_arr.size > 0:
+            is_rel_diff_triggered_arr = diff_arr > abs_tol
+            is_rel_diff_triggered = np.any(is_rel_diff_triggered_arr)
+            if is_rel_diff_triggered:
+                arg_sum_norm_arr = f_norm_op(left_arr) + f_norm_op(right_arr)
+                is_rel_diff_triggered_arr = np.logical_and(is_rel_diff_triggered_arr, arg_sum_norm_arr > abs_tol)
+                is_rel_diff_triggered = np.any(is_rel_diff_triggered_arr)
+                if is_rel_diff_triggered:
+                    temp_arr = np.zeros(diff_arr.shape, dtype=np.float64)
+                    temp_2_arr = np.array(temp_arr, copy=True)
+                    temp_arr[is_rel_diff_triggered_arr] = \
+                        2. * diff_arr[is_rel_diff_triggered_arr] / \
+                        arg_sum_norm_arr[is_rel_diff_triggered_arr]
+                    rel_diff = np.amax(temp_arr)
+                    temp_2_arr[temp_arr == rel_diff] = diff_arr[temp_arr == rel_diff]
+                    abs_m_rel_diff = np.amax(temp_2_arr)
+                    temp_arr = np.zeros(diff_arr.shape, dtype=np.float64)
+                    isn_rel_diff_triggered_arr = np.logical_not(is_rel_diff_triggered_arr)
+                    temp_arr[isn_rel_diff_triggered_arr] = diff_arr[isn_rel_diff_triggered_arr]
+                    abs_r_diff = np.amax(temp_arr)
+            if rel_diff.size > 0:
+                is_equal = abs_r_diff <= abs_tol and rel_diff <= rel_tol
+        else:
+            is_rel_diff_triggered = False
+
+        if not is_equal:
+            if is_rel_diff_triggered:
+                report_str = (('relative difference (FORMAT_SPEC) is greater' +
+                               ' than the specified tolerance (FORMAT_SPEC); absolute' +
+                               ' difference (FORMAT_SPEC), absolute tolerance (FORMAT_SPEC)').replace(
+                    'FORMAT_SPEC', __FORMAT_SPEC) % (rel_diff, rel_tol, abs_m_rel_diff, abs_tol))
+            else:
+                report_str = (('absolute difference (FORMAT_SPEC) is greater' +
+                               ' than the specified tolerance (FORMAT_SPEC)').replace(
+                    'FORMAT_SPEC', __FORMAT_SPEC) % (abs_diff, abs_tol))
+    else:
+        abs_diff = np.nan
+        is_rel_diff_triggered = False
+        rel_diff = np.nan
+        abs_m_rel_diff = np.nan
     return is_equal, abs_diff, is_rel_diff_triggered, rel_diff, abs_m_rel_diff, report_str
