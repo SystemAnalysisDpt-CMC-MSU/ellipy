@@ -12,9 +12,9 @@ class TestLaBasic:
         def check(inp_mat, abs_tol, is_ok):
             test_is_ok = is_mat_not_deg(inp_mat, abs_tol)
             assert test_is_ok == is_ok
-        q_mat = np.array([[-55, 165], [-20, 60]], dtype=np.float64)
-        check(q_mat, 1e-15, False)
-        check(q_mat, 1e-17, True)
+        q_mat = np.array([[-54.99996758, 165.00001081], [-20.00008916, 59.99997028]], dtype=np.float64)
+        check(q_mat, 1e-3, False)
+        check(q_mat, 1e-5, True)
 
     def test_sqrt_m_compare(self):
         def check(inp_mat_f, l_tol, r_tol, is_ex_ok):
