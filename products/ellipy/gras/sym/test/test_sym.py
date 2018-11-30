@@ -5,6 +5,7 @@ from ellipy.gras.sym.sym import var_replace
 
 
 class TestSym:
+
     def test_is_dependent(self):
         assert is_dependent(np.array([['cos(t)', 'sin(t)'], ['-sin(t)', 'cost(t)']], dtype='str'))
         assert not is_dependent(np.array([['cos(t)', 'sin(t)'], ['-sin(t)', 'cost(t)']], dtype='str'), is_discrete=True)
@@ -135,15 +136,15 @@ class TestSym:
         assert np.array_equal(cor_mat, res_mat)
 
     def test_var_replace_real_mat(self):
-        m_mat = np.array([[150.001, 1.11,  2.54],
+        m_mat = np.array([[150.00655674, 1.11,  2.54],
                           [-10.453, 30.01, 100.45],
                           [1.3242,   0.342,  -190.901]])
         from_var_name = 'att'
         to_var_name = '0.8-' + from_var_name
         res_mat = var_replace(m_mat, from_var_name, to_var_name)
-        cor_mat = np.array([['150.001', '1.11', '2.54'],
+        cor_mat = np.array([['150.007', '1.11', '2.54'],
                             ['-10.453', '30.01', '100.45'],
-                            ['1.3242', '0.342',  '-190.901']])
+                            ['1.324', '0.342',  '-190.901']])
         assert np.array_equal(cor_mat, res_mat)
 
     def test_var_replace_int_mat_elem(self):

@@ -1,6 +1,7 @@
 import numpy as np
 import re
 from ellipy.gen.common.common import throw_error
+from numbers import Integral
 
 
 def is_dependent(m_mat: np.ndarray, is_discrete: bool = False) -> bool:
@@ -23,7 +24,18 @@ def var_replace(m_mat: np.ndarray, from_var_name: str, to_var_name: str) -> np.n
         throw_error('wrongInput: from_var_name', 'from_var_name is expected to be a string')
     if not isinstance(to_var_name, str):
         throw_error('wrongInput: to_var_name', 'to_var_name is expected to be a string')
-    m_mat = np.vectorize(str)(m_mat)  # Векторизуем функцию str() и применяем ко всему массиву. В пару раз быстрее будет
+
+    def _str(m_mat_temp):
+        n_compare_decimal_digits = 3
+        if not isinstance(m_mat_temp, str):
+            if not isinstance(m_mat_temp, Integral):
+                # cmp_up_to_digits = '{:.' + n_compare_decimal_digits + 'f}'
+                # m_mat_temp = cmp_up_to_digits.format(m_mat_temp)
+                m_mat_temp = str(round(m_mat_temp, n_compare_decimal_digits))
+            else:
+                m_mat_temp = str(m_mat_temp)
+        return m_mat_temp
+    m_mat = np.vectorize(_str)(m_mat)
     to_var_name = '(' + to_var_name + ')'
 
     def _replace(elem, to_replace, value):
