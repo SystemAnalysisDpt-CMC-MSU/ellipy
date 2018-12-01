@@ -5,6 +5,27 @@ from ellipy.gras.sym.sym import var_replace
 
 
 class TestSym:
+    @staticmethod
+    def compare_m_mat_with_numerics(m_mat, cor_mat, res_mat):
+        n = 3
+        is_ok = False
+        c = np.zeros(m_mat.shape)
+        for i in range(len(m_mat)):
+            for j in range(len(m_mat[i])):
+                c[i][j] = isinstance(m_mat[i][j], float)
+                if c[i][j]:
+                    [first_num_str, first_frac_str] = res_mat[i][j].split('.')
+                    [second_nun_str, second_frac_str] = cor_mat[i][j].split('.')
+                    if first_num_str == second_nun_str:
+                        if first_frac_str[0:n-1] == second_frac_str[0:n-1]:
+                            is_ok = True
+                        else:
+                            is_ok = False
+                    else:
+                        is_ok = False
+                else:
+                    is_ok = True
+        return is_ok
 
     def test_is_dependent(self):
         assert is_dependent(np.array([['cos(t)', 'sin(t)'], ['-sin(t)', 'cost(t)']], dtype='str'))
@@ -133,6 +154,7 @@ class TestSym:
         to_var_name = '0.8-' + from_var_name
         res_mat = var_replace(m_mat, from_var_name, to_var_name)
         cor_mat = np.array([['0.01']])
+        assert self.compare_m_mat_with_numerics(m_mat, cor_mat, res_mat)
         assert np.array_equal(cor_mat, res_mat)
 
     def test_var_replace_real_mat(self):
@@ -145,6 +167,7 @@ class TestSym:
         cor_mat = np.array([['150.007', '1.11', '2.54'],
                             ['-10.453', '30.01', '100.45'],
                             ['1.324', '0.342',  '-190.901']])
+        assert self.compare_m_mat_with_numerics(m_mat, cor_mat, res_mat)
         assert np.array_equal(cor_mat, res_mat)
 
     def test_var_replace_int_mat_elem(self):
@@ -169,6 +192,7 @@ class TestSym:
         cor_mat = np.array([['t+t^2+t^3+sin(t)', 't^(1/2)+t*t*17'],
                             ['(10.8 - att)+t2', 't+temp^t'],
                             ['1/(t+3)*2^t^t', '1.9']])
+        assert self.compare_m_mat_with_numerics(m_mat, cor_mat, res_mat)
         assert np.array_equal(cor_mat, res_mat)
 
     def test_var_replace_mixed_mat(self):
@@ -181,6 +205,7 @@ class TestSym:
         cor_mat = np.array([['3.2',    '(0.81-t)+3.2'],
                             ['9.8',      '-34'],
                             ['sin((0.81-t))', '1.9']])
+        assert self.compare_m_mat_with_numerics(m_mat, cor_mat, res_mat)
         assert np.array_equal(cor_mat, res_mat)
 
     def test_var_replace_wrong_args(self):
