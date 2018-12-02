@@ -46,7 +46,7 @@ class Ellipsoid(AEllipsoid):
             throw_error('wrongInput:shape_mat', 'shape_mat must be a matrix')
         if shape_mat.shape[0] != shape_mat.shape[1]:
             throw_error('wrongInput:shape_mat', 'shape_mat must be a square matrix')
-        shape_mat = try_treat_as_real(shape_mat, self._abs_tol)
+        shape_mat = np.array(try_treat_as_real(shape_mat, self._abs_tol), dtype=np.float64)
         if not np.all(np.isfinite(shape_mat.flatten())):
             throw_error('wrongInput:shape_mat', 'configuration matrix should contain all finite values')
         if not (is_mat_symm(shape_mat, self._abs_tol) and is_mat_pos_def(shape_mat, self._abs_tol, True)):
@@ -79,7 +79,7 @@ class Ellipsoid(AEllipsoid):
             center_vec = ell_dict['center_vec']
             del ell_dict['shape_mat']
             del ell_dict['center_vec']
-            return cls.__class__(center_vec, shape_mat, **ell_dict)
+            return Ellipsoid(center_vec, shape_mat, **ell_dict)
         dict_arr = np.array(dict_arr)
         return np.reshape(np.array([dict_2_ell(ell_dict) for ell_dict in list(dict_arr.flatten())]), dict_arr.shape)
 

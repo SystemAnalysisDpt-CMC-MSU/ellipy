@@ -77,7 +77,7 @@ class Hyperplane(ABasicEllipsoid):
             shift = hyp_dict['shift']
             del hyp_dict['normal_vec']
             del hyp_dict['shift']
-            return cls.__class__(normal_vec, shift, **hyp_dict)
+            return Hyperplane(normal_vec, shift, **hyp_dict)
         dict_arr = np.array(dict_arr)
         return np.reshape(np.array([dict_2_hp(hp_dict) for hp_dict in list(dict_arr.flatten())]), dict_arr.shape)
 

@@ -19,6 +19,6 @@ def ell_sim_diag(a_mat: np.ndarray, b_mat: np.ndarray, abs_tol: float) -> np.nda
         throw_error('wrongInput', 'both matrices must be of the same dimension')
 
     u1_mat, s_vec, _ = np.linalg.svd(a_mat, full_matrices=True)
-    u_mat = sqrtm_pos(np.diag(s_vec), abs_tol) @ u1_mat.T
+    u_mat = np.linalg.lstsq(sqrtm_pos(np.diag(s_vec), abs_tol).T, u1_mat.T, -1)[0].T
     u2_mat, _, _ = np.linalg.svd(u_mat.T @ b_mat @ u_mat)
     return u2_mat.T @ u_mat.T
