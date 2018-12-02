@@ -5,9 +5,9 @@ import ellipy.elltool.conf.properties as p
 
 
 class ParsePropMixin:
-    __PROP_NAME_LIST = ['version', 'isVerbose', 'absTol', 'relTol', 'regTol',
-                        'ODESolverName', 'isODENormControl', 'isEnabledOdeSolverOptions',
-                        'nPlot2dPoints', 'nPlot3dPoints', 'nTimeGridPoints']
+    __PROP_NAME_LIST = ['version', 'is_verbose', 'abs_tol', 'rel_tol', 'reg_tol',
+                        'ode_solver_name', 'is_ode_norm_control', 'is_enabled_ode_solver_options',
+                        'n_plot_2d_points', 'n_plot_3d_points', 'n_time_grid_points']
     __PROP_CHECK_FUNC_LIST = [
         lambda x: isinstance(x, str),  # version
         lambda x: isinstance(x, bool),  # isVerbose

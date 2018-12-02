@@ -1,6 +1,7 @@
 from ellipy.elltool.core.abasicellipsoid.ABasicEllipsoid import *
+from ellipy.gras.la.la import is_mat_pos_def
 from abc import ABC, abstractmethod
-# from typing import Union, List, Tuple, Dict, Callable
+from typing import Union, Tuple, Dict
 import numpy as np
 
 
@@ -29,7 +30,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @_center_vec.setter
     def _center_vec(self, center_vec) -> None:
-        self.__center_vec = center_vec
+        self.__center_vec = np.copy(center_vec)
 
     @classmethod
     def projection(cls, ell_arr: np.ndarray, basis_mat: np.ndarray) -> np.ndarray:
@@ -81,8 +82,17 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @classmethod
     def is_degenerate(cls, ell_arr: np.ndarray) -> np.ndarray:
-        #write
-        pass
+        cls._check_is_me_virtual(ell_arr)
+        ell_arr = np.array(ell_arr)
+        if np.any(cls.is_empty(ell_arr).flatten()):
+            throw_error('wrongInput:emptyEllipsoid', 'input argument contains empty ellipsoid')
+        if ell_arr.size == 0:
+            return np.ones(ell_arr.shape, dtype=bool)
+        else:
+            # noinspection PyProtectedMember
+            return ~np.reshape(
+                np.array([is_mat_pos_def(ell_obj.get_shape_mat(), ell_obj._abs_tol)
+                          for ell_obj in list(ell_arr.flatten())]), ell_arr.shape)
 
     @classmethod
     def volume(cls, ell_arr: np.ndarray) -> np.ndarray:
@@ -90,8 +100,18 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @classmethod
     def dimension(cls, ell_arr: np.ndarray, return_rank=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        #write
-        pass
+        cls._check_is_me_virtual(ell_arr)
+        ell_list = list(ell_arr.flatten())
+        ell_shape_vec = ell_arr.shape
+        if return_rank:
+            ndim_list, rank_list = zip(*[
+                (np.size(ell_obj.get_center_vec()), np.rank(ell_obj.get_shape_mat()))
+                for ell_obj in ell_list
+            ])
+            return np.reshape(np.array(ndim_list), ell_shape_vec), np.reshape(np.array(rank_list), ell_shape_vec)
+        else:
+            ndim_list = [np.size(ell_obj.get_center_vec()) for ell_obj in ell_list]
+            return np.reshape(np.array(ndim_list), ell_shape_vec)
 
     @classmethod
     def get_shape(cls, ell_arr: np.ndarray, mod_mat: np.ndarray) -> np.ndarray:

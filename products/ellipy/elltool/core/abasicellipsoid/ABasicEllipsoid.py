@@ -177,11 +177,11 @@ class ABasicEllipsoid(ABC):
             return comp_dict
 
         ell1_dict_list = \
-            [form_comp_dict(ell_obj, field_nice_names1_dict, field_transform_func1_dict)
-             for ell_obj in list(ell_first_flat_arr)]
+            [form_comp_dict(ell_dict, field_nice_names1_dict, field_transform_func1_dict)
+             for ell_dict in list(dict_ell1_list)]
         ell2_dict_list = \
-            [form_comp_dict(ell_obj, field_nice_names2_dict, field_transform_func2_dict)
-             for ell_obj in list(ell_sec_flat_arr)]
+            [form_comp_dict(ell_dict, field_nice_names2_dict, field_transform_func2_dict)
+             for ell_dict in list(dict_ell2_list)]
         ell1_dict_arr = np.reshape(np.array(ell1_dict_list), first_shape_vec)
         ell2_dict_arr = np.reshape(np.array(ell2_dict_list), sec_shape_vec)
         if not (isn_first_scalar and isn_sec_scalar):
@@ -218,7 +218,7 @@ class ABasicEllipsoid(ABC):
             return np.copy(ell_arr)
         ell_shape_vec = ell_arr.shape
         ell_arr = ell_arr.flatten()
-        if cls._check_if_scalar(ell_arr):
+        if ell_arr.size == 1:
             # noinspection PyProtectedMember
             return np.array(ell_arr[0]._get_single_copy())
         else:
@@ -238,14 +238,14 @@ class ABasicEllipsoid(ABC):
         if not is_numeric(shape_vec):
             throw_error('wrongInput:shape_vec', 'size array should be numeric')
         shape_vec = try_treat_as_real(shape_vec)
-        if shape_vec.size <= 1 or shape_vec.size != np.max(shape_vec.shape):
+        if shape_vec.size == 0 or shape_vec.size != np.max(shape_vec.shape):
             throw_error('wrongInput:shape_vec', 'size vector must have at least two elements and be not a matrix')
         shape_vec = shape_vec.flatten()
-        if not np.all(shape_vec == np.fix(shape_vec) and shape_vec >= 0):
+        if not np.all(np.logical_and(shape_vec == np.fix(shape_vec), shape_vec >= 0)):
             throw_error('wrongInput:shape_vec', 'size vector must contain non-negative integer values')
         n_elems = np.prod(shape_vec).flatten()[0]
         shape_vec = tuple(shape_vec)
-        ell_arr = np.empty(tuple(shape_vec), dtype=np.object)
+        ell_arr = np.empty((n_elems,), dtype=np.object)
         for i_elem in range(n_elems):
             ell_arr[i_elem] = self._get_single_copy()
         ell_arr = np.reshape(ell_arr, shape_vec)

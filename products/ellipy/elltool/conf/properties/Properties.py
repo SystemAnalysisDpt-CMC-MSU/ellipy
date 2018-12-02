@@ -40,16 +40,16 @@ class Properties(ParsePropMixin):
         # TODO: change dictionary on real conf repo manager
         Properties.__conf_repo_mgr = {
             'version': '2.1',
-            'isVerbose': False,
-            'absTol': 1e-06,
-            'relTol': 1e-05,
-            'nTimeGridPoints': 250,
-            'ODESolverName': 'ode45',
-            'isODENormControl': 'on',
-            'isEnabledOdeSolverOptions': False,
-            'nPlot2dPoints': 200,
-            'nPlot3dPoints': 200,
-            'regTol': 1e-05
+            'is_verbose': False,
+            'abs_tol': 1e-06,
+            'rel_tol': 1e-05,
+            'n_time_grid_points': 250,
+            'ode_solver_name': 'ode45',
+            'is_ode_norm_control': 'on',
+            'is_enabled_ode_solver_options': False,
+            'n_plot_2d_points': 200,
+            'n_plot_3d_points': 200,
+            'reg_tol': 1e-05
         }
 
         inp_arg_list = Properties.__get_basic_prop_list()
@@ -78,68 +78,68 @@ class Properties(ParsePropMixin):
 
     @staticmethod
     def get_is_verbose() -> bool:
-        return Properties.__get_option('isVerbose')
+        return Properties.__get_option('is_verbose')
 
     @staticmethod
     def get_abs_tol() -> float:
-        return Properties.__get_option('absTol')
+        return Properties.__get_option('abs_tol')
 
     @staticmethod
     def get_rel_tol() -> float:
-        return Properties.__get_option('relTol')
+        return Properties.__get_option('rel_tol')
 
     @staticmethod
     def get_reg_tol() -> float:
-        return Properties.__get_option('regTol')
+        return Properties.__get_option('reg_tol')
 
     @staticmethod
     def get_n_time_grid_points() -> int:
-        return Properties.__get_option('nTimeGridPoints')
+        return Properties.__get_option('n_time_grid_points')
 
     @staticmethod
     def get_ode_solver_name() -> str:
-        return Properties.__get_option('ODESolverName')
+        return Properties.__get_option('ode_solver_name')
 
     @staticmethod
     def get_is_ode_norm_control() -> bool:
-        return Properties.__get_option('isODENormControl')
+        return Properties.__get_option('is_ode_norm_control')
 
     @staticmethod
     def get_is_enabled_ode_solver_options() -> bool:
-        return Properties.__get_option('isEnabledOdeSolverOptions')
+        return Properties.__get_option('is_enabled_ode_solver_options')
 
     @staticmethod
     def get_n_plot_2d_points() -> int:
-        return Properties.__get_option('nPlot2dPoints')
+        return Properties.__get_option('n_plot_2d_points')
 
     @staticmethod
     def get_n_plot_3d_points() -> int:
-        return Properties.__get_option('nPlot3dPoints')
+        return Properties.__get_option('n_plot_3d_points')
 
     # Public setters
     @staticmethod
     def set_is_verbose(is_verb: bool) -> None:
-        Properties.__set_option('isVerbose', is_verb)
+        Properties.__set_option('is_verbose', is_verb)
 
     @staticmethod
     def set_n_plot_2d_points(n_plot_2d_points: int) -> None:
-        Properties.__set_option('nPlot2dPoints', n_plot_2d_points)
+        Properties.__set_option('n_plot_2d_points', n_plot_2d_points)
 
     @staticmethod
     def set_n_plot_3d_points(n_plot_3d_points: int) -> None:
-        Properties.__set_option('nPlot3dPoints', n_plot_3d_points)
+        Properties.__set_option('n_plot_3d_points', n_plot_3d_points)
 
     @staticmethod
     def set_n_time_grid_points(n_time_grid_points: int) -> None:
-        Properties.__set_option('nTimeGridPoints', n_time_grid_points)
+        Properties.__set_option('n_time_grid_points', n_time_grid_points)
 
     @staticmethod
     def set_abs_tol(value: float) -> None:
-        Properties.__set_option('absTol', value)
+        Properties.__set_option('abs_tol', value)
 
     @staticmethod
     def set_rel_tol(value: float) -> None:
-        Properties.__set_option('relTol', value)
+        Properties.__set_option('rel_tol', value)
 
     @staticmethod
     def get_prop_dict() -> Dict[str, Any]:

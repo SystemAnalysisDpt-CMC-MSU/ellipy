@@ -20,7 +20,7 @@ class Ellipsoid(AEllipsoid):
 
     @property
     def _shape_mat(self) -> np.ndarray:
-        return self.__shape_mat
+        return np.copy(self.__shape_mat)
 
     @_shape_mat.setter
     def _shape_mat(self, shape_mat: np.ndarray) -> None:
@@ -30,7 +30,7 @@ class Ellipsoid(AEllipsoid):
             throw_error('wrongInput:shape_mat', 'shape_mat must be a square matrix')
         if np.any(np.isnan(shape_mat.flatten())):
             throw_error('wrongInput:shape_mat', 'configuration matrix cannot contain NaN values')
-        self.__shape_mat = shape_mat
+        self.__shape_mat = np.copy(shape_mat)
 
     def quad_func(self) -> np.ndarray:
         pass
@@ -226,7 +226,20 @@ class Ellipsoid(AEllipsoid):
         return self.uminus(np.array([self])).flatten()[0]
 
     def __str__(self):
-        pass
+        res_str = ['\n']
+        ell_dict, field_names_dict, field_descr_dict, _ = self.to_dict(np.array([self]), False)
+        ell_dict = np.array(ell_dict).flatten()[0]
 
-    def __repr__(self):
-        pass
+        prop_dict = {'actualClass': 'Ellipsoid', 'shape': '()'}
+        res_str.append('-------ellipsoid object-------\n')
+        res_str.append('Properties:\n')
+        res_str.append(str(prop_dict))
+        res_str.append('\n')
+        res_str.append('Fields (name, type, description):\n')
+        res_str.append('    {}    float64    {}\n'.format(
+            field_names_dict['shape_mat'], field_descr_dict['shape_mat']))
+        res_str.append('    {}    float64    {}\n'.format(
+            field_names_dict['center_vec'], field_descr_dict['center_vec']))
+        res_str.append('\nData: \n')
+        res_str.append(str(ell_dict))
+        return ''.join(res_str)
