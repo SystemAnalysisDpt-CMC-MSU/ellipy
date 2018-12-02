@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Dict, Callable, Union, List, Optional
+from typing import Tuple, Dict, Callable, Union, Optional, Iterable
 from ellipy.gen.common.common import throw_error, is_numeric
 from ellipy.gen.dict.dict import dict_compare_vec
 from ellipy.gras.la.la import try_treat_as_real
 import numpy as np
+import collections
 
 
 class ABasicEllipsoid(ABC):
@@ -44,20 +45,23 @@ class ABasicEllipsoid(ABC):
 
     @classmethod
     @abstractmethod
-    def dimension(cls, ell_arr: np.ndarray, return_rank=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    def dimension(cls, ell_arr: Union[Iterable, np.ndarray], return_rank=False) -> \
+            Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         pass
 
     @classmethod
     @abstractmethod
-    def to_dict(cls, ell_arr: np.ndarray, is_prop_included: bool = False, abs_tol: float = None) -> \
-            Tuple[List[dict], Dict[str, str], Dict[str, str],
+    def to_dict(cls, ell_arr: Union[Iterable, np.ndarray],
+                is_prop_included: bool = False, abs_tol: float = None) -> \
+            Tuple[np.ndarray, Dict[str, str], Dict[str, str],
                   Dict[str, Callable[[np.ndarray], np.ndarray]]]:
         pass
 
     @classmethod
-    def _check_if_scalar(cls, ell_arr: np.ndarray,
+    def _check_if_scalar(cls, ell_arr,
                          err_msg: str = 'input argument must be single ellipsoid') -> None:
-        if type(ell_arr) == np.ndarray:
+        if isinstance(ell_arr, collections.Iterable):
+            ell_arr = np.array(ell_arr)
             if ell_arr.size != 1:
                 throw_error('wrongInput:ell_arr', err_msg)
             if not isinstance(ell_arr.flatten()[0], cls):
@@ -66,13 +70,14 @@ class ABasicEllipsoid(ABC):
             throw_error('wrongInput:ell_arr', err_msg)
 
     @classmethod
-    def _check_is_me_internal(cls, ell_arr: np.ndarray,
+    def _check_is_me_internal(cls, ell_arr: Union[Iterable, np.ndarray],
                               var_name: str = '', err_tag: str = 'wrongInput', err_msg: str = None) -> None:
         if var_name != '':
             err_tag += ':' + var_name
         if err_msg is None:
             err_msg = 'input argument must be {}'.format(cls.__name__)
-        if type(ell_arr) == np.ndarray:
+        if isinstance(ell_arr, collections.Iterable):
+            ell_arr = np.array(ell_arr)
             if ell_arr.size > 0:
                 ell_flatten_arr = ell_arr.flatten()
                 for i_ell in range(ell_flatten_arr.size):
@@ -83,7 +88,7 @@ class ABasicEllipsoid(ABC):
 
     @classmethod
     @abstractmethod
-    def _check_is_me_virtual(cls, ell_arr: np.ndarray, *args, **kwargs):
+    def _check_is_me_virtual(cls, ell_arr: Union[Iterable, np.ndarray], *args, **kwargs):
         pass
 
     @abstractmethod
@@ -91,7 +96,7 @@ class ABasicEllipsoid(ABC):
         pass
 
     @classmethod
-    def get_property(cls, ell_arr: np.ndarray, prop_name: str,
+    def get_property(cls, ell_arr: Union[Iterable, np.ndarray], prop_name: str,
                      f_prop_fun: Optional[Callable[[np.ndarray], np.float64]] = lambda x: np.min(x)) \
             -> Union[np.ndarray, Tuple[np.ndarray, np.float64]]:
         cls._check_is_me_internal(ell_arr)
@@ -120,17 +125,18 @@ class ABasicEllipsoid(ABC):
                 return prop_arr, prop_val
 
     @classmethod
-    def get_abs_tol(cls, ell_arr: np.ndarray, *args, **kwargs) -> \
+    def get_abs_tol(cls, ell_arr: Union[Iterable, np.ndarray], *args, **kwargs) -> \
             Union[np.ndarray, Tuple[np.ndarray, np.float64]]:
         return cls.get_property(ell_arr, '_abs_tol', *args, **kwargs)
 
     @classmethod
-    def get_rel_tol(cls, ell_arr: np.ndarray, *args, **kwargs) -> \
+    def get_rel_tol(cls, ell_arr: Union[Iterable, np.ndarray], *args, **kwargs) -> \
             Union[np.ndarray, Tuple[np.ndarray, np.float64]]:
         return cls.get_property(ell_arr, '_rel_tol', *args, **kwargs)
 
     @classmethod
-    def _is_equal_internal(cls, ell_first_arr, ell_sec_arr,
+    def _is_equal_internal(cls, ell_first_arr: Union[Iterable, np.ndarray],
+                           ell_sec_arr: Union[Iterable, np.ndarray],
                            is_prop_included: bool) -> Tuple[np.ndarray, str]:
         cls._check_is_me_virtual(ell_first_arr, 'first')
         cls._check_is_me_virtual(ell_sec_arr, 'second')
@@ -198,19 +204,21 @@ class ABasicEllipsoid(ABC):
 
     # noinspection PyUnusedLocal
     @classmethod
-    def eq(cls, ell_first_arr: np.ndarray, ell_second_arr: np.ndarray, *args, **kwargs) -> Tuple[np.ndarray, str]:
+    def eq(cls, ell_first_arr: Union[Iterable, np.ndarray],
+           ell_second_arr: Union[Iterable, np.ndarray], *args, **kwargs) -> Tuple[np.ndarray, str]:
         return cls.is_equal(ell_first_arr, ell_second_arr)
 
     def __eq__(self, other) -> bool:
-        is_eq, _ = self._is_equal_internal(self, other, False)
+        is_eq, _ = self._is_equal_internal([self], [other], False)
         return np.array(is_eq).flatten()[0]
 
     @classmethod
-    def is_equal(cls, ell_first_arr, ell_sec_arr, is_prop_included: bool = False) -> Tuple[np.ndarray, str]:
+    def is_equal(cls, ell_first_arr: Union[Iterable, np.ndarray],
+                 ell_sec_arr: Union[Iterable, np.ndarray], is_prop_included: bool = False) -> Tuple[np.ndarray, str]:
         return cls._is_equal_internal(ell_first_arr, ell_sec_arr, is_prop_included)
 
     @classmethod
-    def get_copy(cls, ell_arr: np.ndarray) -> np.ndarray:
+    def get_copy(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         cls._check_is_me_virtual(ell_arr)
         ell_arr = np.array(ell_arr)
         n_elems = ell_arr.size
@@ -229,11 +237,11 @@ class ABasicEllipsoid(ABC):
             return np.reshape(copy_ell_arr, ell_shape_vec)
 
     @classmethod
-    def is_empty(cls, ell_arr: np.ndarray):
+    def is_empty(cls, ell_arr: Union[Iterable, np.ndarray]):
         cls._check_is_me_virtual(ell_arr)
         return cls.dimension(ell_arr) == 0
 
-    def rep_mat(self, shape_vec: Union[list, tuple, np.ndarray]) -> np.ndarray:
+    def rep_mat(self, shape_vec: Union[Iterable, np.ndarray]) -> np.ndarray:
         shape_vec = np.array(shape_vec)
         if not is_numeric(shape_vec):
             throw_error('wrongInput:shape_vec', 'size array should be numeric')

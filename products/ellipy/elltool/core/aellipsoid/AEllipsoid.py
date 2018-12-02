@@ -1,7 +1,7 @@
 from ellipy.elltool.core.abasicellipsoid.ABasicEllipsoid import *
 from ellipy.gras.la.la import is_mat_pos_def
 from abc import ABC, abstractmethod
-from typing import Union, Tuple, Dict
+from typing import Union, Tuple, Dict, Iterable
 import numpy as np
 
 
@@ -30,32 +30,40 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @_center_vec.setter
     def _center_vec(self, center_vec) -> None:
+        if type(center_vec) != np.ndarray or not is_numeric(center_vec):
+            throw_error('wrongInput:center_vec', 'center_vec should be numeric array')
+        center_vec = np.array(try_treat_as_real(center_vec, self._abs_tol), dtype=np.float64)
+        if center_vec.size != np.max(center_vec.shape):
+            throw_error('wrongInput:center_vec', 'center_vec should be a vector')
+        center_vec = center_vec.flatten()
+        if not np.all(np.isfinite(center_vec)):
+            throw_error('wrongInput:center_vec', 'center_vec should have all finite values')
         self.__center_vec = np.copy(center_vec)
 
     @classmethod
-    def projection(cls, ell_arr: np.ndarray, basis_mat: np.ndarray) -> np.ndarray:
+    def projection(cls, ell_arr: Union[Iterable, np.ndarray], basis_mat: np.ndarray) -> np.ndarray:
         pass
 
     def get_center_vec(self):
         return self._center_vec
 
     @classmethod
-    def get_n_plot_2d_points(cls, ell_arr: np.ndarray) -> np.ndarray:
+    def get_n_plot_2d_points(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         return cls.get_property(ell_arr, '_n_plot_2d_points', None)
 
     @classmethod
-    def get_n_plot_3d_points(cls, ell_arr: np.ndarray) -> np.ndarray:
+    def get_n_plot_3d_points(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         return cls.get_property(ell_arr, '_n_plot_2d_points', None)
 
     @classmethod
-    def mtimes(cls, mult_mat: np.ndarray, inp_ell_arr: np.ndarray) -> np.ndarray:
+    def mtimes(cls, mult_mat: np.ndarray, inp_ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         pass
 
     def __rmul__(self, mult_mat: np.ndarray):
-        return self.mtimes(mult_mat, np.array([self])).flatten()[0]
+        return self.mtimes(mult_mat, [self]).flatten()[0]
 
     @classmethod
-    def shape(cls, ell_arr: np.ndarray, mod_mat: np.ndarray) -> np.ndarray:
+    def shape(cls, ell_arr: Union[Iterable, np.ndarray], mod_mat: np.ndarray) -> np.ndarray:
         pass
 
     @abstractmethod
@@ -77,11 +85,11 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, dict_arr: np.ndarray) -> np.ndarray:
+    def from_dict(cls, dict_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         pass
 
     @classmethod
-    def is_degenerate(cls, ell_arr: np.ndarray) -> np.ndarray:
+    def is_degenerate(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         cls._check_is_me_virtual(ell_arr)
         ell_arr = np.array(ell_arr)
         if np.any(cls.is_empty(ell_arr).flatten()):
@@ -95,17 +103,19 @@ class AEllipsoid(ABasicEllipsoid, ABC):
                           for ell_obj in list(ell_arr.flatten())]), ell_arr.shape)
 
     @classmethod
-    def volume(cls, ell_arr: np.ndarray) -> np.ndarray:
+    def volume(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         pass
 
     @classmethod
-    def dimension(cls, ell_arr: np.ndarray, return_rank=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    def dimension(cls, ell_arr: Union[Iterable, np.ndarray], return_rank=False) -> \
+            Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         cls._check_is_me_virtual(ell_arr)
+        ell_arr = np.array(ell_arr)
         ell_list = list(ell_arr.flatten())
         ell_shape_vec = ell_arr.shape
         if return_rank:
             ndim_list, rank_list = zip(*[
-                (np.size(ell_obj.get_center_vec()), np.rank(ell_obj.get_shape_mat()))
+                (np.size(ell_obj.get_center_vec()), np.linalg.matrix_rank(ell_obj.get_shape_mat()))
                 for ell_obj in ell_list
             ])
             return np.reshape(np.array(ndim_list), ell_shape_vec), np.reshape(np.array(rank_list), ell_shape_vec)
@@ -114,15 +124,15 @@ class AEllipsoid(ABasicEllipsoid, ABC):
             return np.reshape(np.array(ndim_list), ell_shape_vec)
 
     @classmethod
-    def get_shape(cls, ell_arr: np.ndarray, mod_mat: np.ndarray) -> np.ndarray:
+    def get_shape(cls, ell_arr: Union[Iterable, np.ndarray], mod_mat: np.ndarray) -> np.ndarray:
         pass
 
     @classmethod
-    def min_eig(cls, ell_arr: np.ndarray) -> np.ndarray:
+    def min_eig(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         pass
 
     @classmethod
-    def max_eig(cls, ell_arr: np.ndarray) -> np.ndarray:
+    def max_eig(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         pass
 
     @classmethod
@@ -130,21 +140,21 @@ class AEllipsoid(ABasicEllipsoid, ABC):
         pass
 
     def __add__(self, b_vec: np.ndarray):
-        return self.plus(np.array([self]), b_vec).flatten()[0]
+        return self.plus([self], b_vec).flatten()[0]
 
     def __radd__(self, b_vec: np.ndarray):
-        return self.plus(b_vec, np.array([self])).flatten()[0]
+        return self.plus(b_vec, [self]).flatten()[0]
 
     @classmethod
     def minus(cls, *args) -> np.ndarray:
         pass
 
     def __sub__(self, b_vec: np.ndarray):
-        return self.minus(np.array([self]), b_vec).flatten()[0]
+        return self.minus([self], b_vec).flatten()[0]
 
     def __rsub__(self, b_vec: np.ndarray):
-        return self.minus(b_vec, np.array([self])).flatten()[0]
+        return self.minus(b_vec, [self]).flatten()[0]
 
     @classmethod
-    def trace(cls, ell_arr: np.ndarray) -> np.ndarray:
+    def trace(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         pass

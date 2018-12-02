@@ -22,11 +22,11 @@ class Hyperplane(ABasicEllipsoid):
     def __init__(self, hyp_norm_vec: np.ndarray = np.array([0.], dtype=np.float64),
                  hyp_shift=0., **kwargs):
         ABasicEllipsoid.__init__(self)
-        self._normal_vec = hyp_norm_vec
-        self._shift = hyp_shift
         prop_list, _ = Properties.parse_prop(kwargs, ['abs_tol', 'rel_tol'])
         self._abs_tol = prop_list[0]
         self._rel_tol = prop_list[1]
+        self._normal_vec = hyp_norm_vec
+        self._shift = hyp_shift
 
     @property
     def _normal_vec(self) -> np.ndarray:
@@ -70,36 +70,35 @@ class Hyperplane(ABasicEllipsoid):
         return hp_obj.rep_mat(shape_vec)
 
     @classmethod
-    def from_dict(cls, dict_arr: np.ndarray) -> np.ndarray:
+    def from_dict(cls, dict_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         def dict_2_hp(hyp_dict: Dict[str, Any]):
             hyp_dict = hyp_dict.copy()
             normal_vec = hyp_dict['normal_vec']
             shift = hyp_dict['shift']
             del hyp_dict['normal_vec']
             del hyp_dict['shift']
-            return Hyperplane(normal_vec, shift, **hyp_dict)
+            return cls.__class__(normal_vec, shift, **hyp_dict)
         dict_arr = np.array(dict_arr)
         return np.reshape(np.array([dict_2_hp(hp_dict) for hp_dict in list(dict_arr.flatten())]), dict_arr.shape)
 
     @classmethod
-    def _check_is_me(cls, hyp_arr, *args, **kwargs):
+    def _check_is_me(cls, hyp_arr: Union[Iterable, np.ndarray], *args, **kwargs):
         cls._check_is_me_internal(hyp_arr, *args, **kwargs)
 
     @classmethod
-    def _check_is_me_virtual(cls, hyp_arr: np.ndarray, *args, **kwargs):
+    def _check_is_me_virtual(cls, hyp_arr: Union[Iterable, np.ndarray], *args, **kwargs):
         cls._check_is_me(hyp_arr, *args, **kwargs)
 
     def _get_single_copy(self):
-        cur_abs_tol = self.get_abs_tol(np.array([self]), None).flatten()[0]
         normal_vec, shift = self.parameters()
-        return self.__class__(normal_vec, shift, abs_tol=cur_abs_tol)
+        return self.__class__(normal_vec, shift, abs_tol=self._abs_tol)
 
     @classmethod
-    def contains(cls, hyp_arr: np.ndarray, x_arr: np.ndarray) -> np.ndarray:
+    def contains(cls, hyp_arr: Union[Iterable, np.ndarray], x_arr: np.ndarray) -> np.ndarray:
         pass
 
     @classmethod
-    def dimension(cls, hyp_arr: np.ndarray, return_rank=False) -> np.ndarray:
+    def dimension(cls, hyp_arr: Union[Iterable, np.ndarray], return_rank=False) -> np.ndarray:
         cls._check_is_me(hyp_arr)
         hyp_arr = np.array(hyp_arr)
 
@@ -127,20 +126,23 @@ class Hyperplane(ABasicEllipsoid):
         return self.double()
 
     @classmethod
-    def is_parallel(cls, first_hyp_arr: np.ndarray, sec_hyp_arr: np.ndarray) -> np.ndarray:
+    def is_parallel(cls, first_hyp_arr: Union[Iterable, np.ndarray],
+                    sec_hyp_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         pass
 
     @classmethod
-    def ne(cls, first_hyp_arr: np.ndarray, second_hyp_arr: np.ndarray) -> Tuple[np.ndarray, str]:
+    def ne(cls, first_hyp_arr: Union[Iterable, np.ndarray],
+           second_hyp_arr: Union[Iterable, np.ndarray]) -> Tuple[np.ndarray, str]:
         pass
 
     def __ne__(self, other):
-        is_ne, _ = self.ne(np.array([self]), np.array([other]))
+        is_ne, _ = self.ne([self], [other])
         return np.array(is_ne).flatten()[0]
 
     @classmethod
-    def to_dict(cls, hyp_arr: np.ndarray, is_prop_included: bool = False, abs_tol: float = None) -> \
-            Tuple[List[dict], Dict[str, str], Dict[str, str],
+    def to_dict(cls, hyp_arr: Union[Iterable, np.ndarray],
+                is_prop_included: bool = False, abs_tol: float = None) -> \
+            Tuple[np.ndarray, Dict[str, str], Dict[str, str],
                   Dict[str, Callable[[np.ndarray], np.ndarray]]]:
         def hp_2_dict(hp_obj, is_prop_incl: bool) -> dict:
             if hp_obj.is_empty(np.array([hp_obj])).flatten()[0]:
@@ -167,9 +169,11 @@ class Hyperplane(ABasicEllipsoid):
                 hp_dict['rel_tol'] = hp_obj.get_rel_tol(hp_obj_arr, None).flatten()[0]
             return hp_dict
 
-        hyp_dict_list = [hp_2_dict(hp_obj, is_prop_included) for hp_obj in list(hyp_arr.flatten())]
+        hyp_arr = np.array(hyp_arr)
+        hyp_dict_arr = np.reshape(np.array(
+            [hp_2_dict(hp_obj, is_prop_included) for hp_obj in list(hyp_arr.flatten())]), hyp_arr.shape)
         field_nice_names_dict = {
-            'normal_vec': 'normal_vec',
+            'normal_vec': 'normal',
             'shift': 'shift'
         }
         field_transform_func_dict = {
@@ -185,15 +189,15 @@ class Hyperplane(ABasicEllipsoid):
             field_descr_dict['abs_tol'] = 'Absolute tolerance.'
             field_nice_names_dict['rel_tol'] = 'rel_tol'
             field_descr_dict['rel_tol'] = 'Relative tolerance.'
-        return hyp_dict_list, field_nice_names_dict, field_descr_dict, field_transform_func_dict
+        return hyp_dict_arr, field_nice_names_dict, field_descr_dict, field_transform_func_dict
 
     @classmethod
-    def uminus(cls, hyp_arr: np.ndarray) -> np.ndarray:
+    def uminus(cls, hyp_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         pass
 
     def __str__(self):
         res_str = ['\n']
-        hyp_dict, field_names_dict, field_descr_dict, _ = self.to_dict(np.array([self]), False)
+        hyp_dict, field_names_dict, field_descr_dict, _ = self.to_dict([self], False)
         hyp_dict = np.array(hyp_dict).flatten()[0]
 
         prop_dict = {'actualClass': 'Hyperplane', 'shape': '()'}
