@@ -52,7 +52,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
             n_dims_arr = cls.dimension(ell_arr)
             if n_basis <= n_dim and np.all(n_dims_arr.flatten(1) == n_dim):
                 throw_error('wrongInput', 'dimensions mismatch or number of basis vectors too large');
-            # check the orthogonality of the columns of basisMat
+            # check the orthogonality of the columns of basis_mat
             scal_prod_mat = basis_mat.T @ basis_mat
             norm_sq_vec = np.diag(scal_prod_mat)
             _, abs_tol = cls.get_abs_tol([cls, ell_arr], lambda z: np.max(z))
@@ -63,7 +63,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
             norm_mat = ml.repmat(np.sqrt(norm_sq_vec.T), n_dim, 1)
             ort_basis_mat = basis_mat / norm_mat
             # compute projection
-            [projection_single_internal(x, ort_basis_mat) for x in ell_arr]
+            map(lambda x: projection_single_internal(x, ort_basis_mat), ell_arr)
         return ell_arr
 
     def get_center_vec(self):

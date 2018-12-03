@@ -3,6 +3,7 @@ from ellipy.elltool.conf.properties.Properties import Properties
 from ellipy.gras.la.la import is_mat_pos_def, is_mat_symm, try_treat_as_real, sqrtm_pos
 from ellipy.gen.common.common import throw_error
 from ellipy.gen.logging.logging import get_logger
+from ellipy.gras.geom.ell.ell import rho_mat
 from typing import Tuple, Dict, Callable, Any
 import numpy as np
 
@@ -105,7 +106,31 @@ class Ellipsoid(AEllipsoid):
     @staticmethod
     def _calc_diff_one_dir(first_ell, sec_ell, l_mat: np.ndarray,
                            p_univ_vec: np.ndarray, is_good_dir_vec: np.ndarray) -> Tuple[np.ndarray, bool]:
-        pass
+        __ABS_TOL = 1e-14
+        abs_tol = Properties.get_abs_tol()
+        _, min_ell_pts_mat = first_ell.rho(first_ell, l_mat)
+        _, sub_ell_pts_mat = sec_ell.rho(sec_ell, l_mat)
+        if first_ell.dimension(first_ell) == 3:
+            is_plot_center_3d = True
+        else:
+            is_plot_center_3d = False
+
+        def calc_diff(is_good: bool, ind: int) -> np.ndarray:
+            if is_good:
+                diff_bnd_mat = min_ell_pts_mat[:, ind] - sub_ell_pts_mat[:, ind]
+            else:
+                _, diff_bnd_mat = rho_mat((1 - p_univ_vec[ind]) * sec_ell.get_shape_mat()
+                                          + (1 - 1 / p_univ_vec[ind]) * first_ell.get_shape_mat(),
+                                          l_mat[:, ind], abs_tol, first_ell.get_center_vec() - sec_ell.get_center_vec())
+            if np.abs(diff_bnd_mat - first_ell.get_center_vec() + sec_ell.get_center_vec()) < __ABS_TOL:
+                diff_bnd_mat = first_ell.get_center_vec - sec_ell.get_center_vec()
+            else:
+                is_plot_center_3d = False
+            return diff_bnd_mat
+
+        diff_bound_mat = np.array(map(lambda x, y: calc_diff(x, y),
+                                      is_good_dir_vec, np.arange(1, l_mat.shape[1] + 1)))
+        return diff_bound_mat, is_plot_center_3d
 
     @staticmethod
     def _ellbndr_2dmat(n_points: int,
@@ -130,6 +155,7 @@ class Ellipsoid(AEllipsoid):
     def _projection_single_internal(self, ort_basis_mat: np.ndarray):
         self._shape_mat = ort_basis_mat.T @ self.get_shape_mat() @ ort_basis_mat
         self._center_vec = ort_basis_mat.T @ self.get_center_vec()
+
     @classmethod
     def _check_is_me_virtual(cls, ell_arr: Union[Iterable, np.ndarray], *args, **kwargs):
         cls._check_is_me(ell_arr, *args, **kwargs)
