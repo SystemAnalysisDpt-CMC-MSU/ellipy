@@ -1,7 +1,7 @@
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
 
 
-class TestPolarEllipsoid(AEllipsoid):
+class PolarEllipsoidTest(AEllipsoid):
     pass
 
 
