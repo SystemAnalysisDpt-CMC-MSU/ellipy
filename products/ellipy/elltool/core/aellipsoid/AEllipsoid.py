@@ -3,6 +3,7 @@ from ellipy.gras.la.la import is_mat_pos_def
 from abc import ABC, abstractmethod
 from typing import Union, Tuple, Dict, Iterable
 import numpy as np
+from numpy import matlib as ml
 
 
 class AEllipsoid(ABasicEllipsoid, ABC):
@@ -42,7 +43,28 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @classmethod
     def projection(cls, ell_arr: Union[Iterable, np.ndarray], basis_mat: np.ndarray) -> np.ndarray:
-        pass
+        cls._check_is_me_virtual(ell_arr)
+        if is_numeric(basis_mat):
+            throw_error('wrongInput:basis_mat',
+                        'second input argument must be matrix with orthogonal columns')
+        if not np.any(cls.is_empty(ell_arr).flatten()):
+            n_dim, n_basis = basis_mat.shape
+            n_dims_arr = cls.dimension(ell_arr)
+            if n_basis <= n_dim and np.all(n_dims_arr.flatten(1) == n_dim):
+                throw_error('wrongInput', 'dimensions mismatch or number of basis vectors too large');
+            # check the orthogonality of the columns of basisMat
+            scal_prod_mat = basis_mat.T @ basis_mat
+            norm_sq_vec = np.diag(scal_prod_mat)
+            _, abs_tol = cls.get_abs_tol([cls, ell_arr], lambda z: np.max(z))
+            is_ortogonal_mat = (scal_prod_mat - diag(norm_sq_vec)) > abs_tol
+            if np.any(is_ortogonal_mat.flatten(1)):
+                throw_error('wrongInput','basis vectors must be orthogonal');
+            # normalize the basis vectors
+            norm_mat = ml.repmat(np.sqrt(norm_sq_vec.T), n_dim, 1)
+            ort_basis_mat = basis_mat / norm_mat
+            # compute projection
+            [projection_single_internal(x, ort_basis_mat) for x in ell_arr]
+        return ell_arr
 
     def get_center_vec(self):
         return self._center_vec

@@ -128,8 +128,8 @@ class Ellipsoid(AEllipsoid):
         pass
 
     def _projection_single_internal(self, ort_basis_mat: np.ndarray):
-        pass
-
+        self._shape_mat = ort_basis_mat.T @ self.get_shape_mat() @ ort_basis_mat
+        self._center_vec = ort_basis_mat.T @ self.get_center_vec()
     @classmethod
     def _check_is_me_virtual(cls, ell_arr: Union[Iterable, np.ndarray], *args, **kwargs):
         cls._check_is_me(ell_arr, *args, **kwargs)
@@ -208,7 +208,9 @@ class Ellipsoid(AEllipsoid):
 
     @classmethod
     def get_projection(cls, ell_arr: Union[Iterable, np.ndarray], basis_mat: np.ndarray) -> np.ndarray:
-        pass
+        proj_ell_arr = cls.get_copy(ell_arr)
+        proj_ell_arr.projection = cls.projection(proj_ell_arr, basis_mat)
+        return proj_ell_arr
 
     def get_rho_boundary(self, n_points: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         pass
