@@ -2,38 +2,46 @@ import numpy as np
 import pytest
 from ellipy.gras.sym.sym import is_dependent
 from ellipy.gras.sym.sym import var_replace
+from ellipy.gen.common.common import is_numeric
 
 
 class TestSym:
+    __N_COMPARE_DECIMAL_DIGITS = 15
+
     @staticmethod
     def compare_m_mat_with_numerics(m_mat, cor_mat, res_mat):
-        n = 3
-        is_ok = False
-        c = np.zeros(m_mat.shape)
-        for i in range(len(m_mat)):
-            for j in range(len(m_mat[i])):
-                c[i][j] = isinstance(m_mat[i][j], float)
-                if c[i][j]:
-                    [first_num_str, first_frac_str] = res_mat[i][j].split('.')
-                    [second_nun_str, second_frac_str] = cor_mat[i][j].split('.')
-                    if first_num_str == second_nun_str:
-                        if first_frac_str[0:n-1] == second_frac_str[0:n-1]:
-                            is_ok = True
-                        else:
-                            is_ok = False
-                    else:
-                        is_ok = False
-                else:
-                    is_ok = True
-        return is_ok
+        def cmp_up_to_digits(first_num_str, second_num_str, n_cmp_digits):
+            first_list = first_num_str.split('.')
+            second_list = second_num_str.split('.')
+            is_res_ok = first_list[0] == second_list[0] and \
+                        len(first_list) == len(second_list)
+            if is_res_ok and len(first_list) > 1:
+                is_res_ok = first_list[1][0:n_cmp_digits - 1] == \
+                            second_list[1][0:n_cmp_digits - 1]
+            return is_res_ok
+
+        is_num_mat = np.reshape([is_numeric(el) for el in list(m_mat.flatten())], m_mat.shape)
+        if np.any(is_num_mat.flatten()):
+            if not np.array_equal(cor_mat[~is_num_mat], res_mat[~is_num_mat]):
+                return False
+        if not np.all(is_num_mat.flatten()):
+            if not np.all(np.array([cmp_up_to_digits(cor_el, res_el, TestSym.__N_COMPARE_DECIMAL_DIGITS)
+                                    for cor_el, res_el in
+                                    zip(list(cor_mat[is_num_mat]), list(res_mat[is_num_mat]))])):
+                return False
+        return True
 
     def test_is_dependent(self):
-        assert is_dependent(np.array([['cos(t)', 'sin(t)'], ['-sin(t)', 'cost(t)']], dtype='str'))
+        assert is_dependent(np.array([['cos(t)', 'sin(t)'], ['-sin(t)', 'cos(t)']], dtype='str'))
         assert not is_dependent(np.array([['cos(t)', 'sin(t)'], ['-sin(t)', 'cost(t)']], dtype='str'), is_discrete=True)
         assert is_dependent(np.array([['cos(k)', 'k'], ['-sin(k)', 'cos(k)']], dtype='str'), is_discrete=True)
         assert not is_dependent(np.array([['cos(k)', 'k'], ['-sin(k)', 'cos(k)']], dtype='str'))
+        assert is_dependent(np.array([['cos(t)', 't'], ['-sin(t)', 'cos(t)']], dtype='str'))
+        assert not is_dependent(np.array([['cos(t)', 't'], ['-sin(t)', 'cos(t)']], dtype='str'), is_discrete=True)
         assert is_dependent(np.array([['4*k + 6', 5], [6, 10]], dtype='str'), is_discrete=True)
         assert is_dependent(np.array([['k', 5], [6, 10]], dtype='str'), is_discrete=True)
+        assert is_dependent(np.array([['4*t + 6', 5], [6, 10]], dtype='str'))
+        assert is_dependent(np.array([['t', 5], [6, 10]], dtype='str'))
         assert not is_dependent(np.array([[3, 5], [5.9, 'z']], dtype='str'))
 
     def test_var_replace_int(self):
@@ -139,7 +147,7 @@ class TestSym:
     def test_var_replace_int_mat(self):  # если взять 150 не строку, а просто число, то не работает. почему..
         m_mat = np.array([[150, 1,  2],
                           [-10, 30, 100],
-                          [1,   0,  -190]])
+                          [1,   0,  -190]], dtype=object)
         from_var_name = 'att'
         to_var_name = '0.8-' + from_var_name
         res_mat = var_replace(m_mat, from_var_name, to_var_name)
@@ -158,13 +166,13 @@ class TestSym:
         assert np.array_equal(cor_mat, res_mat)
 
     def test_var_replace_real_mat(self):
-        m_mat = np.array([[150.00655674, 1.11,  2.54],
+        m_mat = np.array([[15.00000000000000655674, 1.11,  2.54],
                           [-10.453, 30.01, 100.45],
-                          [1.3242,   0.342,  -190.901]])
+                          [1.3240000000000002,   0.342,  -190.901]])
         from_var_name = 'att'
         to_var_name = '0.8-' + from_var_name
         res_mat = var_replace(m_mat, from_var_name, to_var_name)
-        cor_mat = np.array([['150.007', '1.11', '2.54'],
+        cor_mat = np.array([['15.000000000000007', '1.11', '2.54'],
                             ['-10.453', '30.01', '100.45'],
                             ['1.324', '0.342',  '-190.901']])
         assert self.compare_m_mat_with_numerics(m_mat, cor_mat, res_mat)
@@ -185,7 +193,7 @@ class TestSym:
     def test_var_replace_real_mat_elem(self):
         m_mat = np.array([['t+t^2+t^3+sin(t)', 't^(1/2)+t*t*17'],
                           ['att+t2', 't+temp^t'],
-                          ['1/(t+3)*2^t^t', 1.9]])
+                          ['1/(t+3)*2^t^t', 1.9]], dtype=object)
         from_var_name = 'att'
         to_var_name = '10.8 - ' + from_var_name
         res_mat = var_replace(m_mat, from_var_name, to_var_name)
@@ -198,7 +206,7 @@ class TestSym:
     def test_var_replace_mixed_mat(self):
         m_mat = np.array([['3.2',    't + 3.2'],
                           [9.8,      -34],
-                          ['sin(t)', 1.9]])
+                          ['sin(t)', 1.9]], dtype=object)
         from_var_name = 't'
         to_var_name = '0.81-' + from_var_name
         res_mat = var_replace(m_mat, from_var_name, to_var_name)
@@ -211,7 +219,7 @@ class TestSym:
     def test_var_replace_wrong_args(self):
         m_mat = np.array([['3.2',    't + 3.2'],
                           [9.8,      -34],
-                          ['sin(t)', 1.9]])
+                          ['sin(t)', 1.9]], dtype=object)
         from_var_name = 't'
         to_var_name = '0.81-' + from_var_name
         try:

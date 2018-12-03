@@ -7,9 +7,13 @@ from numbers import Integral
 def is_dependent(m_mat: np.ndarray, is_discrete: bool = False) -> bool:
     m_mat = np.vectorize(str)(m_mat)
     if is_discrete:
-        reg_arr = np.vectorize(re.search)(r'\W' + 'k' + r'\W' + r'|' + r'^' + 'k' + r'|' + 'k' + r'$', m_mat)
+        reg_arr = np.vectorize(re.search)(
+            r'\W' + 'k' + r'\W' + r'|' + r'^' + 'k' + r'\W' + r'|' +
+            r'\W' + 'k' + r'$' + r'|' + r'^' + 'k' + r'$', m_mat)
     else:
-        reg_arr = np.vectorize(re.search)(r'\W' + 't' + r'\W' + r'|' + r'^' + 't' + r'|' + 't' + r'$', m_mat)
+        reg_arr = np.vectorize(re.search)(
+            r'\W' + 't' + r'\W' + r'|' + r'^' + 't' + r'\W' + r'|' +
+            r'\W' + 't' + r'$' + r'|' + r'^' + 't' + r'$', m_mat)
     if reg_arr.any():
         is_depend = True
     else:
@@ -25,16 +29,14 @@ def var_replace(m_mat: np.ndarray, from_var_name: str, to_var_name: str) -> np.n
     if not isinstance(to_var_name, str):
         throw_error('wrongInput: to_var_name', 'to_var_name is expected to be a string')
 
-    def _str(m_mat_temp):
-        n_compare_decimal_digits = 3
-        if not isinstance(m_mat_temp, str):
-            if not isinstance(m_mat_temp, Integral):
-                # cmp_up_to_digits = '{:.' + n_compare_decimal_digits + 'f}'
-                # m_mat_temp = cmp_up_to_digits.format(m_mat_temp)
-                m_mat_temp = str(round(m_mat_temp, n_compare_decimal_digits))
+    def _str(elem):
+        __PRECISION = 15
+        if not isinstance(elem, str):
+            if not isinstance(elem, Integral):
+                elem = np.format_float_positional(elem, precision=__PRECISION, trim= '.')
             else:
-                m_mat_temp = str(m_mat_temp)
-        return m_mat_temp
+                elem = str(elem)
+        return elem
     m_mat = np.vectorize(_str)(m_mat)
     to_var_name = '(' + to_var_name + ')'
 
