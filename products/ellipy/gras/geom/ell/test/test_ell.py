@@ -19,9 +19,9 @@ class TestEll:
         __MAX_TOL = 1e-10
         q_mat = np.array([[2, 5, 7],
                           [6, 3, 4],
-                          [5, -2, -3]], dtype=np.int64)
-        x_vec = np.array([7, 8, 9], dtype=np.int64).T
-        c_vec = np.array([1, 0, 1], dtype=np.int64)
+                          [5, -2, -3]], dtype=np.float64)
+        x_vec = np.expand_dims(np.array([7, 8, 9], dtype=np.float64), 1)
+        c_vec = np.array([1, 0, 1], dtype=np.float64)
         calc_mode = 'plain'
         __ANALYTICAL_RESULT_1 = 1304
         __ANALYTICAL_RESULT_2 = 1563
@@ -29,39 +29,39 @@ class TestEll:
 
         def check(analytical_result, mode, c_vector):
             quad_res = quad_mat(q_mat, x_vec, c_vector, mode)
-            is_ok = abs(quad_res - analytical_result) < __MAX_TOL
+            is_ok = np.abs(quad_res - analytical_result) < __MAX_TOL
             assert is_ok
 
         check(__ANALYTICAL_RESULT_1, calc_mode, c_vec)
         c_vec = 0
         check(__ANALYTICAL_RESULT_2, calc_mode, c_vec)
         calc_mode = 'InvAdv'
-        c_vec = np.array([1, 0, 1], dtype=np.int64)
+        c_vec = np.array([1, 0, 1], dtype=np.float64)
         check(__ANALYTICAL_RESULT_3, calc_mode, c_vec)
         calc_mode = 'INV'
         check(__ANALYTICAL_RESULT_3, calc_mode, c_vec)
 
     def test_quad_mat_negative(self):
-        q_mat_square = np.array([[1, 0],
-                                 [0, 1]], dtype=np.int64)
-        q_mat_not_square = np.array([1, 0], dtype=np.int64)
-        x_vec_good_dim = np.array([3, 2], dtype=np.int64)
-        x_vec_bad_dim = np.array([1, 5, 10], dtype=np.int64)
-        c_vec_good_dim = np.array([1, 1], dtype=np.int64)
-        c_vec_bad_dim = np.array([1, 3, 7], dtype=np.int64)
+        q_sq_mat = np.array([[1, 0],
+                                 [0, 1]], dtype=np.float64)
+        q_not_sq_mat = np.array([1, 0], dtype=np.float64)
+        x_good_dim_vec = np.array([3, 2], dtype=np.float64)
+        x_bad_dim_vec = np.array([1, 5, 10], dtype=np.float64)
+        c_good_dim_vec = np.array([1, 1], dtype=np.float64)
+        c_bad_dim_vec = np.array([1, 3, 7], dtype=np.float64)
         mode = 'plain'
 
         with pytest.raises(Exception) as e:
-            quad_mat(q_mat_not_square, x_vec_good_dim, c_vec_good_dim, mode)
-        assert 'wrongInput' in str(e.value)
+            quad_mat(q_not_sq_mat, x_good_dim_vec, c_good_dim_vec, mode)
+        assert 'wrongInput:q_mat' in str(e.value)
 
         with pytest.raises(Exception) as e:
-            quad_mat(q_mat_square, x_vec_bad_dim, c_vec_good_dim, mode)
-        assert 'wrongInput' in str(e.value)
+            quad_mat(q_sq_mat, x_bad_dim_vec, c_good_dim_vec, mode)
+        assert 'wrongInput:q_mat:x_vec' in str(e.value)
 
         with pytest.raises(Exception) as e:
-            quad_mat(q_mat_square, x_vec_good_dim, c_vec_bad_dim, mode)
-        assert 'wrongInput' in str(e.value)
+            quad_mat(q_sq_mat, x_good_dim_vec, c_bad_dim_vec, mode)
+        assert 'wrongInput:q_mat:c_vec' in str(e.value)
 
     def test_rho_mat(self):
         __MAX_TOL = 1e-14

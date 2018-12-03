@@ -18,9 +18,9 @@ class TestLaBasic:
         check(q_mat, 1e-5, True)
 
     def test_is_mat_symm(self):
-        assert is_mat_symm(np.array([[2]], dtype=np.int64))
+        assert is_mat_symm(np.array([[2]], dtype=np.float64))
 
-        assert is_mat_symm(np.diag(np.arange(5) + 1))
+        assert is_mat_symm(np.diag(np.arange(1, 6)))
 
         test_mat = rand(20, 20)
         assert is_mat_symm(test_mat @ test_mat.T)
@@ -39,10 +39,10 @@ class TestLaBasic:
         assert is_mat_symm(test_mat, __ABS_TOL)
 
         test_mat = np.array([[2, 1],
-                             [3, 2]], dtype=np.int64)
+                             [3, 2]], dtype=np.float64)
         assert not is_mat_symm(test_mat)
 
-        test_mat = 10 * rand(20, 20) + np.diag(np.arange(19) + 1, 1)
+        test_mat = 10 * rand(20, 20) + np.diag(np.arange(1, 20), 1)
         assert not is_mat_symm(test_mat)
 
         with pytest.raises(Exception) as e:

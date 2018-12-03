@@ -1,9 +1,8 @@
-from typing import Tuple
+from typing import Tuple, Union
 import numpy as np
 from scipy.special import gamma
 from ellipy.elltool.conf.properties.Properties import Properties
 from ellipy.gras.gen.gen import sqrt_pos
-from numpy.linalg import inv, solve
 from ellipy.gen.common.common import throw_error, is_numeric
 
 
@@ -15,19 +14,21 @@ def ell_volume(q_mat: np.ndarray) -> float:
 
 
 def inv_mat(q_mat: np.ndarray) -> np.ndarray:
-    (q_mat_dim_m, q_mat_dim_n) = np.shape(q_mat)
+    if q_mat.ndim != 2:
+        throw_error('wrongInput:q_mat', 'input must be a matrix')
+    q_mat_dim_m, q_mat_dim_n = np.shape(q_mat)
 
     if q_mat_dim_m != q_mat_dim_n:
-        throw_error('wrongInput:q_mat', 'ELL_INV: matrix must be square.')
+        throw_error('wrongInput:q_mat', 'input matrix must be square')
 
-    b_mat = inv(q_mat)
-    i_mat = inv(b_mat @ q_mat) @ b_mat
+    b_mat = np.linalg.inv(q_mat)
+    i_mat = np.linalg.inv(b_mat @ q_mat) @ b_mat
     return i_mat
 
 
 def quad_mat(q_mat: np.ndarray,
              x_vec: np.ndarray,
-             c_vec: np.ndarray = np.array([0.]),
+             c_vec: Union[int, float, np.ndarray] = 0.,
              mode: str = 'plain') -> float:
 
     if not is_numeric(q_mat):
@@ -37,56 +38,59 @@ def quad_mat(q_mat: np.ndarray,
     if not is_numeric(c_vec):
         throw_error('wrongInput:c_vec', 'c_vec must be numeric')
     if mode.lower() not in ['plain', 'inv', 'invadv']:
-        throw_error('wrongInput:mode', 'mode must be one of the next types:'
-                    '(''plain'', ''inv'', ''invadv'')')
+        throw_error('wrongInput:mode', 'mode must be one of the next types: ' +
+                    "'plain', 'inv', 'invadv'")
 
-    if q_mat.ndim == 1:
-        throw_error('wrongInput:q_mat', 'q_mat must be matrix')
+    if q_mat.ndim != 2:
+        throw_error('wrongInput:q_mat', 'q_mat must be a matrix')
 
-    (q_matm_elems, q_matn_elems) = q_mat.shape
+    q_matm_elems, q_matn_elems = q_mat.shape
 
     if q_matm_elems != q_matn_elems:
         throw_error('wrongInput:q_mat', 'q_mat must be square')
 
-    if x_vec.ndim == 1:
+    if x_vec.ndim > 2:
+        throw_error('wrongInput:x_vec', 'x_vec must be a vector')
+    elif x_vec.ndim == 1:
         x_vec = np.expand_dims(x_vec, axis=0)
 
-    (x_vecm_elems, x_vecn_elems) = x_vec.shape
+    x_vecm_elems, x_vecn_elems = x_vec.shape
 
-    if (x_vecm_elems > 1) & (x_vecn_elems > 1):
-        throw_error('wrongInput:x_vec', 'x_vec must be vector')
+    if x_vecm_elems > 1 and x_vecn_elems > 1:
+        throw_error('wrongInput:x_vec', 'x_vec must be a vector')
     elif x_vecm_elems > 1:
         x_vec = x_vec.T
         x_vecn_elems = x_vec.shape[1]
 
-    if np.all(c_vec == 0):
-        c_vec = np.zeros((x_vecm_elems, x_vecn_elems), dtype=np.float64)
-
-    if c_vec.ndim == 1:
-        c_vec = np.expand_dims(c_vec, axis=0)
-
-    (c_vecm_elems, c_vecn_elems) = c_vec.shape
+    c_vec = np.array(c_vec, dtype=np.float64)
+    if c_vec.size == 1 and np.all(c_vec.flatten()[0] == 0.):
+        c_vec = np.zeros((1, x_vecn_elems), dtype=np.float64)
+    elif c_vec.ndim > 2:
+        throw_error('wrongInput:c_vec', 'c_vec must be a vector')
+    elif c_vec.ndim <= 1:
+        c_vec = np.reshape(c_vec, (1, c_vec.size))
 
     if x_vecn_elems != q_matn_elems:
-        throw_error('wrongInput:q_mat, x_vec',
+        throw_error('wrongInput:q_mat:x_vec',
                     'Dimensions of q_mat and x_vec must be coordinated')
 
+    c_vecm_elems, c_vecn_elems = c_vec.shape
     if (c_vecm_elems > 1) & (c_vecn_elems > 1):
-        throw_error('wrongInput:c_vec', 'c_vec must be vector')
+        throw_error('wrongInput:c_vec', 'c_vec must be a vector')
     elif c_vecm_elems > 1:
         c_vec = c_vec.T
         c_vecn_elems = c_vec.shape[1]
 
     if c_vecn_elems != q_matn_elems:
-        throw_error('wrongInput:q_mat, c_vec',
+        throw_error('wrongInput:q_mat:c_vec',
                     'Dimensions of q_mat and c_vec must be coordinated')
 
     if mode.lower() == 'plain':
         res = np.dot(x_vec - c_vec, q_mat @ (x_vec - c_vec).T)
     elif mode.lower() == 'invadv':
-        res = np.dot(x_vec - c_vec, inv(q_mat) @ (x_vec - c_vec).T)
+        res = np.dot(x_vec - c_vec, inv_mat(q_mat) @ (x_vec - c_vec).T)
     else:
-        res = (x_vec - c_vec) @ solve(q_mat, (x_vec - c_vec).T)
+        res = (x_vec - c_vec) @ np.linalg.lstsq(q_mat, (x_vec - c_vec).T, -1)[0]
 
     return res
 
