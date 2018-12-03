@@ -53,7 +53,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @classmethod
     def get_n_plot_3d_points(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        return cls.get_property(ell_arr, '_n_plot_2d_points', None)
+        return cls.get_property(ell_arr, '_n_plot_3d_points', None)
 
     @classmethod
     def mtimes(cls, mult_mat: np.ndarray, inp_ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:

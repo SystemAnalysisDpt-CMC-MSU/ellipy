@@ -102,7 +102,7 @@ class Ellipsoid(AEllipsoid):
 
     @staticmethod
     def _calc_diff_one_dir(first_ell, sec_ell, l_mat: np.ndarray,
-                           p_univ_vec: np.ndarray, is_good_dir_vec: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+                           p_univ_vec: np.ndarray, is_good_dir_vec: np.ndarray) -> Tuple[np.ndarray, bool]:
         pass
 
     @staticmethod
