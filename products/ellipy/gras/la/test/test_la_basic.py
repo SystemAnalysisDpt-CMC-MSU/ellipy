@@ -1,8 +1,9 @@
 from ellipy.gras.la.la import *
 from ellipy.gras.gen.gen import *
+from ellipy.elltool.conf.properties.Properties import Properties
+from numpy.random import rand
 import numpy as np
 import pytest
-from ellipy.elltool.conf.properties.Properties import Properties
 import scipy.io
 import os
 
@@ -15,6 +16,41 @@ class TestLaBasic:
         q_mat = np.array([[-54.99996758, 165.00001081], [-20.00008916, 59.99997028]], dtype=np.float64)
         check(q_mat, 1e-3, False)
         check(q_mat, 1e-5, True)
+
+    def test_is_mat_symm(self):
+        assert is_mat_symm(np.array([[2]], dtype=np.float64))
+
+        assert is_mat_symm(np.diag(np.arange(1, 6)))
+
+        test_mat = rand(20, 20)
+        assert is_mat_symm(test_mat @ test_mat.T)
+
+        test_mat = 10 * rand(100, 100)
+        assert is_mat_symm(test_mat + test_mat.T)
+
+        __ABS_TOL = 1e-7
+        test_mat = np.array([[0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0.6912, 0.2368, 1.7280],
+                             [0, 0, 0, 0.2368, 0.1552, 0.5920],
+                             [0, 0, 0, 1.7280, 0.5920, 4.3200]], dtype=np.float64)
+        test_mat[4, 5] = test_mat[4, 5] + __ABS_TOL / 1000
+        assert is_mat_symm(test_mat, __ABS_TOL)
+
+        test_mat = np.array([[2, 1],
+                             [3, 2]], dtype=np.float64)
+        assert not is_mat_symm(test_mat)
+
+        test_mat = 10 * rand(20, 20) + np.diag(np.arange(1, 20), 1)
+        assert not is_mat_symm(test_mat)
+
+        with pytest.raises(Exception) as e:
+            is_mat_symm(np.eye(5, 7))
+        assert 'wrongInput:nonSquareMat' in str(e.value)
+
+        test_mat = np.diag(np.array([np.inf, -np.inf, 1, 2, 0], dtype=np.float64))
+        assert is_mat_symm(test_mat)
 
     def test_sqrt_m_compare(self):
         def check(inp_mat_f, l_tol, r_tol, is_ex_ok):
@@ -39,7 +75,8 @@ class TestLaBasic:
             if is_not_neg:
                 assert np.all(np.isreal(sqrtm_pos(inp_mat_f, abs_tol)))
                 sqrt_vec = sqrt_pos(np.array([eig_vec]), abs_tol)
-                exp_sqrt_vec = np.array([sqrt_pos(np.array(x), abs_tol) for x in np.array([eig_vec])])
+                exp_sqrt_vec = np.array([sqrt_pos(np.array(x), abs_tol)
+                                         for x in np.array([eig_vec])])
                 assert np.all(sqrt_vec == exp_sqrt_vec)
                 assert np.all(np.isreal(sqrt_vec))
             else:
@@ -99,27 +136,34 @@ class TestLaBasic:
         test_mat = np.array([[5, -4, 1], [-4, 6, -4], [1, -4, 5]])
         sqrt_test_mat = np.array([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
         sqrt_mat = sqrtm_pos(test_mat, __MAX_TOL)
-        assert np.linalg.norm(sqrtm_pos(sqrt_test_mat, __MAX_TOL) - sqrtm_pos(sqrt_mat, __MAX_TOL)) < __MAX_TOL
+        assert np.linalg.norm(sqrtm_pos(sqrt_test_mat, __MAX_TOL) -
+                              sqrtm_pos(sqrt_mat, __MAX_TOL)) < __MAX_TOL
 
-        loaded_info = scipy.io.loadmat(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'testSqrtm1_inp.mat'))
+        loaded_info = scipy.io.loadmat(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'testSqrtm1_inp.mat'))
         mat = loaded_info['testMat']
         sqrt_mat = sqrtm_pos(mat, __MAX_TOL)
-        assert np.linalg.norm(sqrtm_pos(mat, __MAX_TOL) - sqrtm_pos(sqrt_mat@sqrt_mat.T, __MAX_TOL)) < __MAX_TOL
+        assert np.linalg.norm(sqrtm_pos(mat, __MAX_TOL) -
+                              sqrtm_pos(sqrt_mat@sqrt_mat.T, __MAX_TOL)) < __MAX_TOL
 
-        loaded_info = scipy.io.loadmat(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'testSqrtm2_inp.mat'))
+        loaded_info = scipy.io.loadmat(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'testSqrtm2_inp.mat'))
         mat = loaded_info['testMat']
         sqrt_mat = sqrtm_pos(mat, __MAX_TOL)
-        assert np.linalg.norm(sqrtm_pos(mat, __MAX_TOL) - sqrtm_pos(sqrt_mat @ sqrt_mat.T)) < __MAX_TOL
+        assert np.linalg.norm(sqrtm_pos(mat, __MAX_TOL) -
+                              sqrtm_pos(sqrt_mat @ sqrt_mat.T)) < __MAX_TOL
 
         test_1_mat = np.eye(2)
         test_2_sqrt_mat = np.eye(2) + 1.01 * __MAX_TOL
         test_2_mat = test_2_sqrt_mat @ test_2_sqrt_mat.transpose()
-        assert np.linalg.norm(sqrtm_pos(test_1_mat, __MAX_TOL) - sqrtm_pos(test_2_mat, __MAX_TOL)) > __MAX_TOL
+        assert np.linalg.norm(sqrtm_pos(test_1_mat, __MAX_TOL) -
+                              sqrtm_pos(test_2_mat, __MAX_TOL)) > __MAX_TOL
 
         test_1_mat = np.eye(2)
         test_2_sqrt_mat = np.eye(2) + 0.5 * __MAX_TOL
         test_2_mat = test_2_sqrt_mat@test_2_sqrt_mat.T
-        assert np.linalg.norm(sqrtm_pos(test_1_mat, __MAX_TOL) - sqrtm_pos(test_2_mat, __MAX_TOL)) < __MAX_TOL
+        assert np.linalg.norm(sqrtm_pos(test_1_mat, __MAX_TOL) -
+                              sqrtm_pos(test_2_mat, __MAX_TOL)) < __MAX_TOL
 
         test_mat = np.array([[1, 0], [0, -1]])
         with pytest.raises(Exception) as e:

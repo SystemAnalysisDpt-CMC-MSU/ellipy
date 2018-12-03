@@ -1,8 +1,68 @@
 from ellipy.gras.geom.ell.ell import *
-import numpy as np
+from numpy.linalg import norm, inv
+from scipy.linalg import hilbert as hilb
+from scipy.linalg import invhilbert as invhilb
+from ellipy.gen.common.common import *
+import pytest
 
 
 class TestEll:
+    def test_inv_mat(self):
+        norm_diff_vec = np.zeros(10, dtype=np.float64)
+        for x in range(2, 12):
+            norm_diff_vec[x - 2] = (norm(invhilb(x) - inv_mat(hilb(x))) -
+                                    norm(invhilb(x) - inv(hilb(x))))
+        is_ok = np.prod(norm_diff_vec) == 0
+        assert is_ok
+
+    def test_quad_mat(self):
+        __MAX_TOL = 1e-10
+        q_mat = np.array([[2, 5, 7],
+                          [6, 3, 4],
+                          [5, -2, -3]], dtype=np.float64)
+        x_vec = np.expand_dims(np.array([7, 8, 9], dtype=np.float64), 1)
+        c_vec = np.array([1, 0, 1], dtype=np.float64)
+        calc_mode = 'plain'
+        __ANALYTICAL_RESULT_1 = 1304
+        __ANALYTICAL_RESULT_2 = 1563
+        __ANALYTICAL_RESULT_3 = -364
+
+        def check(analytical_result, mode, c_vector):
+            quad_res = quad_mat(q_mat, x_vec, c_vector, mode)
+            is_ok = np.abs(quad_res - analytical_result) < __MAX_TOL
+            assert is_ok
+
+        check(__ANALYTICAL_RESULT_1, calc_mode, c_vec)
+        c_vec = 0
+        check(__ANALYTICAL_RESULT_2, calc_mode, c_vec)
+        calc_mode = 'InvAdv'
+        c_vec = np.array([1, 0, 1], dtype=np.float64)
+        check(__ANALYTICAL_RESULT_3, calc_mode, c_vec)
+        calc_mode = 'INV'
+        check(__ANALYTICAL_RESULT_3, calc_mode, c_vec)
+
+    def test_quad_mat_negative(self):
+        q_sq_mat = np.array([[1, 0],
+                                 [0, 1]], dtype=np.float64)
+        q_not_sq_mat = np.array([1, 0], dtype=np.float64)
+        x_good_dim_vec = np.array([3, 2], dtype=np.float64)
+        x_bad_dim_vec = np.array([1, 5, 10], dtype=np.float64)
+        c_good_dim_vec = np.array([1, 1], dtype=np.float64)
+        c_bad_dim_vec = np.array([1, 3, 7], dtype=np.float64)
+        mode = 'plain'
+
+        with pytest.raises(Exception) as e:
+            quad_mat(q_not_sq_mat, x_good_dim_vec, c_good_dim_vec, mode)
+        assert 'wrongInput:q_mat' in str(e.value)
+
+        with pytest.raises(Exception) as e:
+            quad_mat(q_sq_mat, x_bad_dim_vec, c_good_dim_vec, mode)
+        assert 'wrongInput:q_mat:x_vec' in str(e.value)
+
+        with pytest.raises(Exception) as e:
+            quad_mat(q_sq_mat, x_good_dim_vec, c_bad_dim_vec, mode)
+        assert 'wrongInput:q_mat:c_vec' in str(e.value)
+
     def test_rho_mat(self):
         __MAX_TOL = 1e-14
         __ABS_TOL = 1e-7
