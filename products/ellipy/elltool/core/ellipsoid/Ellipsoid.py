@@ -110,10 +110,6 @@ class Ellipsoid(AEllipsoid):
         abs_tol = Properties.get_abs_tol()
         _, min_ell_pts_mat = first_ell.rho(first_ell, l_mat)
         _, sub_ell_pts_mat = sec_ell.rho(sec_ell, l_mat)
-        if first_ell.dimension(first_ell) == 3:
-            is_plot_center_3d = True
-        else:
-            is_plot_center_3d = False
 
         def calc_diff(is_good: bool, ind: int) -> np.ndarray:
             if is_good:
@@ -127,6 +123,11 @@ class Ellipsoid(AEllipsoid):
             else:
                 is_plot_center_3d = False
             return diff_bnd_mat
+
+        if first_ell.dimension(first_ell) == 3:
+            is_plot_center_3d = True
+        else:
+            is_plot_center_3d = False
 
         diff_bound_mat = np.array(map(lambda x, y: calc_diff(x, y),
                                       is_good_dir_vec, np.arange(1, l_mat.shape[1] + 1)))
@@ -297,7 +298,66 @@ class Ellipsoid(AEllipsoid):
 
     @classmethod
     def rho(cls, ell_arr: Union[Iterable, np.ndarray], dirs_arr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        pass
+        def f_rho_for_dir(ell_obj, dir_vec: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+            c_vec, e_mat = ell_obj.double()
+            a_tol = ell_obj.get_abs_tol()
+            sup_fun, x_vec = rho_mat(e_mat, dir_vec, a_tol, c_vec)
+            return sup_fun, x_vec
+
+        cls._check_is_me(ell_arr, 'first')
+        ell_arr = np.array(ell_arr)
+        if not is_numeric(dirs_arr):
+            throw_error('wrongInput', 'second argument must be matrix of direction vectors')
+        dir_size_vec = dirs_arr.shape
+        ell_size_vec = ell_arr.shape
+        is_one_ell = np.isscalar(ell_arr)
+        is_one_dir = dir_size_vec[1] == 1 & len(dir_size_vec) == 2
+        #
+        n_ell = np.prod(ell_size_vec)
+        n_dim = dir_size_vec[0]
+        n_dirs = np.prod(dir_size_vec[1:])
+        #
+        if not (is_one_ell or is_one_dir or n_ell == n_dirs and
+                (ell_size_vec[0] == 1 or ell_size_vec[1] == 1) and
+                len(dir_size_vec) == 2 or np.all(ell_size_vec == dir_size_vec[1:])):
+            throw_error('wrongInput:wrongSizes', 'arguments must be single ellipsoid or single ' +
+                        'direction vector or arrays of almost the same sizes')
+        #
+        n_dims_arr = cls.dimension(ell_arr)
+        if not np.all(n_dims_arr.flatten() == n_dim):
+            throw_error('wrongInput', 'dimensions mismatch')
+        #
+        if is_one_ell:  # one ellipsoid, multiple directions
+            cen_vec = ell_arr[0][0].get_center_vec()
+            ell_mat = ell_arr[0][0].get_shape_mat()
+            _, abs_tol = cls.get_abs_tol(ell_arr)
+            dirs_mat = np.reshape(dirs_arr, (n_dim, n_dirs))
+            #
+            sup_arr, bp_arr = rho_mat(ell_mat, dirs_mat, abs_tol, cen_vec)
+            if len(dir_size_vec) > 2:
+                sup_arr = np.reshape(sup_arr, dir_size_vec[1:])
+                bp_arr = np.reshape(bp_arr, dir_size_vec)
+        elif is_one_dir:  # multiple ellipsoids, one direction
+            res_c_arr, x_c_arr = zip(*map(lambda ell_obj: f_rho_for_dir(ell_obj, dirs_arr),
+                                          ell_arr.flatten()))
+            sup_arr = np.array(res_c_arr)
+            x_c_arr = np.array(x_c_arr)
+            bp_arr = np.hstack(x_c_arr)
+            if len(ell_size_vec) > 2:
+                bp_arr = np.reshape(bp_arr, (n_dim, ell_size_vec))
+        else:  # multiple ellipsoids, multiple directions
+            augx_c_arr = list(dirs_arr)
+            dir_c_arr = np.reshape(augx_c_arr[0][:], ell_size_vec)
+            #
+            # f_composite = @(ellObj, lVec) fRhoForDir(ellObj, lVec{1})
+            res_c_arr, x_c_arr = zip(*map(lambda ell_obj, l_vec:
+                                          f_rho_for_dir(ell_obj, l_vec[0]),
+                                          ell_arr.flatten(), dir_c_arr.flatten()))
+            sup_arr = np.array(res_c_arr)
+            x_c_arr = np.array(x_c_arr)
+            bp_arr = np.hstack(x_c_arr)
+            bp_arr = np.reshape(bp_arr, dir_size_vec)
+        return sup_arr, bp_arr
 
     @classmethod
     def to_dict(cls, ell_arr: Union[Iterable, np.ndarray],

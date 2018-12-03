@@ -44,13 +44,13 @@ class AEllipsoid(ABasicEllipsoid, ABC):
     @classmethod
     def projection(cls, ell_arr: Union[Iterable, np.ndarray], basis_mat: np.ndarray) -> np.ndarray:
         cls._check_is_me_virtual(ell_arr)
-        if is_numeric(basis_mat):
+        if not is_numeric(basis_mat):
             throw_error('wrongInput:basis_mat',
                         'second input argument must be matrix with orthogonal columns')
         if not np.any(cls.is_empty(ell_arr).flatten()):
             n_dim, n_basis = basis_mat.shape
             n_dims_arr = cls.dimension(ell_arr)
-            if n_basis <= n_dim and np.all(n_dims_arr.flatten(1) == n_dim):
+            if not (n_basis <= n_dim and np.all(n_dims_arr.flatten(1) == n_dim)):
                 throw_error('wrongInput', 'dimensions mismatch or number of basis vectors too large');
             # check the orthogonality of the columns of basis_mat
             scal_prod_mat = basis_mat.T @ basis_mat
@@ -63,7 +63,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
             norm_mat = ml.repmat(np.sqrt(norm_sq_vec.T), n_dim, 1)
             ort_basis_mat = basis_mat / norm_mat
             # compute projection
-            map(lambda x: projection_single_internal(x, ort_basis_mat), ell_arr)
+            ell_arr = np.array(map(lambda x: projection_single_internal(x, ort_basis_mat), ell_arr.flatten()))
         return ell_arr
 
     def get_center_vec(self):
