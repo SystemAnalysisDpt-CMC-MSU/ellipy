@@ -43,7 +43,7 @@ class TestEll:
 
     def test_quad_mat_negative(self):
         q_sq_mat = np.array([[1, 0],
-                                 [0, 1]], dtype=np.float64)
+                             [0, 1]], dtype=np.float64)
         q_not_sq_mat = np.array([1, 0], dtype=np.float64)
         x_good_dim_vec = np.array([3, 2], dtype=np.float64)
         x_bad_dim_vec = np.array([1, 5, 10], dtype=np.float64)
