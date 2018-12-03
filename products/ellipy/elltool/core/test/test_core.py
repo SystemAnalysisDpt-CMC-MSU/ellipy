@@ -1,2 +1,2 @@
-
-
+class TestCore:
+    pass
