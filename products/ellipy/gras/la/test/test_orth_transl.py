@@ -109,32 +109,26 @@ class TestOrthTransl:
         __N_RANDOM_CASES = 10
         __DIM_VEC = np.array([[1, 2, 3, 5]], dtype=np.int32)
         __ALT_TOL = 1e-10
+        __MAX_METRIC_COMP_TOL = 1e-13
 
         def master_check(mas_ch_src_mat, mas_ch_dst_mat):
+            
             def check_metric(f_calc, o_max_mat, o_comp_mat, *args):
-                MAX_METRIC_COMP_TOL = 1e-13
-                if f_calc == calc_trace:
-                    check_a_mat, *other = args
-                    max_val = f_calc(o_max_mat, check_a_mat)
-                    comp_val = f_calc(o_comp_mat, check_a_mat)
-                else:
-                    max_val = f_calc(o_max_mat)
-                    comp_val = f_calc(o_comp_mat)
-                is_pos = max_val + MAX_METRIC_COMP_TOL >= comp_val
+                max_val = f_calc(o_max_mat, *args)
+                comp_val = f_calc(o_comp_mat, *args)
+                is_pos = max_val + __MAX_METRIC_COMP_TOL >= comp_val
                 assert is_pos, "{} maximization doesn't work, max_val {} < comp_val {}" .format(
                     f_calc, max_val, comp_val)
 
             def check(f_prod, f_test, f_comp, *args):
-                if f_comp == calc_trace:
-                    check_src_vec, check_dst_vec, check_a_mat, *other = args
-                else:
-                    check_src_vec, check_dst_vec, *other = args
+                check_src_vec, check_dst_vec, *other = args
                 check_o_mat = f_prod(*args)
                 self.aux_check_orth(check_o_mat, check_src_vec, check_dst_vec, '{}'.format(f_prod))
 
                 o_exp_mat = f_test(*args)
                 self.aux_check_orth(o_exp_mat, check_src_vec, check_dst_vec, '{}'.format(f_test))
                 if f_comp == calc_trace:
+                    check_a_mat, *other = other
                     comp_val = f_comp(check_o_mat, check_a_mat)
                     comp_exp_val = f_comp(o_exp_mat, check_a_mat)
                 else:
@@ -178,7 +172,8 @@ class TestOrthTransl:
             # Test MAX Dir functions
             src_max_vec = mas_ch_src_mat[:, 1]
             dst_max_vec = mas_ch_dst_mat[:, 1]
-            o_max_dir_mat = check(orth_transl_max_dir, orth_transl_max_dir, calc_dir, src_vec, dst_vec, src_max_vec, dst_max_vec)
+            o_max_dir_mat = check(orth_transl_max_dir, orth_transl_max_dir, calc_dir,
+                                  src_vec, dst_vec, src_max_vec, dst_max_vec)
             o_plain_mat = orth_transl(src_vec, dst_vec)
 
             check_metric(calc_trace, o_max_tr_mat, o_max_dir_mat, a_mat)

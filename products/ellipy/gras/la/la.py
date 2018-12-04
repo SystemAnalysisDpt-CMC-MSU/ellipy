@@ -48,9 +48,9 @@ def is_mat_symm(q_mat: np.ndarray, abs_tol: float = 0.) -> bool:
 
 
 def mat_orth(src_mat: np.ndarray) -> np.ndarray:
-    o_mat, src_r = np.linalg.qr(src_mat, 'complete')
-    is_neg_diag = np.diag(src_r) < 0
-    is_neg_diag_vec = np.zeros(o_mat.shape[1], 'bool')
+    o_mat, src_r_mat = np.linalg.qr(src_mat, 'complete')
+    is_neg_diag = np.diagonal(src_r_mat) < 0.
+    is_neg_diag_vec = np.zeros(o_mat.shape[1], dtype=bool)
     is_neg_diag_vec[:is_neg_diag.size] = is_neg_diag
     o_mat[:, is_neg_diag_vec] = -o_mat[:, is_neg_diag_vec]
     return o_mat
@@ -128,19 +128,21 @@ def orth_transl_max_dir(src_vec: np.ndarray, dst_vec: np.ndarray,
                         src_max_vec: np.ndarray, dst_max_vec: np.ndarray) -> np.ndarray:
     n_dims = src_vec.size
     if n_dims > 1:
-        o_src_mat = orth_transl(np.concatenate((np.array([1]), np.zeros(n_dims - 1))), src_vec)
-        o_dst_mat = orth_transl(np.concatenate((np.array([1]), np.zeros(n_dims - 1))), dst_vec)
-        v0 = o_src_mat[:, 1:]
-        u0 = o_dst_mat[:, 1:]
+        e_vec = np.append(np.ones((1,), dtype=np.float64), np.zeros((n_dims - 1,), dtype=np.float64))
+        o_src_mat = orth_transl(e_vec, src_vec)
+        o_dst_mat = orth_transl(e_vec, dst_vec)
+
+        v_0_mat = o_src_mat[:, 1:]
+        u_0_mat = o_dst_mat[:, 1:]
         a = o_src_mat[:, 0]
         b = o_dst_mat[:, 0]
-        a1 = np.transpose(v0) @ src_max_vec
-        b1 = np.transpose(u0) @ dst_max_vec
+        a1 = np.transpose(v_0_mat) @ src_max_vec
+        b1 = np.transpose(u_0_mat) @ dst_max_vec
         o1_src_mat, r1_src_mat = np.linalg.qr(a1.reshape(-1, 1), 'complete')
         o1_dst_mat, r1_dst_mat = np.linalg.qr(b1.reshape(-1, 1), 'complete')
         if np.logical_xor(r1_src_mat[0, 0] > 0, r1_dst_mat[0, 0] > 0):
             o1_dst_mat[:, 0] = -o1_dst_mat[:, 0]
-        o_mat = u0 @ o1_dst_mat @ np.transpose(o1_src_mat) @ np.transpose(v0) + (b.reshape(-1, 1)) * a
+        o_mat = u_0_mat @ o1_dst_mat @ np.transpose(o1_src_mat) @ np.transpose(v_0_mat) + (b.reshape(-1, 1)) * a
     else:
         o_mat = np.sign(src_vec)*np.sign(dst_vec)
     return o_mat
