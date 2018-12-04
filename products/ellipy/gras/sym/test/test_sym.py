@@ -222,12 +222,9 @@ class TestSym:
                           ['sin(t)', 1.9]], dtype=object)
         from_var_name = 't'
         to_var_name = '0.81-' + from_var_name
-        try:
-            res_mat = var_replace(from_var_name, to_var_name)
-        except TypeError:
-            pass
-        if 'res_mat' in locals():
-            print('error')
+        with pytest.raises(Exception) as e:
+            var_replace(m_mat, from_var_name)
+            assert 'wrongInput: m_mat' in str(e.value)
 
     def test_var_replace_empty_mat(self):
         m_mat = np.array([[]])
@@ -235,4 +232,4 @@ class TestSym:
         to_var_name = '0.81-' + from_var_name
         with pytest.raises(Exception) as e:
             var_replace(m_mat, from_var_name, to_var_name)
-        assert 'wrongInput: m_mat' in str(e.value)
+            assert 'wrongInput: m_mat' in str(e.value)
