@@ -9,17 +9,14 @@ from ellipy.gras.la.la import is_mat_symm, sqrtm_pos
 def mat_dot(inp_arr1: np.ndarray, inp_arr2: np.ndarray) -> np.ndarray:
     mat_sum = 0
     res_arr = 0
-    size = np.shape(inp_arr1)
-    if not (np.shape(inp_arr2) == size):
+    inp_arr1 = np.array(inp_arr1)
+    inp_arr2 = np.array(inp_arr2)
+    if not (inp_arr2.shape == inp_arr1.shape):
         throw_error('wrongInput:size', 'input matrices have the different size')
-    if not (size[0] == size[1]):
+    if not (inp_arr1.shape[0] == inp_arr1.shape[1]):
         throw_error('wrongInput:not_square', 'input matrices aren''t square matrices or square matrix arrays')
-    d = np.zeros(size[0])
-    for i in range(len(inp_arr1)):
-        for j in range(len(inp_arr1[i])):
-            d[i] += inp_arr1[i][j] * inp_arr2[i][j]
-        mat_sum += d[i]
-    res_arr = mat_sum / len(inp_arr1)
+    mat_sum = np.sum(np.sum(inp_arr1 * inp_arr2, keepdims=True), keepdims=True)
+    res_arr = mat_sum / inp_arr1.shape[0]
     return res_arr
 
 
