@@ -15,7 +15,7 @@ class TestOrthTransl:
                 orth_transl(check_src_vec, check_dst_vec)
             assert exp_error_tag in str(e.value)
             with pytest.raises(Exception) as e:
-                    orth_transl_qr(check_src_vec, check_dst_vec)
+                orth_transl_qr(check_src_vec, check_dst_vec)
             assert exp_error_tag in str(e.value)
 
         src_vec = np.array([0, 0], dtype=np.float64)
@@ -80,10 +80,12 @@ class TestOrthTransl:
             .format(func_name, real_tol, self.__MAX_TOL)
 
     def aux_check_orth_plain(self, o_mat, func_name):
-        assert (o_mat.ndim <= 2)
-        assert np.size(o_mat, 0) == np.size(o_mat, 1)
-        self.aux_check_eye(o_mat.T @ o_mat, 'o_mat^t*o_mat', func_name)
-        self.aux_check_eye(o_mat @ o_mat.T, 'o_mat*o_mat^t', func_name)
+        if np.size(o_mat) == 1:
+            self.aux_check_eye(o_mat ** 2, 'o_mat^t*o_mat', func_name)
+        else:
+            assert np.size(o_mat, 0) == np.size(o_mat, 1)
+            self.aux_check_eye(o_mat.T @ o_mat, 'o_mat^t*o_mat', func_name)
+            self.aux_check_eye(o_mat @ o_mat.T, 'o_mat*o_mat^t', func_name)
 
     def aux_check_eye(self, e_mat, msg_str, func_name):
         n_dims = np.size(e_mat, 0)
@@ -91,28 +93,68 @@ class TestOrthTransl:
         is_pos = real_tol <= self.__MAX_TOL
         assert is_pos, 'real tol for {}=I check of {} is {}>{}'.format(msg_str, func_name, real_tol, self.__MAX_TOL)
 
+    def test_mat_orth(self):
+        def check(test_inp_mat):
+            o_mat = mat_orth(test_inp_mat)
+            o_red_mat = math_orth_col(test_inp_mat)
+            assert np.array_equal(o_mat[:, :test_inp_mat.shape[1]], o_red_mat)
+            self.aux_check_orth_plain(o_mat, 'matorth')
+
+        inp_mat = self.__SRC_TL_MAT
+        n_cols = inp_mat.shape[1]
+        for i_col in range(n_cols):
+            check(inp_mat[:, :i_col + 1])
+
     def test_orth_transl_max(self):
         __N_RANDOM_CASES = 10
         __DIM_VEC = np.array([[1, 2, 3, 5]], dtype=np.int32)
         __ALT_TOL = 1e-10
+        __MAX_METRIC_COMP_TOL = 1e-13
 
         def master_check(mas_ch_src_mat, mas_ch_dst_mat):
+            
+            def check_metric(f_calc, o_max_mat, o_comp_mat, *args):
+                max_val = f_calc(o_max_mat, *args)
+                comp_val = f_calc(o_comp_mat, *args)
+                is_pos = max_val + __MAX_METRIC_COMP_TOL >= comp_val
+                assert is_pos, "{} maximization doesn't work, max_val {} < comp_val {}" .format(
+                    f_calc, max_val, comp_val)
+
             def check(f_prod, f_test, f_comp, *args):
-                check_src_vec, check_dst_vec, check_a_mat = args
+                check_src_vec, check_dst_vec, *other = args
                 check_o_mat = f_prod(*args)
                 self.aux_check_orth(check_o_mat, check_src_vec, check_dst_vec, '{}'.format(f_prod))
 
                 o_exp_mat = f_test(*args)
                 self.aux_check_orth(o_exp_mat, check_src_vec, check_dst_vec, '{}'.format(f_test))
-                comp_val = f_comp(check_o_mat, check_a_mat)
-                comp_exp_val = f_comp(o_exp_mat, check_a_mat)
+                if f_comp == calc_trace:
+                    check_a_mat, *other = other
+                    comp_val = f_comp(check_o_mat, check_a_mat)
+                    comp_exp_val = f_comp(o_exp_mat, check_a_mat)
+                else:
+                    comp_val = f_comp(check_o_mat)
+                    comp_exp_val = f_comp(o_exp_mat)
                 real_tol = np.max(np.abs(comp_val - comp_exp_val))
                 is_pos = real_tol <= self.__MAX_TOL
                 assert is_pos, 'when comparing {} and {} real tol {}>{}'.format(
                     f_prod, f_test, real_tol, self.__MAX_TOL)
+                return check_o_mat
 
             def calc_trace(inp_o_mat, inp_a_mat):
-                return np.trace(inp_o_mat @ inp_a_mat)
+                if (np.size(inp_o_mat) > 1) and (np.size(inp_a_mat) > 1):
+                    return np.trace(inp_o_mat @ inp_a_mat)
+                elif np.size(inp_o_mat) > 1:
+                    return np.trace(inp_o_mat) * inp_a_mat
+                elif np.size(inp_a_mat) > 1:
+                    return np.trace(inp_a_mat) * inp_o_mat
+                else:
+                    return inp_o_mat * inp_a_mat
+
+            def calc_dir(inp_o_mat):
+                if np.size(inp_o_mat) > 1:
+                    return np.transpose(dst_max_vec) @ inp_o_mat @ src_max_vec
+                else:
+                    return inp_o_mat * np.transpose(dst_max_vec) @ src_max_vec
 
             src_vec = mas_ch_src_mat[:, 0]
             dst_vec = mas_ch_dst_mat[:, 0]
@@ -125,7 +167,19 @@ class TestOrthTransl:
             n_dims_max_tr = np.size(src_vec)
             a_sqrt_mat = np.random.rand(n_dims_max_tr, n_dims_max_tr)
             a_mat = a_sqrt_mat @ a_sqrt_mat.transpose()
-            check(orth_transl_max_tr, orth_transl_max_tr, calc_trace, src_vec, dst_vec, a_mat)
+            o_max_tr_mat = check(orth_transl_max_tr, orth_transl_max_tr, calc_trace, src_vec, dst_vec, a_mat)
+
+            # Test MAX Dir functions
+            src_max_vec = mas_ch_src_mat[:, 1]
+            dst_max_vec = mas_ch_dst_mat[:, 1]
+            o_max_dir_mat = check(orth_transl_max_dir, orth_transl_max_dir, calc_dir,
+                                  src_vec, dst_vec, src_max_vec, dst_max_vec)
+            o_plain_mat = orth_transl(src_vec, dst_vec)
+
+            check_metric(calc_trace, o_max_tr_mat, o_max_dir_mat, a_mat)
+            check_metric(calc_dir, o_max_dir_mat, o_max_tr_mat)
+            check_metric(calc_dir, o_max_dir_mat, o_plain_mat)
+            check_metric(calc_trace, o_max_tr_mat, o_plain_mat, a_mat)
 
         master_check(self.__SRC_TL_MAT, self.__DST_TL_MAT)
 

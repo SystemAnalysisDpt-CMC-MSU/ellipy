@@ -48,11 +48,17 @@ def is_mat_symm(q_mat: np.ndarray, abs_tol: float = 0.) -> bool:
 
 
 def mat_orth(src_mat: np.ndarray) -> np.ndarray:
-    pass
+    o_mat, src_r_mat = np.linalg.qr(src_mat, 'complete')
+    is_neg_diag = np.diagonal(src_r_mat) < 0.
+    is_neg_diag_vec = np.zeros(o_mat.shape[1], dtype=bool)
+    is_neg_diag_vec[:is_neg_diag.size] = is_neg_diag
+    o_mat[:, is_neg_diag_vec] = -o_mat[:, is_neg_diag_vec]
+    return o_mat
 
 
 def math_orth_col(src_mat: np.ndarray) -> np.ndarray:
-    pass
+    o_mat = mat_orth(src_mat)
+    return o_mat[:, :src_mat.shape[1]]
 
 
 def ml_orth_transl(src_mat: np.ndarray, dst_arr: np.ndarray) -> np.ndarray:
@@ -120,7 +126,26 @@ def orth_transl_haus(src_vec: np.ndarray, dst_vec: np.ndarray) -> np.ndarray:
 
 def orth_transl_max_dir(src_vec: np.ndarray, dst_vec: np.ndarray,
                         src_max_vec: np.ndarray, dst_max_vec: np.ndarray) -> np.ndarray:
-    pass
+    n_dims = src_vec.size
+    if n_dims > 1:
+        e_vec = np.append(np.ones((1,), dtype=np.float64), np.zeros((n_dims - 1,), dtype=np.float64))
+        o_src_mat = orth_transl(e_vec, src_vec)
+        o_dst_mat = orth_transl(e_vec, dst_vec)
+
+        v_0_mat = o_src_mat[:, 1:]
+        u_0_mat = o_dst_mat[:, 1:]
+        a_vec = o_src_mat[:, 0]
+        b_vec = o_dst_mat[:, 0]
+        a1_vec = v_0_mat.T @ src_max_vec
+        b1_vec = u_0_mat.T @ dst_max_vec
+        o1_src_mat, r1_src_mat = np.linalg.qr(a1_vec.reshape(-1, 1), 'complete')
+        o1_dst_mat, r1_dst_mat = np.linalg.qr(b1_vec.reshape(-1, 1), 'complete')
+        if np.logical_xor(r1_src_mat[0, 0] > 0, r1_dst_mat[0, 0] > 0):
+            o1_dst_mat[:, 0] = -o1_dst_mat[:, 0]
+        o_mat = u_0_mat @ o1_dst_mat @ o1_src_mat.T @ v_0_mat.T + (b_vec.reshape(-1, 1)) * a_vec
+    else:
+        o_mat = np.sign(src_vec) * np.sign(dst_vec)
+    return o_mat
 
 
 def orth_transl_max_tr(src_vec: np.ndarray, dst_vec: np.ndarray, max_mat: np.ndarray) -> np.ndarray:
