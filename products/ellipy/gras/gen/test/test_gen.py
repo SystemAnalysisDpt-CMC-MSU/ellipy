@@ -516,3 +516,16 @@ class TestGen:
         exp_out_arr = load_data['output'][0][0][0][0]
         out_arr = SquareMatVector.lr_divide_vec(inp_b_arr, inp_a_arr)
         assert np.isclose(out_arr, exp_out_arr).all()
+
+    def test_mat_dot(self):
+        a_mat = np.array([
+            [16, 2, 3, 13],
+            [5, 11, 10, 8],
+            [9, 7, 6, 12],
+            [4, 14, 15, 1]], dtype=np.float64)
+        b_mat = np.eye(4, dtype=np.float64)
+        c_mat = np.ones((4, 4), dtype=np.float64)
+        assert np.array_equal(mat_dot(a_mat, b_mat), mat_dot(b_mat, a_mat))
+        assert np.array_equal(mat_dot(a_mat, 2 * b_mat - 4 * c_mat),
+                              (2 * mat_dot(a_mat, b_mat) - 4 * mat_dot(a_mat, c_mat)))
+        assert np.array_equal(mat_dot(3*a_mat, -5*b_mat), -15*mat_dot(a_mat, b_mat))
