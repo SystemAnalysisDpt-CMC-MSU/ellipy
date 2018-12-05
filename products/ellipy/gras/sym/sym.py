@@ -23,17 +23,17 @@ def is_dependent(m_mat: np.ndarray, is_discrete: bool = False) -> bool:
 
 def var_replace(m_mat: np.ndarray, from_var_name: str, to_var_name: str) -> np.ndarray:
     if not m_mat.size:
-        throw_error('wrongInput: m_mat', 'm_mat must not be empty')
+        throw_error('wrongInput:m_mat', 'm_mat must not be empty')
     if not isinstance(from_var_name, str):
-        throw_error('wrongInput: from_var_name', 'from_var_name is expected to be a string')
+        throw_error('wrongInput:from_var_name', 'from_var_name is expected to be a string')
     if not isinstance(to_var_name, str):
-        throw_error('wrongInput: to_var_name', 'to_var_name is expected to be a string')
+        throw_error('wrongInput:to_var_name', 'to_var_name is expected to be a string')
 
     def _str(elem):
         __PRECISION = 15
         if not isinstance(elem, str):
             if not isinstance(elem, Integral):
-                elem = np.format_float_positional(elem, precision=__PRECISION, trim= '.')
+                elem = np.format_float_positional(elem, precision=__PRECISION, trim='.')
             else:
                 elem = str(elem)
         return elem

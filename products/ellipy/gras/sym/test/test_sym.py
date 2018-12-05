@@ -13,8 +13,7 @@ class TestSym:
         def cmp_up_to_digits(first_num_str, second_num_str, n_cmp_digits):
             first_list = first_num_str.split('.')
             second_list = second_num_str.split('.')
-            is_res_ok = first_list[0] == second_list[0] and \
-                        len(first_list) == len(second_list)
+            is_res_ok = first_list[0] == second_list[0] and len(first_list) == len(second_list)
             if is_res_ok and len(first_list) > 1:
                 is_res_ok = first_list[1][0:n_cmp_digits - 1] == \
                             second_list[1][0:n_cmp_digits - 1]
@@ -221,10 +220,10 @@ class TestSym:
                           [9.8,      -34],
                           ['sin(t)', 1.9]], dtype=object)
         from_var_name = 't'
-        to_var_name = '0.81-' + from_var_name
         with pytest.raises(Exception) as e:
+            # noinspection PyArgumentList
             var_replace(m_mat, from_var_name)
-            assert 'wrongInput: m_mat' in str(e.value)
+            assert 'wrongInput:m_mat' in str(e.value)
 
     def test_var_replace_empty_mat(self):
         m_mat = np.array([[]])
@@ -232,4 +231,4 @@ class TestSym:
         to_var_name = '0.81-' + from_var_name
         with pytest.raises(Exception) as e:
             var_replace(m_mat, from_var_name, to_var_name)
-            assert 'wrongInput: m_mat' in str(e.value)
+            assert 'wrongInput:m_mat' in str(e.value)
