@@ -1,7 +1,7 @@
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
 
 
-class EllAuxTestCase:
+class TestEllAuxTestCase:
     __ABS_TOL = 1e-8
 
     # noinspection PyMethodMayBeStatic

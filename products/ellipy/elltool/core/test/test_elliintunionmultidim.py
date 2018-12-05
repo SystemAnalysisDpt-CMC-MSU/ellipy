@@ -2,7 +2,7 @@ from ellipy.elltool.core.core import *
 from ellipy.elltool.core.hyperplane.Hyperplane import *
 
 
-class ElliIntUnionTCMultiDim:
+class TestElliIntUnionTCMultiDim:
     # noinspection PyMethodMayBeStatic
     def ellipsoid(self, *args, **kwargs):
         return Ellipsoid(*args, **kwargs)

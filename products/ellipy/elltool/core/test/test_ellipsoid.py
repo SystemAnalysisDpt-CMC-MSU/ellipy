@@ -2,7 +2,7 @@ from ellipy.elltool.core.ellipsoid.Ellipsoid import *
 from ellipy.elltool.core.hyperplane.Hyperplane import *
 
 
-class EllipsoidTestCase:
+class TestEllipsoidTestCase:
     # noinspection PyMethodMayBeStatic
     def ellipsoid(self, *args, **kwargs):
         return Ellipsoid(*args, **kwargs)

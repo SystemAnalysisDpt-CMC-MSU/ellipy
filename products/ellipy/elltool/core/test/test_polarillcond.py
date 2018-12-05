@@ -5,7 +5,7 @@ class PolarEllipsoidTest(AEllipsoid):
     pass
 
 
-class PolarIllCondTC:
+class TestPolarIllCondTC:
     # noinspection PyMethodMayBeStatic
     def ellipsoid(self, *args, **kwargs):
         return Ellipsoid(*args, **kwargs)

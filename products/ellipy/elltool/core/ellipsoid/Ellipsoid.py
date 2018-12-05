@@ -25,8 +25,8 @@ class Ellipsoid(AEllipsoid):
         self._n_plot_2d_points = prop_list[2]
         self._n_plot_3d_points = prop_list[3]
         if len(args) == 0:
-            self._center_vec = np.array((0,), dtype=np.float64)
-            self._shape_mat = np.array((0, 0), dtype=np.float64)
+            self._center_vec = np.zeros((0,), dtype=np.float64)
+            self._shape_mat = np.zeros((0, 0), dtype=np.float64)
         elif len(args) == 1:
             self._shape_mat = args[0]
             self._center_vec = np.zeros((self._shape_mat.shape[0],), dtype=np.float64)

@@ -15,7 +15,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
             '_n_plot_2d_points': '_n_plot_2d_points',
             'nPlot3dPoints': '_n_plot_3d_points',
             'n_plot_3d_points': '_n_plot_3d_points',
-            '_n_plot_3d_points': '_n_plot_2d_points',
+            '_n_plot_3d_points': '_n_plot_3d_points',
             'centerVec': '_center_vec',
             'center_vec': '_center_vec',
             '_center_vec': '_center_vec'})

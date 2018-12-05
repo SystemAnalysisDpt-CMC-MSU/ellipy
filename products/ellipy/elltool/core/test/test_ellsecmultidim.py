@@ -1,7 +1,7 @@
 from ellipy.elltool.core.core import *
 
 
-class EllSecTCMultiDim:
+class TestEllSecTCMultiDim:
     # noinspection PyMethodMayBeStatic
     def ellipsoid(self, *args, **kwargs):
         return Ellipsoid(*args, **kwargs)
