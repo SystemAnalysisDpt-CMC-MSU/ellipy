@@ -47,10 +47,12 @@ class Ellipsoid(AEllipsoid):
         if shape_mat.shape[0] != shape_mat.shape[1]:
             throw_error('wrongInput:shape_mat', 'shape_mat must be a square matrix')
         shape_mat = np.array(try_treat_as_real(shape_mat, self._abs_tol), dtype=np.float64)
-        if not np.all(np.isfinite(shape_mat.flatten())):
-            throw_error('wrongInput:shape_mat', 'configuration matrix should contain all finite values')
-        if not (is_mat_symm(shape_mat, self._abs_tol) and is_mat_pos_def(shape_mat, self._abs_tol, True)):
-            throw_error('wrongInput:shape_mat', 'configuration matrix should be symmetric and positive semidefinite')
+        if shape_mat.size > 0:
+            if not np.all(np.isfinite(shape_mat.flatten())):
+                throw_error('wrongInput:shape_mat', 'configuration matrix should contain all finite values')
+            if not (is_mat_symm(shape_mat, self._abs_tol) and is_mat_pos_def(shape_mat, self._abs_tol, True)):
+                throw_error('wrongInput:shape_mat',
+                            'configuration matrix should be symmetric and positive semidefinite')
         self.__shape_mat = np.copy(shape_mat)
 
     def quad_func(self) -> np.ndarray:
