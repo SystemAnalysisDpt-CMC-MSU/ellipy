@@ -310,8 +310,8 @@ class Ellipsoid(AEllipsoid):
             throw_error('wrongInput', 'second argument must be matrix of direction vectors')
         dir_size_vec = dirs_arr.shape
         ell_size_vec = ell_arr.shape
-        is_one_ell = np.isscalar(ell_arr)
-        is_one_dir = dir_size_vec[1] == 1 & len(dir_size_vec) == 2
+        is_one_ell = ell_arr.size == 1
+        is_one_dir = dir_size_vec[1] == 1 and len(dir_size_vec) == 2
         #
         n_ell = np.prod(ell_size_vec)
         n_dim = dir_size_vec[0]
@@ -328,8 +328,8 @@ class Ellipsoid(AEllipsoid):
             throw_error('wrongInput', 'dimensions mismatch')
         #
         if is_one_ell:  # one ellipsoid, multiple directions
-            cen_vec = ell_arr[0][0].get_center_vec()
-            ell_mat = ell_arr[0][0].get_shape_mat()
+            cen_vec = ell_arr.flat[0].get_center_vec()
+            ell_mat = ell_arr.flat[0].get_shape_mat()
             _, abs_tol = cls.get_abs_tol(ell_arr)
             dirs_mat = np.reshape(dirs_arr, (n_dim, n_dirs))
             #
@@ -349,7 +349,6 @@ class Ellipsoid(AEllipsoid):
             augx_c_arr = list(dirs_arr)
             dir_c_arr = np.reshape(augx_c_arr[0][:], ell_size_vec)
             #
-            # f_composite = @(ellObj, lVec) fRhoForDir(ellObj, lVec{1})
             res_c_arr, x_c_arr = zip(*map(lambda ell_obj, l_vec:
                                           f_rho_for_dir(ell_obj, l_vec[0]),
                                           ell_arr.flatten(), dir_c_arr.flatten()))
