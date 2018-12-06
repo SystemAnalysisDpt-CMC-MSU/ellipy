@@ -128,3 +128,41 @@ class TestEllipsoidTestCase:
                                           0.0])
         is_test_res = np.all(is_test_mat)
         assert is_test_res
+
+    def test_is_degenerate(self):
+        # Empty self.ellipsoid
+        with pytest.raises(Exception) as e:
+            AEllipsoid.is_degenerate(np.array([self.ellipsoid()]))
+        assert 'wrongInput:emptyEllipsoid' in str(e.value)
+        # Not degerate self.ellipsoid
+        test_ellipsoid = np.array([self.ellipsoid(np.ones((6, 1)), np.eye(6, 6))])
+        is_test_res = AEllipsoid.is_degenerate(test_ellipsoid)
+        assert np.array_equal(is_test_res, np.array([False]))
+        # Degenerate self.ellipsoids
+        test_ellipsoid = np.array([self.ellipsoid(np.ones((6, 1)), np.zeros((6, 6)))])
+        is_test_res = AEllipsoid.is_degenerate(test_ellipsoid)
+        assert np.array_equal(is_test_res, np.array([True]))
+
+        test_a_mat = np.array([[3, 1], [0, 1], [-2, 1]])
+        test_ellipsoid = np.array([self.ellipsoid(test_a_mat@test_a_mat.T)])
+        is_test_res = AEllipsoid.is_degenerate(test_ellipsoid)
+        assert np.array_equal(is_test_res, np.array([True]))
+        # High-dimensional self.ellipsoids
+        test_ell_vec = np.array([self.ellipsoid(np.diag(np.arange(1, 23))),
+                                 self.ellipsoid(np.linspace(0.0, 1.4, 15).T, np.diag(np.arange(1, 16))),
+                                 self.ellipsoid(np.random.rand(21, 1), np.diag(np.arange(0, 21)))])
+        is_test_deg_vec = AEllipsoid.is_degenerate(test_ell_vec)
+        is_test_res = np.all(is_test_deg_vec == [False, False, True])
+        assert is_test_res
+        test_ell_mat = np.array([[self.ellipsoid(np.linspace(0.0, 2.0, 21).T, np.diag(np.linspace(0.0, 0.2, 21))),
+                                  self.ellipsoid(np.eye(40, 40)),
+                                  self.ellipsoid(np.random.rand(50, 1), 9*np.eye(50, 50))],
+                                 [self.ellipsoid(np.diag(np.linspace(10.0, 40.0, 16))),
+                                  self.ellipsoid(np.tile(np.concatenate((np.diag(np.linspace(0.0, 5.0, 51)),
+                                                                         np.diag(np.linspace(0.0, 5.0, 51))),
+                                                                        axis=1), (2, 1))),
+                                  self.ellipsoid(np.zeros((30, 30)))]])
+        is_test_deg_mat = AEllipsoid.is_degenerate(test_ell_mat)
+        is_test_mat = (is_test_deg_mat == np.array([[True, False, False], [False, True, True]]))
+        is_test_res = np.all(is_test_mat.flatten())
+        assert is_test_res
