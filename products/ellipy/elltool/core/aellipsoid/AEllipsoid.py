@@ -212,4 +212,8 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @classmethod
     def trace(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        pass
+        cls._check_is_me_virtual(ell_arr)
+        ell_arr_flatten = np.array(ell_arr).flatten()
+        if np.any(cls.is_empty(ell_arr_flatten)):
+            throw_error('wrongInput:emptyEllipsoid', 'input argument contains empty ellipsoid')
+        return np.array([np.trace(ell_obj.get_shape_mat()) for ell_obj in list(ell_arr_flatten)])

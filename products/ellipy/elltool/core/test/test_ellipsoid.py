@@ -93,3 +93,38 @@ class TestEllipsoidTestCase:
         is_test_mat = test_min_eig_mat == [0.01, 20.0, 9.0, 0.0, 0.0001, 0.0]
         is_test_res = np.all(is_test_mat)
         assert is_test_res
+
+    def test_trace(self):
+        # Check empty self.ellipsoid
+        with pytest.raises(Exception) as e:
+            AEllipsoid.trace(np.array([self.ellipsoid()]))
+        assert 'wrongInput:emptyEllipsoid' in str(e.value)
+        # Not empty self.ellipsoid
+        test_ellipsoid = np.array([self.ellipsoid(np.zeros((10, 1)), np.eye(10, 10))])
+        is_test_res = AEllipsoid.trace(test_ellipsoid) == 10.0
+        assert np.array_equal(is_test_res, np.array([True]))
+
+        test_ellipsoid = np.array([self.ellipsoid(-np.eye(3, 1), np.array([[1, 0, 1], [0, 0, 0], [1, 0, 2]]))])
+        is_test_res = AEllipsoid.trace(test_ellipsoid) == 3.0
+        assert np.array_equal(is_test_res, np.array([True]))
+        # High-dimensional self.ellipsoids
+        test_ell_vec = np.array([self.ellipsoid(np.diag(np.arange(1, 13))),
+                                 self.ellipsoid(np.array(np.linspace(0.0, 1.4, 15)).T,
+                                                np.diag(np.linspace(0.1, 1.5, 15))),
+                                 self.ellipsoid(np.random.rand(21, 1), np.diag(np.arange(0, 21)))])
+        test_trace_vec = AEllipsoid.trace(test_ell_vec)
+        is_test_res = np.all(test_trace_vec == [78.0, 12.0, 210.0])
+        assert is_test_res
+
+        test_ell_mat = np.array([[self.ellipsoid(np.linspace(0.1, 2.0, 20).T, np.diag(np.linspace(0.01, 0.2, 20))),
+                                  self.ellipsoid(-10 * np.ones((41, 1)), np.diag(np.linspace(20.0, 420.0, 41))),
+                                  self.ellipsoid(np.random.rand(50, 1), 9 * np.eye(50, 50))],
+                                 [self.ellipsoid(np.tile(np.diag(np.arange(1, 21)), (2, 2))),
+                                  self.ellipsoid(np.diag(np.linspace(0.0001, 0.01, 100))),
+                                  self.ellipsoid(np.zeros((30, 30)))]])
+        test_trace_mat = AEllipsoid.trace(test_ell_mat)
+        is_test_mat = (test_trace_mat == [np.sum(np.linspace(0.01, 0.2, 20)), np.sum(np.linspace(20.0, 420.0, 41)),
+                                          9*50, 2 * np.sum(np.arange(1, 21)), np.sum(np.linspace(0.0001, 0.01, 100)),
+                                          0.0])
+        is_test_res = np.all(is_test_mat)
+        assert is_test_res
