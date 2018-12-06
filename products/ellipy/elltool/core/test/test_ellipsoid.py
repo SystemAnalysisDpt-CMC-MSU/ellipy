@@ -166,3 +166,34 @@ class TestEllipsoidTestCase:
         is_test_mat = (is_test_deg_mat == np.array([[True, False, False], [False, True, True]]))
         is_test_res = np.all(is_test_mat.flatten())
         assert is_test_res
+
+    def test_is_empty(self):
+        # Check really empty self.ellipsoid
+        test_ellipsoid = self.ellipsoid()
+        is_test_res = test_ellipsoid.is_empty(np.array([test_ellipsoid]))
+        assert is_test_res
+        # Check not empty self.ellipsoid
+        test_ellipsoid = self.ellipsoid(np.eye(10, 1), np.eye(10, 10))
+        is_test_res = test_ellipsoid.is_empty(np.array([test_ellipsoid]))
+        assert not is_test_res
+        # High-dimensional self.ellipsoids
+        test_ell_vec = [self.ellipsoid(np.diag(np.arange(1, 23))),
+                        self.ellipsoid(np.linspace(0.0, 1.4, 15).T, np.diag(np.arange(1, 16))),
+                        self.ellipsoid(np.random.rand(21, 1), np.diag(np.arange(0, 21))),
+                        self.ellipsoid(), self.ellipsoid(), self.ellipsoid(np.zeros((40, 40)))]
+        is_test_emp_vec = np.array([ell_obj.is_empty(np.array([ell_obj])) for ell_obj in list(test_ell_vec)]).flatten()
+        is_test_res = np.all(is_test_emp_vec == [False, False, False, True, True, False])
+        assert is_test_res
+
+        test_ell_mat = np.array([[self.ellipsoid(np.linspace(0.0, 2.0, 21).T, np.diag(np.linspace(0.0, 0.2, 21))),
+                                  self.ellipsoid(np.eye(40, 40)),
+                                  self.ellipsoid()],
+                                 [self.ellipsoid(),
+                                  self.ellipsoid(np.tile(np.concatenate((np.diag(np.linspace(0.0, 5.0, 51)),
+                                                                         np.diag(np.linspace(0.0, 5.0, 51))),
+                                                                        axis=1), (2, 1))),
+                                  self.ellipsoid(np.zeros((30, 30)))]]).flatten()
+        is_test_emp_mat = np.array([ell_obj.is_empty(np.array(ell_obj)) for ell_obj in list(test_ell_mat)])
+        is_test_mat = (is_test_emp_mat == [False, False, True, True, False, False])
+        is_test_res = np.all(is_test_mat)
+        assert is_test_res
