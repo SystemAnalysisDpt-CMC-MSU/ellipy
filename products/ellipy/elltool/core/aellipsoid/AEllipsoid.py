@@ -157,38 +157,38 @@ class AEllipsoid(ABasicEllipsoid, ABC):
     @classmethod
     def min_eig(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         cls._check_is_me_virtual(ell_arr)
-        ell_arr = np.array(ell_arr)
-        if np.any(cls.is_empty(ell_arr).flatten()):
+        ell_arr_flatten = np.array(ell_arr).flatten()
+        if np.any(cls.is_empty(ell_arr_flatten)):
             throw_error('wrongInput:emptyEllipsoid', 'input argument contains empty ellipsoid')
 
-        def __get_single_min_eig(ell_obj) -> np.float64:
+        def __get_single_min_eig(ell_obj) -> np.ndarray:
             shape_mat = ell_obj.get_shape_mat()
-            if min(shape_mat.flatten()) == np.inf:
+            if np.min(shape_mat.flatten()) == np.inf:
                 return np.inf
-            elif np.isnan(min(shape_mat.flatten())):
+            elif np.isnan(np.min(shape_mat.flatten())):
                 return np.nan
             else:
-                return min(np.linalg.eigvalsh(shape_mat))
+                return np.min(np.linalg.eigvalsh(shape_mat))
 
-        return np.array([__get_single_min_eig(ell_obj) for ell_obj in list(ell_arr.flatten())])
+        return np.array([__get_single_min_eig(ell_obj) for ell_obj in list(ell_arr_flatten)])
 
     @classmethod
     def max_eig(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         cls._check_is_me_virtual(ell_arr)
-        ell_arr = np.array(ell_arr)
-        if np.any(cls.is_empty(ell_arr).flatten()):
+        ell_arr_flatten = np.array(ell_arr).flatten()
+        if np.any(cls.is_empty(ell_arr_flatten)):
             throw_error('wrongInput:emptyEllipsoid', 'input argument contains empty ellipsoid')
 
-        def __get_single_max_eig(ell_obj) -> np.float64:
+        def __get_single_max_eig(ell_obj) -> np.ndarray:
             shape_mat = ell_obj.get_shape_mat()
-            if max(shape_mat.flatten()) == np.inf:
+            if np.max(shape_mat.flatten()) == np.inf:
                 return np.inf
-            elif np.isnan(max(shape_mat.flatten())):
+            elif np.isnan(np.max(shape_mat.flatten())):
                 return np.nan
             else:
-                return max(np.linalg.eigvalsh(shape_mat))
+                return np.max(np.linalg.eigvalsh(shape_mat))
 
-        return np.array([__get_single_max_eig(ell_obj) for ell_obj in list(ell_arr.flatten())])
+        return np.array([__get_single_max_eig(ell_obj) for ell_obj in list(ell_arr_flatten)])
 
     @classmethod
     def plus(cls, *args) -> np.ndarray:
