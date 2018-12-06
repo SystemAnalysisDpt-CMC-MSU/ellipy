@@ -1,5 +1,7 @@
 from ellipy.elltool.core.core import *
 from ellipy.elltool.core.hyperplane.Hyperplane import *
+from ellipy.gen.common.common import abs_rel_compare
+from typing import Tuple
 
 
 class TestEllipsoidSecTestCase:

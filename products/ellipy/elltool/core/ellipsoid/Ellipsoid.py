@@ -6,7 +6,7 @@ from ellipy.gen.common.common import throw_error
 from ellipy.gen.logging.logging import get_logger
 from ellipy.gras.geom.ell.ell import rho_mat
 from ellipy.gras.geom.tri.tri import sphere_tri_ext
-from typing import Tuple, Dict, Callable, Any
+from typing import Union, Tuple, Dict, Callable, Any
 import numpy as np
 
 
@@ -115,6 +115,7 @@ class Ellipsoid(AEllipsoid):
             del ell_dict['shape_mat']
             del ell_dict['center_vec']
             return Ellipsoid(center_vec, shape_mat, **ell_dict)
+
         dict_arr = np.array(dict_arr)
         return np.reshape(np.array([dict_2_ell(ell_dict) for ell_dict in list(dict_arr.flatten())]), dict_arr.shape)
 
@@ -273,8 +274,31 @@ class Ellipsoid(AEllipsoid):
         is_ne, _ = self.ne([self], [other])
         return np.array(is_ne).flatten()[0]
 
-    def get_boundary(self, n_points: int) -> Tuple[np.ndarray, np.ndarray]:
-        pass
+    def get_boundary(self, n_points: int = None, return_grid: bool = False) -> Union[
+        np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        self._check_if_scalar(self)
+        n_dim = self.dimension(self)
+        if n_dim == 2:
+            if n_points is None:
+                n_points = self._n_plot_2d_points
+        elif n_dim == 3:
+            if n_points is None:
+                n_points = self._n_plot_3d_points
+        else:
+            throw_error('wrongDim', 'ellipsoid must be of dimension 2 or 3')
+
+        if return_grid:
+            dir_mat, f_mat = sphere_tri_ext(n_dim, n_points, return_grid)
+        else:
+            dir_mat = sphere_tri_ext(n_dim, n_points, return_grid)
+        cen_vec, q_mat = self.double()
+        ret_mat = dir_mat @ sqrtm_pos(q_mat, self._abs_tol)
+        cen_mat = np.tile(cen_vec.T, (dir_mat.shape[0], 1))
+        ret_mat = ret_mat + cen_mat
+        if return_grid:
+            return ret_mat, f_mat
+        else:
+            return ret_mat
 
     def get_boundary_by_factor(self, factor_vec: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         pass
