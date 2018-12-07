@@ -1,9 +1,11 @@
 from ellipy.elltool.core.abasicellipsoid.ABasicEllipsoid import *
 from ellipy.gras.la.la import is_mat_pos_def
+from ellipy.gras.gen.gen import sqrt_pos
 from abc import ABC, abstractmethod
 from typing import Union, Tuple, Dict, Iterable
 import numpy as np
 from numpy import matlib as ml
+import math
 
 
 class AEllipsoid(ABasicEllipsoid, ABC):
@@ -131,7 +133,26 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @classmethod
     def volume(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        pass
+        cls._check_is_me_virtual(ell_arr)
+        ell_arr_flatten = np.array(ell_arr).flatten()
+        if np.any(cls.is_empty(ell_arr_flatten)):
+            throw_error('wrongInput:emptyEllipsoid', 'input argument contains empty ellipsoid')
+
+        def __f_single_volume(ell_obj) -> np.ndarray:
+            if AEllipsoid.is_degenerate(ell_obj):
+                return np.array([0.0])
+            else:
+                q_mat = ell_obj.get_shape_mat()
+                n_dim = cls.dimension(ell_obj)
+                if np.remainder(n_dim, 2):
+                    k = (n_dim - 1)*0.5
+                    s = ((2 ** (2 * k + 1)) * (math.pi ** k) * math.factorial(k))/math.factorial(2 * k + 1)
+                else:
+                    k = n_dim * 0.5
+                    s = (math.pi ** k)/math.factorial(k)
+                return s * sqrt_pos(np.linalg.det(q_mat))
+
+        return np.array([__f_single_volume(ell_obj) for ell_obj in list(ell_arr_flatten)])
 
     @classmethod
     def dimension(cls, ell_arr: Union[Iterable, np.ndarray], return_rank=False) -> \
