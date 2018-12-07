@@ -122,7 +122,6 @@ def __calc_exp_mink_sum(ell_factory_obj, is_ext_apx: bool, n_dirs: int, a_mat: n
             analytic_res_ell_vec[i_dir] = ell_factory_obj.ellipsoid(analytic_res_vec, analytic_res_mat)
         return analytic_res_ell_vec
 
-
 def _compare_analytic_for_mink_sum(ell_factory_obj, is_ea: bool, is_high_dim: bool,
                                    ind_typical_example: int, n_dirs: int, n_good_dirs: int, exp_result: bool):
         if is_high_dim:

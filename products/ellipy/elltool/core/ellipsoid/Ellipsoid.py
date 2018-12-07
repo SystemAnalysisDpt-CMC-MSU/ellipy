@@ -277,7 +277,7 @@ class Ellipsoid(AEllipsoid):
 
     def get_boundary(self, n_points: int = None, return_grid: bool = False) -> Union[
         np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        self._check_if_scalar(self)
+        Ellipsoid._check_if_scalar(self)
         n_dim = self.dimension(self)
         if n_dim == 2:
             if n_points is None:
@@ -303,7 +303,7 @@ class Ellipsoid(AEllipsoid):
 
     def get_boundary_by_factor(self, factor_vec: Union[np.ndarray, int] = None, return_grid: bool = False) -> Union[
         np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        self._check_if_scalar(self)
+        Ellipsoid._check_if_scalar(self)
         n_dim = self.dimension(self)
         if (n_dim < 2) or (n_dim > 3):
             throw_error('wrongDim', 'ellipsoid must be of dimension 2 or 3')
@@ -337,7 +337,7 @@ class Ellipsoid(AEllipsoid):
         return cls.projection(proj_ell_arr, basis_mat)
 
     def get_rho_boundary(self, n_points: int = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        self._check_if_scalar(self)
+        Ellipsoid._check_if_scalar(self)
         n_dim = self.dimension(self)
         if n_dim == 2:
             if n_points is None:
@@ -357,7 +357,7 @@ class Ellipsoid(AEllipsoid):
 
     def get_rho_boundary_by_factor(self, factor_vec: Union[np.ndarray, int] = None) -> \
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        self._check_if_scalar(self)
+        Ellipsoid._check_if_scalar(self)
         n_dim = self.dimension(self)
         if factor_vec is None:
             factor = 1
