@@ -300,8 +300,27 @@ class Ellipsoid(AEllipsoid):
         else:
             return ret_mat
 
-    def get_boundary_by_factor(self, factor_vec: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        pass
+    def get_boundary_by_factor(self, factor_vec: Union[np.ndarray, int, None], return_grid: bool = False) -> Union[
+        np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        self._check_if_scalar(self)
+        n_dim = self.dimension(self)
+        if (n_dim < 2) or (n_dim > 3):
+            throw_error('wrongDim', 'ellipsoid must be of dimension 2 or 3')
+        if factor_vec is None:
+            factor = 1
+        elif type(factor_vec) is int:
+            factor = factor_vec
+        else:
+            factor = factor_vec[n_dim - 2]
+        if n_dim == 2:
+            n_plot_points = int(self._n_plot_2d_points)
+            if not (factor == 1):
+                n_plot_points = int(np.floor(n_plot_points * factor))
+        else:
+            n_plot_points = int(self._n_plot_3d_points)
+            if not (factor == 1):
+                n_plot_points = int(np.floor(n_plot_points * factor))
+        return self.get_boundary(n_plot_points, return_grid)
 
     @classmethod
     def get_inv(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
