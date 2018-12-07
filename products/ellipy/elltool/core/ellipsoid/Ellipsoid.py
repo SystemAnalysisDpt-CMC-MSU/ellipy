@@ -350,15 +350,32 @@ class Ellipsoid(AEllipsoid):
         dir_mat, f_mat = sphere_tri_ext(n_dim, n_points, True)
         cen_vec, q_mat = self.double()
         l_grid_mat = np.vstack((dir_mat, dir_mat[0, :]))
-        sup_vec, bp_mat = rho_mat(q_mat, l_grid_mat.T, self.get_abs_tol(self), cen_vec)
+        sup_vec, bp_mat = rho_mat(q_mat, l_grid_mat.T, self._abs_tol, np.expand_dims(cen_vec, 1))
         sup_vec = sup_vec.T
         bp_mat = bp_mat.T
         return bp_mat, f_mat, sup_vec, l_grid_mat
 
-    def get_rho_boundary_by_factor(self, factor_vec: np.ndarray) -> \
+    def get_rho_boundary_by_factor(self, factor_vec: Union[np.ndarray, int] = None) -> \
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        # todo
-        pass
+        self._check_if_scalar(self)
+        n_dim = self.dimension(self)
+        if factor_vec is None:
+            factor = 1
+        elif type(factor_vec) is int:
+            factor = factor_vec
+        else:
+            factor = factor_vec[n_dim - 2]
+        if n_dim == 2:
+            n_plot_points = int(self._n_plot_2d_points)
+            if not (factor == 1):
+                n_plot_points = int(np.floor(n_plot_points * factor))
+        elif n_dim == 3:
+            n_plot_points = int(self._n_plot_3d_points)
+            if not (factor == 1):
+                n_plot_points = int(np.floor(n_plot_points * factor))
+        else:
+            throw_error('wrongDim', 'ellipsoid must be of dimension 2 or 3')
+        return self.get_rho_boundary(n_points=n_plot_points)
 
     @classmethod
     def inv(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:

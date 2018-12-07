@@ -29,10 +29,10 @@ class TestEllipsoidSecTestCase:
         self.__compare_analytic_for_mink_sum(False, False, 13, 5, 5, True)
         self.__compare_analytic_for_mink_sum(False, True, 10, 100, 100, True)
 
+<<<<<<< HEAD
     def __compare_analytic_for_mink_sum(self, is_ea: bool, is_high_dim: bool, ind_typical_example: int, n_dirs: int,
                                         n_good_dirs: int, exp_result: bool):
         _compare_analytic_for_mink_sum(self, is_ea, is_high_dim, ind_typical_example, n_dirs, n_good_dirs, exp_result)
-
 
 def __create_typical_high_dim_ell(ell_factory_obj, flag: int):
     if flag == 10:
