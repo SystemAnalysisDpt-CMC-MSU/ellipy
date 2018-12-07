@@ -6,6 +6,7 @@ from ellipy.gen.common.common import throw_error
 from ellipy.gen.logging.logging import get_logger
 from ellipy.gras.geom.ell.ell import rho_mat
 from ellipy.gras.geom.tri.tri import sphere_tri_ext
+from ellipy.gras.geom.ell.ell import rho_mat
 from typing import Union, Tuple, Dict, Callable, Any
 import numpy as np
 
@@ -300,7 +301,7 @@ class Ellipsoid(AEllipsoid):
         else:
             return ret_mat
 
-    def get_boundary_by_factor(self, factor_vec: Union[np.ndarray, int, None], return_grid: bool = False) -> Union[
+    def get_boundary_by_factor(self, factor_vec: Union[np.ndarray, int] = None, return_grid: bool = False) -> Union[
         np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         self._check_if_scalar(self)
         n_dim = self.dimension(self)
@@ -335,11 +336,28 @@ class Ellipsoid(AEllipsoid):
         proj_ell_arr = cls.get_copy(ell_arr)
         return cls.projection(proj_ell_arr, basis_mat)
 
-    def get_rho_boundary(self, n_points: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        pass
+    def get_rho_boundary(self, n_points: int = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        self._check_if_scalar(self)
+        n_dim = self.dimension(self)
+        if n_dim == 2:
+            if n_points is None:
+                n_points = self._n_plot_2d_points
+        elif n_dim == 3:
+            if n_points is None:
+                n_points = self._n_plot_3d_points
+        else:
+            throw_error('wrongDim', 'ellipsoid must be of dimension 2 or 3')
+        dir_mat, f_mat = sphere_tri_ext(n_dim, n_points, True)
+        cen_vec, q_mat = self.double()
+        l_grid_mat = np.vstack((dir_mat, dir_mat[0, :]))
+        sup_vec, bp_mat = rho_mat(q_mat, l_grid_mat.T, self.get_abs_tol(self), cen_vec)
+        sup_vec = sup_vec.T
+        bp_mat = bp_mat.T
+        return bp_mat, f_mat, sup_vec, l_grid_mat
 
     def get_rho_boundary_by_factor(self, factor_vec: np.ndarray) -> \
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        # todo
         pass
 
     @classmethod
