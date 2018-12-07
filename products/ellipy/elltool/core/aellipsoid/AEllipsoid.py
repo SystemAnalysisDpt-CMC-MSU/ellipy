@@ -44,6 +44,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
     @classmethod
     def projection(cls, ell_arr: Union[Iterable, np.ndarray], basis_mat: np.ndarray) -> np.ndarray:
         cls._check_is_me_virtual(ell_arr)
+        ell_arr = np.array(ell_arr)
         if not is_numeric(basis_mat):
             throw_error('wrongInput:basis_mat',
                         'second input argument must be matrix with orthogonal columns')
@@ -55,15 +56,16 @@ class AEllipsoid(ABasicEllipsoid, ABC):
             # check the orthogonality of the columns of basis_mat
             scal_prod_mat = basis_mat.T @ basis_mat
             norm_sq_vec = np.diag(scal_prod_mat)
-            _, abs_tol = cls.get_abs_tol([cls, ell_arr], lambda z: np.max(z))
-            is_ortogonal_mat = (scal_prod_mat - diag(norm_sq_vec)) > abs_tol
+            _, abs_tol = cls.get_abs_tol(ell_arr, lambda z: np.max(z))
+            is_ortogonal_mat = (scal_prod_mat - np.diag(norm_sq_vec)) > abs_tol
             if np.any(is_ortogonal_mat.flatten(1)):
                 throw_error('wrongInput','basis vectors must be orthogonal');
             # normalize the basis vectors
             norm_mat = ml.repmat(np.sqrt(norm_sq_vec.T), n_dim, 1)
             ort_basis_mat = basis_mat / norm_mat
             # compute projection
-            ell_arr = np.array(map(lambda x: projection_single_internal(x, ort_basis_mat), ell_arr.flatten()))
+            for x in list(ell_arr.flatten()):
+               x._projection_single_internal(ort_basis_mat)
         return ell_arr
 
     def get_center_vec(self):
@@ -94,6 +96,10 @@ class AEllipsoid(ABasicEllipsoid, ABC):
 
     @abstractmethod
     def _get_scalar_polar_internal(self, is_robust_method: bool):
+        pass
+
+    @abstractmethod
+    def _projection_single_internal(self, ort_basis_mat: np.ndarray):
         pass
 
     @abstractmethod

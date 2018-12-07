@@ -236,8 +236,7 @@ class Ellipsoid(AEllipsoid):
     @classmethod
     def get_projection(cls, ell_arr: Union[Iterable, np.ndarray], basis_mat: np.ndarray) -> np.ndarray:
         proj_ell_arr = cls.get_copy(ell_arr)
-        proj_ell_arr.projection = cls.projection(proj_ell_arr, basis_mat)
-        return proj_ell_arr
+        return cls.projection(proj_ell_arr, basis_mat)
 
     def get_rho_boundary(self, n_points: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         pass
