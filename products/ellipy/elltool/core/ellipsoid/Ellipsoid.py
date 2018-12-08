@@ -119,7 +119,7 @@ class Ellipsoid(AEllipsoid):
                                           + (1 - 1 / p_univ_vec[ind]) * first_ell.get_shape_mat(),
                                           l_mat[:, ind], abs_tol, first_ell.get_center_vec() - sec_ell.get_center_vec())
             if np.abs(diff_bnd_mat - first_ell.get_center_vec() + sec_ell.get_center_vec()) < __ABS_TOL:
-                diff_bnd_mat = first_ell.get_center_vec - sec_ell.get_center_vec()
+                diff_bnd_mat = first_ell.get_center_vec() - sec_ell.get_center_vec()
             else:
                 is_plot_center_3d = False
             return diff_bnd_mat
@@ -299,8 +299,8 @@ class Ellipsoid(AEllipsoid):
     def rho(cls, ell_arr: Union[Iterable, np.ndarray], dirs_arr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         def f_rho_for_dir(ell_obj, dir_vec: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
             c_vec, e_mat = ell_obj.double()
-            a_tol = ell_obj.get_abs_tol()
-            sup_fun, x_vec = rho_mat(e_mat, dir_vec, a_tol, c_vec)
+            a_tol = ell_obj.get_abs_tol(ell_obj)
+            sup_fun, x_vec = rho_mat(e_mat, dir_vec, a_tol, c_vec.reshape(-1, 1))
             return sup_fun, x_vec
 
         cls._check_is_me(ell_arr, 'first')
@@ -332,7 +332,7 @@ class Ellipsoid(AEllipsoid):
             _, abs_tol = cls.get_abs_tol(ell_arr)
             dirs_mat = np.reshape(dirs_arr, (n_dim, n_dirs))
             #
-            sup_arr, bp_arr = rho_mat(ell_mat, dirs_mat, abs_tol, cen_vec)
+            sup_arr, bp_arr = rho_mat(ell_mat, dirs_mat, abs_tol, cen_vec.reshape(-1, 1))
             if len(dir_size_vec) > 2:
                 sup_arr = np.reshape(sup_arr, dir_size_vec[1:])
                 bp_arr = np.reshape(bp_arr, dir_size_vec)
@@ -342,19 +342,24 @@ class Ellipsoid(AEllipsoid):
             sup_arr = np.array(res_c_arr)
             x_c_arr = np.array(x_c_arr)
             bp_arr = np.hstack(x_c_arr)
+            sup_arr = np.reshape(sup_arr, ell_size_vec)
             if len(ell_size_vec) > 2:
-                bp_arr = np.reshape(bp_arr, (n_dim, ell_size_vec))
+                bp_arr = np.reshape(bp_arr, (n_dim, ) + ell_size_vec)
         else:  # multiple ellipsoids, multiple directions
             augx_c_arr = list(dirs_arr)
-            dir_c_arr = np.reshape(augx_c_arr[0][:], ell_size_vec)
+            dir_c_arr = np.array(tuple(zip(list(augx_c_arr[0][:].flatten()),
+                                          list(augx_c_arr[1][:].flatten()))))
+            # dir_c_arr = np.reshape(augx_c_arr[0, :], ell_size_vec)
             #
             res_c_arr, x_c_arr = zip(*map(lambda ell_obj, l_vec:
-                                          f_rho_for_dir(ell_obj, l_vec[0]),
-                                          ell_arr.flatten(), dir_c_arr.flatten()))
+                                          f_rho_for_dir(ell_obj, l_vec.reshape(-1, 1)),
+                                          ell_arr.flatten(), dir_c_arr))
             sup_arr = np.array(res_c_arr)
             x_c_arr = np.array(x_c_arr)
             bp_arr = np.hstack(x_c_arr)
-            bp_arr = np.reshape(bp_arr, dir_size_vec)
+            if len(dir_size_vec) > 2:
+                sup_arr = np.reshape(sup_arr, dir_size_vec[1:])
+                bp_arr = np.reshape(bp_arr, dir_size_vec)
         return sup_arr, bp_arr
 
     @classmethod

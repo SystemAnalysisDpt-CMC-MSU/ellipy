@@ -1,4 +1,5 @@
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
+import pytest
 
 
 class TestEllipsoidBasicSecondTC:
@@ -113,20 +114,20 @@ class TestEllipsoidBasicSecondTC:
         ell_obj_mat = np.diag(np.array([9, 25]))
         ell_obj_cen_vec = np.array([[2], [0]])
         ell_obj = self.ellipsoid(ell_obj_cen_vec, ell_obj_mat)
-        ell_vec = [ell_obj, ell_obj, ell_obj]
+        ell_vec = np.array([[ell_obj, ell_obj, ell_obj]])
         #
         # Check one ell - one dirs
-        sup_val, bp_vec = rho(ell_obj, dir_mat[:, 0])
+        sup_val, bp_vec = ell_obj.rho(ell_obj, dir_mat[:, 0].reshape(-1, 1))
         check_rho_res(sup_val, bp_vec)
         check_rho_size(sup_val, bp_vec, np.ones((2, 1)), np.array([[1, 1]]))
         #
         # Check one ell - multiple dirs
-        sup_arr, bp_mat = rho(ell_obj, dir_mat)
+        sup_arr, bp_mat = ell_obj.rho(ell_obj, dir_mat)
         check_rho_res(sup_arr, bp_mat)
         check_rho_size(sup_arr, bp_mat, dir_mat, np.array([[1, 2]]))
         #
         # Check multiple ell - one dir
-        sup_arr, bp_mat = rho(ell_vec, dir_mat[:, 0])
+        sup_arr, bp_mat = ell_obj.rho(ell_vec, dir_mat[:, 0].reshape(-1, 1))
         check_rho_res(sup_arr, bp_mat)
         check_rho_size(sup_arr, bp_mat, np.ones((2, 3)), np.array([[1, 3]]))
         #
@@ -136,17 +137,17 @@ class TestEllipsoidBasicSecondTC:
         dir_arr[0, :] = 1
         test_ell = self.ellipsoid(ell_obj_cen_vec, ell_obj_mat)
         ell_arr = test_ell.rep_mat(arr_size_vec)
-        sup_arr, bp_arr = rho(ell_arr, dir_arr)
+        sup_arr, bp_arr = ell_obj.rho(ell_arr, dir_arr)
         check_rho_res(sup_arr, bp_arr)
         check_rho_size(sup_arr, bp_arr, dir_arr, arr_size_vec)
         #
         # Check array ell - one dir
-        sup_arr, bp_arr = rho(ell_arr, dir_mat[:, 0])
+        sup_arr, bp_arr = ell_obj.rho(ell_arr, dir_mat[:, 0].reshape(-1, 1))
         check_rho_res(sup_arr, bp_arr)
         check_rho_size(sup_arr, bp_arr, dir_arr, arr_size_vec)
         #
         # Check one ell - array dir
-        sup_arr, bp_arr = rho(ell_obj, dir_arr)
+        sup_arr, bp_arr = ell_obj.rho(ell_obj, dir_arr)
         check_rho_res(sup_arr, bp_arr)
         check_rho_size(sup_arr, bp_arr, dir_arr, arr_size_vec)
         #
@@ -157,26 +158,26 @@ class TestEllipsoidBasicSecondTC:
         ell2_arr = test_ell.rep_mat(arr2_size_vec)
         with pytest.raises(Exception) as e:
             # noinspection PyChecker
-            rho(ell2_arr, dir_arr)
+            ell_obj.rho(ell2_arr, dir_arr)
         assert 'wrongInput:wrongSizes' in str(e.value)
         with pytest.raises(Exception) as e:
             # noinspection PyChecker
-            rho(ell_arr, dir2_arr)
+            ell_obj.rho(ell_arr, dir2_arr)
         assert 'wrongInput:wrongSizes' in str(e.value)
         ell_vec = np.array([[ell_obj, ell_obj, ell_obj]])
         dir_mat = np.eye(2)
         with pytest.raises(Exception) as e:
             # noinspection PyChecker
-            rho(ell_vec, dir_mat)
+            ell_obj.rho(ell_vec, dir_mat)
         assert 'wrongInput:wrongSizes' in str(e.value)
         ell_vec = np.array([[ell_obj, ell_obj, ell_obj]]).T
         dir_mat = np.eye(2)
         with pytest.raises(Exception) as e:
             # noinspection PyChecker
-            rho(ell_vec, dir_mat)
+            ell_obj.rho(ell_vec, dir_mat)
         assert 'wrongInput:wrongSizes' in str(e.value)
-        ell_empt_arr = self.ellipsoid.empty([0, 0, 2, 0])
+        ell_empty_arr = np.empty((0, 0, 2, 0), dtype=np.object)
         with pytest.raises(Exception) as e:
             # noinspection PyChecker
-            rho(ell_empt_arr, dir_mat)
+            ell_obj.rho(ell_empty_arr, dir_mat)
         assert 'wrongInput:wrongSizes' in str(e.value)
