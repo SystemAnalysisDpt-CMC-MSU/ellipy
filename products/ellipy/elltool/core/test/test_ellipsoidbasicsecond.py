@@ -40,8 +40,8 @@ class TestEllipsoidBasicSecondTC:
                             cent_vec: np.ndarray, shape_mat: np.ndarray,
                             pr_mat: np.ndarray, dim_vec: np.ndarray = None):
 
-            def isequal_internal(ell_obj_1_vec: Union[Iterable, np.ndarray],
-                                 ell_obj_2_vec: Union[Iterable, np.ndarray]) -> bool:
+            def is_equ_internal(ell_obj_1_vec: Union[Iterable, np.ndarray],
+                                ell_obj_2_vec: Union[Iterable, np.ndarray]) -> bool:
                 ell_obj_1_vec = np.array(ell_obj_1_vec)
                 ell_obj_2_vec = np.array(ell_obj_2_vec)
                 if ell_obj_1_vec.size == 0 or ell_obj_2_vec.size == 0:
@@ -56,6 +56,9 @@ class TestEllipsoidBasicSecondTC:
                         np.array_equal(ell_obj_1_vec.shape, ell_obj_2_vec.shape)
                 return is_ok
 
+            is_inp_obj_modify = None
+            ell_copy_obj = None
+            ell_copy_arr = None
             inp_obj_modify_list = ['projection']
             inp_obj_not_modify_list = ['get_projection']
             pr_cent_vec = pr_mat.T @ cent_vec
@@ -73,7 +76,7 @@ class TestEllipsoidBasicSecondTC:
                             ', ' + inp_obj_not_modify_list[0] + '. Input name: ' + method_name)
             if dim_vec is None:
                 pr_ell_obj = getattr(ell_obj, method_name)(ell_obj, pr_mat)
-                test_is_right_1 = isequal_internal(comp_ell_obj, pr_ell_obj)
+                test_is_right_1 = is_equ_internal(comp_ell_obj, pr_ell_obj)
                 if is_inp_obj_modify:
                     # additional test for modification of input object
                     test_is_right_2, _ = comp_ell_obj.is_equal(comp_ell_obj, ell_obj)
@@ -86,7 +89,7 @@ class TestEllipsoidBasicSecondTC:
                     ell_copy_arr = ell_copy_obj.rep_mat(dim_vec)
                 pr_ell_arr = getattr(ell_obj, method_name)(ell_arr, pr_mat)
                 comp_ell_arr = comp_ell_obj.rep_mat(dim_vec)
-                test_is_right_1 = isequal_internal(comp_ell_arr, pr_ell_arr)
+                test_is_right_1 = is_equ_internal(comp_ell_arr, pr_ell_arr)
                 if is_inp_obj_modify:
                     # additional test for modification of input array
                     test_arr_2, _ = comp_ell_obj.is_equal(comp_ell_arr, ell_arr)
@@ -114,15 +117,16 @@ class TestEllipsoidBasicSecondTC:
         ell_obj_mat = np.diag(np.array([9, 25]))
         ell_obj_cen_vec = np.array([[2], [0]])
         ell_obj = self.ellipsoid(ell_obj_cen_vec, ell_obj_mat)
+        ell_obj_arr = np.array([ell_obj])
         ell_vec = np.array([[ell_obj, ell_obj, ell_obj]])
         #
         # Check one ell - one dirs
-        sup_val, bp_vec = ell_obj.rho(ell_obj, dir_mat[:, 0].reshape(-1, 1))
+        sup_val, bp_vec = ell_obj.rho(ell_obj_arr, dir_mat[:, 0].reshape(-1, 1))
         check_rho_res(sup_val, bp_vec)
         check_rho_size(sup_val, bp_vec, np.ones((2, 1)), np.array([[1, 1]]))
         #
         # Check one ell - multiple dirs
-        sup_arr, bp_mat = ell_obj.rho(ell_obj, dir_mat)
+        sup_arr, bp_mat = ell_obj.rho(ell_obj_arr, dir_mat)
         check_rho_res(sup_arr, bp_mat)
         check_rho_size(sup_arr, bp_mat, dir_mat, np.array([[1, 2]]))
         #
@@ -147,7 +151,7 @@ class TestEllipsoidBasicSecondTC:
         check_rho_size(sup_arr, bp_arr, dir_arr, arr_size_vec)
         #
         # Check one ell - array dir
-        sup_arr, bp_arr = ell_obj.rho(ell_obj, dir_arr)
+        sup_arr, bp_arr = ell_obj.rho(ell_obj_arr, dir_arr)
         check_rho_res(sup_arr, bp_arr)
         check_rho_size(sup_arr, bp_arr, dir_arr, arr_size_vec)
         #

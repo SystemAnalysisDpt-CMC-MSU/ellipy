@@ -48,7 +48,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
         if not is_numeric(basis_mat):
             throw_error('wrongInput:basis_mat',
                         'second input argument must be matrix with orthogonal columns')
-        if not np.any(cls.is_empty(ell_arr).flatten()):
+        if ell_arr.size != 0:
             n_dim, n_basis = basis_mat.shape
             n_dims_arr = cls.dimension(ell_arr)
             if not (n_basis <= n_dim and np.all(n_dims_arr.flatten(1) == n_dim)):
@@ -58,7 +58,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
             norm_sq_vec = np.diag(scal_prod_mat)
             _, abs_tol = cls.get_abs_tol(ell_arr, lambda z: np.max(z))
             is_ortogonal_mat = (scal_prod_mat - np.diag(norm_sq_vec)) > abs_tol
-            if np.any(is_ortogonal_mat.flatten(1)):
+            if np.any(is_ortogonal_mat.flatten()):
                 throw_error('wrongInput','basis vectors must be orthogonal');
             # normalize the basis vectors
             norm_mat = ml.repmat(np.sqrt(norm_sq_vec.T), n_dim, 1)

@@ -118,7 +118,8 @@ class Ellipsoid(AEllipsoid):
                 _, diff_bnd_mat = rho_mat((1 - p_univ_vec[ind]) * sec_ell.get_shape_mat()
                                           + (1 - 1 / p_univ_vec[ind]) * first_ell.get_shape_mat(),
                                           l_mat[:, ind], abs_tol, first_ell.get_center_vec() - sec_ell.get_center_vec())
-            if np.abs(diff_bnd_mat - first_ell.get_center_vec() + sec_ell.get_center_vec()) < __ABS_TOL:
+            if np.all(np.abs(diff_bnd_mat - first_ell.get_center_vec() +
+                             sec_ell.get_center_vec()) < __ABS_TOL):
                 diff_bnd_mat = first_ell.get_center_vec() - sec_ell.get_center_vec()
             else:
                 is_plot_center_3d = False
@@ -128,9 +129,7 @@ class Ellipsoid(AEllipsoid):
             is_plot_center_3d = True
         else:
             is_plot_center_3d = False
-
-        diff_bound_mat = np.array(map(lambda x, y: calc_diff(x, y),
-                                      is_good_dir_vec, np.arange(1, l_mat.shape[1] + 1)))
+        diff_bound_mat = np.array([calc_diff(x,y) for x, y in zip(is_good_dir_vec, np.arange(0, l_mat.shape[1]))])
         return diff_bound_mat, is_plot_center_3d
 
     @staticmethod
@@ -346,10 +345,7 @@ class Ellipsoid(AEllipsoid):
             if len(ell_size_vec) > 2:
                 bp_arr = np.reshape(bp_arr, (n_dim, ) + ell_size_vec)
         else:  # multiple ellipsoids, multiple directions
-            augx_c_arr = list(dirs_arr)
-            dir_c_arr = np.array(tuple(zip(list(augx_c_arr[0][:].flatten()),
-                                          list(augx_c_arr[1][:].flatten()))))
-            # dir_c_arr = np.reshape(augx_c_arr[0, :], ell_size_vec)
+            dir_c_arr = np.reshape(dirs_arr, (n_dim, n_dirs)).T
             #
             res_c_arr, x_c_arr = zip(*map(lambda ell_obj, l_vec:
                                           f_rho_for_dir(ell_obj, l_vec.reshape(-1, 1)),
