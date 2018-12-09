@@ -1,6 +1,6 @@
 from typing import Tuple, Union
 import numpy as np
-from scipy.special import gamma
+# from scipy.special import gamma
 from ellipy.elltool.conf.properties.Properties import Properties
 from ellipy.gras.gen.gen import sqrt_pos
 from ellipy.gen.common.common import throw_error, is_numeric
