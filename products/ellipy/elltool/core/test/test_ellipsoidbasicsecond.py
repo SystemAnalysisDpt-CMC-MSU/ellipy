@@ -7,6 +7,45 @@ class TestEllipsoidBasicSecondTC:
     def ellipsoid(self, *args, **kwargs):
         return Ellipsoid(*args, **kwargs)
 
+    def test_uminus(self):
+        test_1_ell = self.ellipsoid(np.array([[0], [0]]),
+                                    np.array([
+                                        [1, 0],
+                                        [0, 1]
+                                    ]))
+        test_2_ell = self.ellipsoid(np.array([[1], [0]]),
+                                    np.array([
+                                        [1, 0],
+                                        [0, 1]
+                                    ]))
+        test_3_ell = self.ellipsoid(np.array([[1], [0]]),
+                                    np.array([
+                                        [2, 0],
+                                        [0, 1]
+                                    ]))
+        test_4_ell = self.ellipsoid(np.array([[0], [0]]),
+                                    np.array([
+                                        [0, 0],
+                                        [0, 0]
+                                    ]))
+        test_5_ell = self.ellipsoid(np.array([[0], [0], [0]]),
+                                    np.array([
+                                        [0, 0, 0],
+                                        [0, 0, 0],
+                                        [0, 0, 0]
+                                    ]))
+        test_6_ell = self.ellipsoid()
+        test_7_ell = self.ellipsoid(np.array([[2], [1]]),
+                                    np.array([
+                                        [3, 1],
+                                        [1, 1]
+                                    ]))
+        test_8_ell = self.ellipsoid(np.array([[1], [1]]),
+                                    np.array([
+                                        [1, 0],
+                                        [0, 1]
+                                    ]))
+
     def test_projection(self):
         project_mat = np.array([[1, 0], [0, 1], [0, 0]])
         cent_vec = np.array([[-2], [-1], [4]])
