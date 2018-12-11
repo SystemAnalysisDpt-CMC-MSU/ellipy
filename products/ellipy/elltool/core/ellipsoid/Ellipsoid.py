@@ -391,7 +391,67 @@ class Ellipsoid(AEllipsoid):
 
     @classmethod
     def minksum_ia(cls, ell_arr: Union[Iterable, np.ndarray], dir_mat: np.ndarray) -> np.ndarray:
-        pass
+        def f_rot_arr(ell_ind: int) -> Tuple[np.ndarray, np.ndarray]:
+            from ellipy.gras.la.la import ml_orth_transl
+            sh_mat = ell_arr[ell_ind].get_shape_mat()
+            if ell_arr[ell_ind].is_degenerate([ell_arr[ell_ind]]):
+                if Properties.get_is_verbose():
+                    logger = get_logger()
+                    logger.info('MINKSUM_IA: Warning! Degenerate ellipsoid.')
+                    logger.info('           Regularizing...')
+                sh_mat = cls._regularize(sh_mat, abs_tol_arr[ell_ind])
+            sh_sqrt_mat = sqrtm_pos(sh_mat, abs_tol_arr[ell_ind])
+            dst_mat = sh_sqrt_mat @ dir_mat
+            return sh_sqrt_mat, ml_orth_transl(dst_mat, src_mat)
+
+        def f_single_direction(dir_ind: int) -> Ellipsoid:
+            # subShMat = zeros(nDims, nDims);
+            # arrayfun( @ (x) fAddSh(x), 1: nEll);
+            # function fAddSh(ellIndex)
+            #     subShMat = subShMat + ...
+            #     rotArr(:,:, ellIndex, dirIndex) *sqrtShArr(:,:, ellIndex);
+            # Next line supposed to be equal to matlab code above
+            sub_sh_mat = np.cumsum(np.array(list(map(lambda ell_ind:
+                                                     np.squeeze(rot_arr[ell_ind, :, :, dir_ind])
+                                                     @ sqrt_sh_arr[ell_ind, :, :],
+                                                     np.arange(0, n_ell)))), 0)
+            sub_sh_mat = np.squeeze(sub_sh_mat[-1, :, :])
+            return ell_arr[0].__class__(cent_vec, sub_sh_mat.T @ sub_sh_mat)
+        #
+        # There should be equal python checks
+        # modgen.common.checkvar(inpEllArr, 'numel(x) > 0', 'errorTag', ...
+        # 'wrongInput:emptyArray', 'errorMessage', ...
+        # 'Each array must be not empty.');
+        # modgen.common.checkvar(inpEllArr, 'all(~x(:).isEmpty())', 'errorTag', ...
+        # 'wrongInput:emptyEllipsoid', 'errorMessage', ...
+        # 'Array should not have empty ellipsoid.');
+        ell_arr = np.array(ell_arr)
+        cls._check_is_me(ell_arr, 'first')
+        n_ell = ell_arr.size
+        n_dims_ell_arr = cls.dimension(ell_arr)
+        n_dims = dir_mat.shape[0]
+        if np.size(dir_mat.shape) == 1:
+            n_cols = 1
+        else:
+            n_cols = dir_mat.shape[1]
+
+        if not n_ell > 0:
+            throw_error('wrongInput:emptyArray', 'Each array must be not empty.')
+        if np.all(ell_arr[0].is_empty(np.ravel(ell_arr))):
+            throw_error('wrongInput:emptyEllipsoid', 'Array should not have empty ellipsoid.')
+        if not (np.all(n_dims_ell_arr.flatten() == n_dims)) & (np.all(n_dims_ell_arr.flatten() == n_dims_ell_arr[0])):
+            throw_error('wrongSizes', 'ellipsoids in the array and vector(s) must be of the same dimension.')
+        if n_ell == 1:
+            return ell_arr[0].rep_mat(np.array([1, n_cols]))
+        else:
+            cent_vec = np.sum(np.array([ell.get_center_vec() for ell in ell_arr]), 0)
+            abs_tol_arr = cls.get_abs_tol(ell_arr)[0]
+
+            src_mat = sqrtm_pos(ell_arr[0].get_shape_mat(), np.min(abs_tol_arr.flatten())) @ dir_mat
+            sqrt_sh_arr, rot_arr = zip(*[f_rot_arr(i) for i in np.arange(0, n_ell)])
+            sqrt_sh_arr = np.array(sqrt_sh_arr)
+            rot_arr = np.array(rot_arr)
+            return np.array([f_single_direction(i) for i in np.arange(0, n_cols)])
 
     @classmethod
     def move_2_origin(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
