@@ -51,21 +51,20 @@ class AEllipsoid(ABasicEllipsoid, ABC):
         if ell_arr.size != 0:
             n_dim, n_basis = basis_mat.shape
             n_dims_arr = cls.dimension(ell_arr)
-            if not (n_basis <= n_dim and np.all(n_dims_arr.flatten(1) == n_dim)):
-                throw_error('wrongInput', 'dimensions mismatch or number of basis vectors too large');
+            if not (n_basis <= n_dim and np.all(n_dims_arr.flatten() == n_dim)):
+                throw_error('wrongInput', 'dimensions mismatch or number of basis vectors too large')
             # check the orthogonality of the columns of basis_mat
-            scal_prod_mat = basis_mat.T @ basis_mat
-            norm_sq_vec = np.diag(scal_prod_mat)
+            sc_prod_mat = basis_mat.T @ basis_mat
+            norm_sq_vec = np.diag(sc_prod_mat)
             _, abs_tol = cls.get_abs_tol(ell_arr, lambda z: np.max(z))
-            is_ortogonal_mat = (scal_prod_mat - np.diag(norm_sq_vec)) > abs_tol
-            if np.any(is_ortogonal_mat.flatten()):
-                throw_error('wrongInput','basis vectors must be orthogonal');
+            is_orthogonal_mat = (sc_prod_mat - np.diag(norm_sq_vec)) > abs_tol
+            if np.any(is_orthogonal_mat.flatten()):
+                throw_error('wrongInput', 'basis vectors must be orthogonal')
             # normalize the basis vectors
             norm_mat = ml.repmat(np.sqrt(norm_sq_vec.T), n_dim, 1)
             ort_basis_mat = basis_mat / norm_mat
             # compute projection
-            for x in list(ell_arr.flatten()):
-               x._projection_single_internal(ort_basis_mat)
+            [cls._projection_single_internal(x, ort_basis_mat) for x in ell_arr.flatten()]
         return ell_arr
 
     def get_center_vec(self):
