@@ -159,16 +159,16 @@ class Hyperplane(ABasicEllipsoid):
         # TO DO: checkmultivar
         if type(first_hyp_arr) == cls:
             if type(sec_hyp_arr) == cls:
-                first_hyp_abs_tol_arr = cls.get_abs_tol(first_hyp_arr)
+                first_hyp_abs_tol_arr = cls.get_abs_tol(first_hyp_arr)[0].flatten()[0]
                 return is_sing_parallel(first_hyp_arr, sec_hyp_arr, first_hyp_abs_tol_arr)
             else:
                 first_hyp_arr = f_copy_hyp(first_hyp_arr, np.shape(sec_hyp_arr))
-                first_hyp_abs_tol_arr = [elem.get_abs_tol() for elem in first_hyp_arr]
+                first_hyp_abs_tol_arr = [cls.get_abs_tol(elem)[0].flatten()[0] for elem in first_hyp_arr]
         elif type(sec_hyp_arr) == cls:
             sec_hyp_arr = f_copy_hyp(sec_hyp_arr, np.shape(first_hyp_arr))
-            first_hyp_abs_tol_arr = np.array([elem.get_abs_tol() for elem in first_hyp_arr])
+            first_hyp_abs_tol_arr = np.array([cls.get_abs_tol(elem)[0].flatten()[0] for elem in first_hyp_arr])
         else:
-            first_hyp_abs_tol_arr = np.array([elem.get_abs_tol() for elem in first_hyp_arr])
+            first_hyp_abs_tol_arr = np.array([cls.get_abs_tol(elem)[0].flatten()[0] for elem in first_hyp_arr])
 
         is_pos_arr = np.array([is_sing_parallel(x, y, z)
                                for (x, y, z) in zip(first_hyp_arr, sec_hyp_arr, first_hyp_abs_tol_arr)])

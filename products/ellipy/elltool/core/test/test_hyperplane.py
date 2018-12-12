@@ -29,7 +29,7 @@ class TestHyperplaneTestCase:
         s_inp_data = self.__aux_read_file()
         test_hyperplanes_vec = s_inp_data['testHyperplanesVec'].flatten()[0]
         test_hyperplanes_vec = Hyperplane(test_hyperplanes_vec[0], test_hyperplanes_vec[1])
-        is_parallel_vec = s_inp_data['isParallelVec'].flatten()[0]
+        is_parallel_vec = s_inp_data['isParallelVec'].flatten()
         compare_hyperplanes_vec = s_inp_data['compareHyperplanesVec'].flatten()[0]
         compare_hyperplanes_vec = Hyperplane(compare_hyperplanes_vec[0], compare_hyperplanes_vec[1])
 
