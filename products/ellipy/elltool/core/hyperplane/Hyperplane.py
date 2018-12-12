@@ -3,6 +3,7 @@ from ellipy.elltool.conf.properties.Properties import Properties
 from ellipy.gras.la.la import try_treat_as_real
 from typing import Tuple, Dict, Callable, Any
 import numpy as np
+import copy
 
 
 class Hyperplane(ABasicEllipsoid):
@@ -193,7 +194,28 @@ class Hyperplane(ABasicEllipsoid):
 
     @classmethod
     def uminus(cls, hyp_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        pass
+        cls._check_is_me(hyp_arr)
+        size_vec = np.shape(hyp_arr)
+        n_elems = np.size(hyp_arr)
+        out_hyp_arr = copy.deepcopy(hyp_arr)
+
+        def set_prop(i_obj=None):
+            if i_obj is None:
+                out_hyp_arr._normal_vec = -out_hyp_arr._normal_vec
+                out_hyp_arr._shift = -out_hyp_arr._shift
+            else:
+                out_hyp_arr[i_obj]._normal_vec = -out_hyp_arr[i_obj]._normal_vec
+                out_hyp_arr[i_obj]._shift = -out_hyp_arr[i_obj]._shift
+        if type(hyp_arr) != cls:
+            [set_prop(i) for i in range(n_elems)]
+            out_hyp_arr = np.reshape(out_hyp_arr, newshape=size_vec)
+        else:
+            set_prop()
+
+        return out_hyp_arr
+
+    def __neg__(self):
+        return self.uminus([self]).flatten()[0]
 
     def __str__(self):
         res_str = ['\n']
