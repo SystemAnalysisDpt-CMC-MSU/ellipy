@@ -25,9 +25,21 @@ class TestHyperplaneTestCase:
         res = self.__is_normal_and_constant_right(-test_normal_vec, -test_constant, minus_test_hyraplane)
         assert res
 
+    def test_is_parallel(self):
+        s_inp_data = self.__aux_read_file()
+        test_hyperplanes_vec = s_inp_data['testHyperplanesVec'].flatten()[0]
+        test_hyperplanes_vec = Hyperplane(test_hyperplanes_vec[0], test_hyperplanes_vec[1])
+        is_parallel_vec = s_inp_data['isParallelVec'].flatten()[0]
+        compare_hyperplanes_vec = s_inp_data['compareHyperplanesVec'].flatten()[0]
+        compare_hyperplanes_vec = Hyperplane(compare_hyperplanes_vec[0], compare_hyperplanes_vec[1])
+
+        tested_is_parallel = Hyperplane.is_parallel([test_hyperplanes_vec], [compare_hyperplanes_vec])
+        assert np.array_equal(tested_is_parallel, is_parallel_vec)
+
     def __aux_read_file(self):
         method_name = get_caller_name_ext(2)[0]
-        method_name = 'test' + method_name[5].upper() + method_name[6:]
+        method_split = [name[0].upper() + name[1:] for name in method_name.split('_')[1:]]
+        method_name = 'test' + ''.join(method_split)
         inp_file_name = os.path.join(self.test_data_root_dir, method_name + '_inp.mat')
         #
         return scipy.io.loadmat(inp_file_name)

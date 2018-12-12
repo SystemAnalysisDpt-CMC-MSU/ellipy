@@ -128,8 +128,52 @@ class Hyperplane(ABasicEllipsoid):
 
     @classmethod
     def is_parallel(cls, first_hyp_arr: Union[Iterable, np.ndarray],
-                    sec_hyp_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        pass
+                    sec_hyp_arr: Union[Iterable, np.ndarray]) -> Union[np.ndarray, np.bool]:
+        cls._check_is_me(first_hyp_arr)
+        cls._check_is_me(sec_hyp_arr)
+
+        def f_copy_hyp(hyp_obj, size_vec):
+            n_elem = np.int32(np.prod(size_vec))
+            res_hyp_arr = np.array([copy.deepcopy(hyp_obj) for _ in range(n_elem)])
+            return np.reshape(res_hyp_arr, newshape=size_vec)
+
+        def is_sing_parallel(first_hyp, sec_hyp, first_hyp_abs_tol):
+            if type(first_hyp) != cls:
+                first_hyp_norm_vec = np.array([elem.parameters()[0] for elem in first_hyp])
+            else:
+                first_hyp_norm_vec = first_hyp.parameters()[0]
+            if type(sec_hyp) != cls:
+                sec_hyp_norm_vec = np.array([elem.parameters()[0] for elem in sec_hyp])
+            else:
+                sec_hyp_norm_vec = sec_hyp.parameters()[0]
+            is_pos = False
+            if np.array_equal(np.shape(first_hyp_norm_vec), np.shape(sec_hyp_norm_vec)):
+                first_hyp_norm_vec /= np.linalg.norm(first_hyp_norm_vec)
+                sec_hyp_norm_vec /= np.linalg.norm(sec_hyp_norm_vec)
+                if np.max(np.abs(first_hyp_norm_vec - sec_hyp_norm_vec) < first_hyp_abs_tol):
+                    is_pos = True
+                elif np.max(np.abs(first_hyp_norm_vec + sec_hyp_norm_vec) < first_hyp_abs_tol):
+                    is_pos = True
+            return is_pos
+
+        # TO DO: checkmultivar
+        if type(first_hyp_arr) == cls:
+            if type(sec_hyp_arr) == cls:
+                first_hyp_abs_tol_arr = cls.get_abs_tol(first_hyp_arr)
+                return is_sing_parallel(first_hyp_arr, sec_hyp_arr, first_hyp_abs_tol_arr)
+            else:
+                first_hyp_arr = f_copy_hyp(first_hyp_arr, np.shape(sec_hyp_arr))
+                first_hyp_abs_tol_arr = [elem.get_abs_tol() for elem in first_hyp_arr]
+        elif type(sec_hyp_arr) == cls:
+            sec_hyp_arr = f_copy_hyp(sec_hyp_arr, np.shape(first_hyp_arr))
+            first_hyp_abs_tol_arr = np.array([elem.get_abs_tol() for elem in first_hyp_arr])
+        else:
+            first_hyp_abs_tol_arr = np.array([elem.get_abs_tol() for elem in first_hyp_arr])
+
+        is_pos_arr = np.array([is_sing_parallel(x, y, z)
+                               for (x, y, z) in zip(first_hyp_arr, sec_hyp_arr, first_hyp_abs_tol_arr)])
+
+        return is_pos_arr
 
     @classmethod
     def ne(cls, first_hyp_arr: Union[Iterable, np.ndarray],
@@ -197,20 +241,24 @@ class Hyperplane(ABasicEllipsoid):
         cls._check_is_me(hyp_arr)
         size_vec = np.shape(hyp_arr)
         n_elems = np.size(hyp_arr)
-        out_hyp_arr = copy.deepcopy(hyp_arr)
+        out_hyp_arr = []
 
-        def set_prop(i_obj=None):
+        def set_prop(out_hyp_arr_local, i_obj=None):
             if i_obj is None:
-                out_hyp_arr._normal_vec = -out_hyp_arr._normal_vec
-                out_hyp_arr._shift = -out_hyp_arr._shift
+                new_normal_vec = np.array(map(lambda hyp: -hyp.parameters()[0], hyp_arr))
+                new_shift = np.float64(map(lambda hyp: -hyp.parameters()[1], hyp_arr))
+                out_hyp_arr_local = Hyperplane(new_normal_vec, new_shift)
             else:
-                out_hyp_arr[i_obj]._normal_vec = -out_hyp_arr[i_obj]._normal_vec
-                out_hyp_arr[i_obj]._shift = -out_hyp_arr[i_obj]._shift
+                new_normal_vec = -hyp_arr[i_obj].parameters()[0]
+                new_shift = -hyp_arr[i_obj].parameters()[1]
+                out_hyp_arr_local.append(Hyperplane(new_normal_vec, new_shift))
+            return out_hyp_arr_local
+
         if type(hyp_arr) != cls:
-            [set_prop(i) for i in range(n_elems)]
+            [set_prop(out_hyp_arr, i) for i in range(n_elems)]
             out_hyp_arr = np.reshape(out_hyp_arr, newshape=size_vec)
         else:
-            set_prop()
+            out_hyp_arr = set_prop(out_hyp_arr)
 
         return out_hyp_arr
 
