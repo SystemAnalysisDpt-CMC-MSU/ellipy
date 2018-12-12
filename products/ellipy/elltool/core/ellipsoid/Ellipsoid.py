@@ -1,3 +1,4 @@
+import ellipy
 from ellipy.elltool.core.aellipsoid.AEllipsoid import *
 from ellipy.elltool.core.abasicellipsoid.ABasicEllipsoid import *
 from ellipy.elltool.conf.properties.Properties import Properties
@@ -7,6 +8,7 @@ from ellipy.gen.logging.logging import get_logger
 from ellipy.gras.geom.ell.ell import rho_mat
 from typing import Tuple, Dict, Callable, Any
 import numpy as np
+import copy
 
 
 class Ellipsoid(AEllipsoid):
@@ -503,18 +505,18 @@ class Ellipsoid(AEllipsoid):
     @classmethod
     def uminus(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         cls._check_is_me(ell_arr)
-        size_c_vec = list(np.shape(ell_arr))
-        class_name = type(ell_arr)
-        if 0 == ell_arr.size:
-            out_ell_arr = eval(class_name + '.empty')(size_c_vec[:])
+        size_c_vec = np.shape(ell_arr)
+        if (type(ell_arr) != cls) and (0 == len(ell_arr)):
+            out_ell_arr = np.empty(shape=size_c_vec, dtype=cls)
         else:
-            out_ell_arr = eval(class_name)(size_c_vec[:])
+            out_ell_arr = np.array(copy.deepcopy(ell_arr), dtype=cls).flatten()
 
-            def f_single_uminus(index: np.int32):
-                out_ell_arr[index].center_vec = -ell_arr[index].center_vec
-                out_ell_arr[index].shape_mat = ell_arr[index].shape_mat
-            out_ell_arr = np.reshape([f_single_uminus(elem) for elem in list(out_ell_arr.flatten())],
-                                     newshape=size_c_vec)
+            def f_single_uminus(index: np.int64):
+                out_ell_arr[index]._center_vec = -out_ell_arr[index].get_center_vec()
+            [f_single_uminus(i) for i in range(len(out_ell_arr))]
+            if type(ell_arr) != cls:
+                out_ell_arr = np.reshape(out_ell_arr, newshape=size_c_vec)
+        return out_ell_arr
 
     def __neg__(self):
         return self.uminus([self]).flatten()[0]
