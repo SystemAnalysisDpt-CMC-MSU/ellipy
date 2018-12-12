@@ -2,6 +2,8 @@ from ellipy.elltool.core.core import *
 from ellipy.elltool.core.hyperplane.Hyperplane import *
 from ellipy.gen.common.common import abs_rel_compare
 from typing import Tuple
+import os
+import scipy.io
 
 
 class TestEllipsoidSecTestCase:
@@ -29,7 +31,6 @@ class TestEllipsoidSecTestCase:
         self.__compare_analytic_for_mink_sum(False, False, 13, 5, 5, True)
         self.__compare_analytic_for_mink_sum(False, True, 10, 100, 100, True)
 
-<<<<<<< HEAD
     def __compare_analytic_for_mink_sum(self, is_ea: bool, is_high_dim: bool, ind_typical_example: int, n_dirs: int,
                                         n_good_dirs: int, exp_result: bool):
         _compare_analytic_for_mink_sum(self, is_ea, is_high_dim, ind_typical_example, n_dirs, n_good_dirs, exp_result)
