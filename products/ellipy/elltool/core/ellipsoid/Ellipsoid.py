@@ -343,7 +343,7 @@ class Ellipsoid(AEllipsoid):
         if ell_arr.size == 0:
             throw_error('wrongInput:emptyArray', 'Each array must be not empty.')
         if np.any(cls.is_empty(np.ravel(ell_arr))):
-            throw_error('wrongInput:emptyArray', 'Array should not have empty ellipsoid.')
+            throw_error('wrongInput:emptyEllipsoid', 'Array should not have empty ellipsoid.')
 
         if type(mode) != str:
             mode = 'u'
