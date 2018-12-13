@@ -96,7 +96,66 @@ class Hyperplane(ABasicEllipsoid):
 
     @classmethod
     def contains(cls, hyp_arr: Union[Iterable, np.ndarray], x_arr: np.ndarray) -> np.ndarray:
-        pass
+        cls._check_is_me(hyp_arr)
+
+        # TO DO: checkvar
+        # TO DO: checkvar
+        n_dim_var = cls.dimension(hyp_arr)
+        max_dim = np.max(n_dim_var)
+        min_dim = np.min(n_dim_var)
+
+        # TO DO: checkmultivar
+        n_dims = max_dim
+        size_x_vec = np.shape(x_arr)
+
+        # TO DO: checkmultivar
+        size_hyp_arr = np.shape(hyp_arr)
+        is_column = False
+        if (np.size(size_x_vec) == 2) and not (size_x_vec[1] == 1) and \
+                (np.size(size_hyp_arr) == 2) and np.any(np.equal(size_hyp_arr, 1)):
+            size_x_vec = (size_x_vec[0], 1, size_x_vec[1])
+            x_arr = np.reshape(x_arr, size_x_vec)
+
+            if size_hyp_arr[1] == 1:
+                is_column = True
+                hyp_arr = hyp_arr.T
+                size_hyp_arr = np.shape(hyp_arr)
+
+        # TO DO: checkmultivar
+
+        def process(other_dim_vec_loc):
+            ind_c_vec = np.array([np.ones(shape=(1, x)) for x in other_dim_vec_loc])
+            x_c_arr_loc = x_arr
+            # TO DO: mat2cell
+            return np.rollaxis(x_c_arr_loc, 1)
+
+        def is_sing_contains(hyp, x_vec):
+            hyp_norm_vec, hyp_const = cls.parameters(hyp)
+            abs_tol = cls.get_abs_tol(hyp)[0].flatten()[0]
+            is_pos = False
+            is_fin_vec = np.isfinite(x_vec)
+            if np.all(hyp_norm_vec[~is_fin_vec] == 0):
+                hyp_norm_vec = hyp_norm_vec[is_fin_vec]
+                x_vec = x_vec[is_fin_vec]
+                if abs((hyp_norm_vec.T @ x_vec) - hyp_const) < abs_tol:
+                    is_pos = True
+            return is_pos
+
+        if (np.shape(size_x_vec)[1] == 2) and (size_x_vec[1] == 1):
+            is_pos_arr = np.array([is_sing_contains(x, x_arr) for x in hyp_arr])
+        elif type(hyp_arr) == cls:
+            other_dim_vec = size_x_vec
+            other_dim_vec[:, 0] = []
+            x_c_arr = process(other_dim_vec)
+            is_pos_arr = np.array([is_sing_contains(hyp_arr, x[0]) for x in x_c_arr])
+        else:
+            other_dim_vec = np.shape(hyp_arr)
+            x_c_arr = process(other_dim_vec)
+            is_pos_arr = np.array([is_sing_contains(x, y[0]) for (x, y) in zip(hyp_arr, x_c_arr)])
+
+        if is_column:
+            is_pos_arr = is_pos_arr.T
+        return is_pos_arr
 
     @classmethod
     def dimension(cls, hyp_arr: Union[Iterable, np.ndarray], return_rank=False) -> np.ndarray:

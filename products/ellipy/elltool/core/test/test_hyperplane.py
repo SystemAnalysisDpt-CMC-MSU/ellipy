@@ -36,6 +36,51 @@ class TestHyperplaneTestCase:
         tested_is_parallel = Hyperplane.is_parallel([test_hyperplanes_vec], [compare_hyperplanes_vec])
         assert np.array_equal(tested_is_parallel, is_parallel_vec)
 
+    def test_contains(self):
+        s_inp_data = self.__aux_read_file()
+
+        test_hyperplanes_vec = s_inp_data['testHyperplanesVec'].flatten()
+        test_hyperplanes_vec = np.array([self.hyperplane(elem[0], elem[1]) for elem in test_hyperplanes_vec])
+        test_vectors_mat = s_inp_data['testVectorsMat']
+        is_contained_vec = s_inp_data['isContainedVec']
+        is_contained_tested_vec = Hyperplane.contains(test_hyperplanes_vec, test_vectors_mat)
+        assert np.array_equal(is_contained_vec, is_contained_tested_vec)
+
+        test_hyp = self.hyperplane([1, 0, 0], 1)
+        test_vectors_mat = np.array([
+            [1, 0, 0, 2],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0]
+        ])
+        is_contained_vec = Hyperplane.contains(np.array([test_hyp]), test_vectors_mat)
+        is_contained_tested_vec = [True, 0, 0, 0]
+        assert np.array_equal(is_contained_vec, is_contained_tested_vec)
+
+        test_first_hyp = self.hyperplane([1, 0], 1)
+        test_sec_hyp = self.hyperplane([1, 1], 1)
+        test_third_hyp = self.hyperplane([0, 1], 1)
+        test_hyp_mat = np.array([
+            [test_first_hyp, test_sec_hyp],
+            [test_first_hyp, test_third_hyp]
+        ])
+        test_vectors = np.array([1, 0])
+        is_contained_mat = Hyperplane.contains(test_hyp_mat, test_vectors)
+        is_contained_tested_mat = np.array([
+            [True, False],
+            [True, False]
+        ])
+        assert np.array_equal(is_contained_mat, is_contained_tested_mat)
+
+        n_elems = 24
+        test_hyp_arr = np.array([self.hyperplane([1, 1], 1) for _ in range(n_elems)])
+        test_hyp_arr = np.reshape(test_hyp_arr, newshape=(2, 3, 4))
+        test_vectors_arr = np.zeros(shape=(2, 2, 3, 4))
+        test_vectors_arr[:, 1, 2, 3] = [1, 1]
+        is_contained_arr = Hyperplane.contains(test_hyp_arr, test_vectors_arr)
+        is_contained_tested_arr = np.zeros(shape=(2, 3, 4), dtype=np.bool)
+        is_contained_tested_arr[1, 2, 3] = True
+        assert np.array_equal(is_contained_arr, is_contained_tested_arr)
+
     def __aux_read_file(self):
         method_name = get_caller_name_ext(2)[0]
         method_split = [name[0].upper() + name[1:] for name in method_name.split('_')[1:]]
