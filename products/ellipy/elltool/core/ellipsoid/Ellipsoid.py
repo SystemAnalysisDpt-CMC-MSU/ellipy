@@ -305,35 +305,36 @@ class Ellipsoid(AEllipsoid):
     @classmethod
     def is_internal(cls, ell_arr: Union[Iterable, np.ndarray],
                     mat_of_vec_mat: np.ndarray, mode: str) -> np.ndarray:
-        def is_int_single_vec(self, ell_arr, x_vec, mode: str):
-            def f_single_case(sing_ell: np.ndarray, abs_tol: np.float64):
+        def is_int_single_vec(ell_arr_in, x_vec, mode_in) -> bool:
+            def f_single_case(sing_ell: np.ndarray, abs_tol: Union[np.float64, np.ndarray]) -> bool:
                 from ellipy.gras.geom.ell.ell import inv_mat
                 is_pos = False
-                c_vec = x_vec - sing_ell.get_center_vec()
-                sh_mat = sing_ell.get_shape_mat()
+                c_vec = (x_vec - np.array([sing_ell.flat[0].get_center_vec().T])).T
+                sh_mat = sing_ell.flat[0].get_shape_mat()
 
-                if sing_ell.is_degenerate([sing_ell]).flatten()[0]:
+                if sing_ell.flat[0].is_degenerate([sing_ell]).flatten()[0]:
                     if Properties.get_is_verbose():
                         logger = get_logger()
                         logger.info('ISINTERNAL: Warning! There is degenerate ellipsoid in the array.')
                         logger.info('           Regularizing...')
-                    sh_mat = Ellipsoid._regularize(sh_mat, abs_tol)
+                    sh_mat = Ellipsoid._regularize(sh_mat, abs_tol[1])
                 r_val = np.sqrt(c_vec.T @ inv_mat(sh_mat) @ c_vec)
-                if r_val < 1 or np.abs(r_val - 1) < abs_tol:
+                if r_val < 1 or np.all(np.abs(r_val - 1) < abs_tol[1]):
                     is_pos = True
                 return is_pos
 
-            abs_tol_arr = self.get_abs_tol(ell_arr)
-            # is_pos_arr = arrayfun( @ (x, y) fSingleCase(x, y), ell_arr, abs_tol_arr);
-            is_pos_arr = self.f_single_case(ell_arr, abs_tol_arr)
-            if mode == 'u':
+            abs_tol_arr = cls.get_abs_tol(ell_arr_in)
+            is_pos_arr = np.full((n_dims_mat.size, 1), True, dtype=bool)
+            for j in range(0, n_dims_mat.size):
+                is_pos_arr[j] = f_single_case(ell_arr_in[j], abs_tol_arr)
+            if mode_in == 'u':
                 is_positive = False
                 if np.any(np.ravel(is_pos_arr)):
                     is_positive = True
             else:
                 is_positive = True
-            if not (np.all(np.ravel(is_pos_arr))):
-                is_positive = False
+                if not (np.all(np.ravel(is_pos_arr))):
+                    is_positive = False
             return is_positive
 
         cls._check_is_me(ell_arr, 'first')
@@ -355,9 +356,11 @@ class Ellipsoid(AEllipsoid):
         if not(np.all(np.ravel(n_dims_mat) == m_rows)):
             throw_error('wrongSizes', 'dimensions mismatch.')
 
-        # l_c_vec = mat2cell(mat_of_vec_mat, m_rows, np.ones(1, m_cols))
-        l_c_vec = np.reshape(mat_of_vec_mat, m_rows, m_cols)
-        is_positive_vec = is_int_single_vec(ell_arr, l_c_vec, mode)
+        l_c_vec = np.reshape(mat_of_vec_mat, (m_rows, m_cols))
+        is_positive_vec = np.full((np.size(l_c_vec, 1), 1), True, dtype=bool)
+        for i in range(0, np.size(l_c_vec, 1)):
+                is_positive_vec[i] = is_int_single_vec(ell_arr, l_c_vec[:, i], mode)
+
         return is_positive_vec
 
     @classmethod
