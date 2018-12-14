@@ -3,6 +3,7 @@ from ellipy.elltool.core.hyperplane.Hyperplane import *
 from ellipy.gen.common.common import get_caller_name_ext
 import scipy.io
 import os
+import pytest
 
 
 class TestHyperplaneTestCase:
@@ -46,11 +47,11 @@ class TestHyperplaneTestCase:
         test_hyperplanes_vec = s_inp_data['testHyperplanesVec'].flatten()
         test_hyperplanes_vec = np.array([self.hyperplane(elem[0], elem[1]) for elem in test_hyperplanes_vec])
         test_vectors_mat = s_inp_data['testVectorsMat']
-        is_contained_vec = s_inp_data['isContainedVec']
+        is_contained_vec = s_inp_data['isContainedVec'].flatten()
         is_contained_tested_vec = Hyperplane.contains(test_hyperplanes_vec, test_vectors_mat)
         assert np.array_equal(is_contained_vec, is_contained_tested_vec)
 
-        test_hyp = self.hyperplane([1, 0, 0], 1)
+        test_hyp = self.hyperplane(np.array([1, 0, 0]), [1])
         test_vectors_mat = np.array([
             [1, 0, 0, 2],
             [0, 1, 0, 0],
@@ -60,9 +61,9 @@ class TestHyperplaneTestCase:
         is_contained_tested_vec = [True, 0, 0, 0]
         assert np.array_equal(is_contained_vec, is_contained_tested_vec)
 
-        test_first_hyp = self.hyperplane([1, 0], 1)
-        test_sec_hyp = self.hyperplane([1, 1], 1)
-        test_third_hyp = self.hyperplane([0, 1], 1)
+        test_first_hyp = self.hyperplane(np.array([1, 0]), 1)
+        test_sec_hyp = self.hyperplane(np.array([1, 1]), 1)
+        test_third_hyp = self.hyperplane(np.array([0, 1]), 1)
         test_hyp_mat = np.array([
             [test_first_hyp, test_sec_hyp],
             [test_first_hyp, test_third_hyp]
@@ -70,16 +71,16 @@ class TestHyperplaneTestCase:
         test_vectors = np.array([1, 0])
         is_contained_mat = Hyperplane.contains(test_hyp_mat, test_vectors)
         is_contained_tested_mat = np.array([
-            [True, False],
+            [True, True],
             [True, False]
         ])
         assert np.array_equal(is_contained_mat, is_contained_tested_mat)
 
         n_elems = 24
-        test_hyp_arr = np.array([self.hyperplane([1, 1], 1) for _ in range(n_elems)])
+        test_hyp_arr = np.array([self.hyperplane(np.array([1, 1]), 2) for _ in range(n_elems)])
         test_hyp_arr = np.reshape(test_hyp_arr, newshape=(2, 3, 4))
         test_vectors_arr = np.zeros(shape=(2, 2, 3, 4))
-        test_vectors_arr[:, 1, 2, 3] = [1, 1]
+        test_vectors_arr[:, 1, 2, 3] = np.array([1, 1])
         is_contained_arr = Hyperplane.contains(test_hyp_arr, test_vectors_arr)
         is_contained_tested_arr = np.zeros(shape=(2, 3, 4), dtype=np.bool)
         is_contained_tested_arr[1, 2, 3] = True
@@ -158,9 +159,16 @@ class TestHyperplaneTestCase:
         nan_vec = s_inp_data['nanVector']
         inf_vec = s_inp_data['infVector']
 
-        # TO DO: run_and_check_error
-        # TO DO: run_and_check_error
-        # TO DO: run_and_check_error
+        with pytest.raises(Exception) as e:
+            # noinspection PyChecker
+            Hyperplane.contains(np.array([test_hyperplane]), nan_vec)
+            assert 'wrongInput' in str(e.value)
+            self.hyperplane(inf_vec, test_constant)
+            assert 'wrongInput' in str(e.value)
+            self.hyperplane(nan_vec, test_constant)
+            assert 'wrongInput' in str(e.value)
+
+        return self
 
     def __aux_read_file(self):
         method_name = get_caller_name_ext(2)[0]

@@ -98,64 +98,75 @@ class Hyperplane(ABasicEllipsoid):
     def contains(cls, hyp_arr: Union[Iterable, np.ndarray], x_arr: np.ndarray) -> np.ndarray:
         cls._check_is_me(hyp_arr)
 
-        # TO DO: checkvar
-        # TO DO: checkvar
+        size_x_vec_old = np.shape(x_arr)
+        x_arr = np.reshape(x_arr, newshape=(size_x_vec_old[0], np.array(np.prod(size_x_vec_old[1:]), dtype=np.int64)))
+
+        size_hyp_arr_old = np.shape(hyp_arr)
+        hyp_arr = hyp_arr.flatten()
+
+        if not is_numeric(x_arr):
+            throw_error('wrongInput', 'Second input argument must be of type double.')
+        if np.any(np.isnan(x_arr.flatten())):
+            throw_error('wrongInput', 'Second input argument is not correct')
+
         n_dim_var = cls.dimension(hyp_arr)
         max_dim = np.max(n_dim_var)
         min_dim = np.min(n_dim_var)
 
-        # TO DO: checkmultivar
+        if min_dim != max_dim:
+            throw_error('wrongSizes', 'Hyperplanes must be of the same dimension.')
+
         n_dims = max_dim
         size_x_vec = np.shape(x_arr)
+        if 1 == np.size(size_x_vec):
+            size_x_vec = (1, size_x_vec[0])
 
-        # TO DO: checkmultivar
+        if size_x_vec[0] != n_dims:
+            throw_error('wrongInput:wrongSizes', 'Vector dimension does not match the dimension of hyperplanes.')
+
         size_hyp_arr = np.shape(hyp_arr)
-        is_column = False
-        if (np.size(size_x_vec) == 2) and not (size_x_vec[1] == 1) and \
-                (np.size(size_hyp_arr) == 2) and np.any(np.equal(size_hyp_arr, 1)):
-            size_x_vec = (size_x_vec[0], 1, size_x_vec[1])
-            x_arr = np.reshape(x_arr, size_x_vec)
+        if 1 == np.size(size_hyp_arr):
+            size_hyp_arr = (1, size_hyp_arr[0])
 
-            if size_hyp_arr[1] == 1:
-                is_column = True
-                hyp_arr = hyp_arr.T
-                size_hyp_arr = np.shape(hyp_arr)
-
-        # TO DO: checkmultivar
+        if not (np.array_equal(size_x_vec[1:], size_hyp_arr) or
+                ((type(hyp_arr) == cls) and not (0 == len(x_arr))) or
+                (1 == np.size(size_x_vec[1:]))):
+            throw_error('wrongSizes', 'Array of normal vectors and array of constants has wrong sizes.')
 
         def process(other_dim_vec_loc):
-            ind_c_vec = np.array([np.ones(shape=(1, x)) for x in other_dim_vec_loc])
-            x_c_arr_loc = x_arr
-            # TO DO: mat2cell
-            return np.rollaxis(x_c_arr_loc, 1)
+            if np.array_equal(other_dim_vec_loc, (size_x_vec[1], )):
+                other_dim_vec_loc = (1, size_x_vec[1])
+            ind_c_vec = np.array(np.arange(other_dim_vec_loc[0], size_x_vec[1], other_dim_vec_loc[0]))
+
+            x_c_arr_loc = np.array(np.split(x_arr, ind_c_vec, axis=1))
+            return np.rollaxis(x_c_arr_loc, 0)
 
         def is_sing_contains(hyp, x_vec):
             hyp_norm_vec, hyp_const = cls.parameters(hyp)
             abs_tol = cls.get_abs_tol(hyp)[0].flatten()[0]
             is_pos = False
-            is_fin_vec = np.isfinite(x_vec)
-            if np.all(hyp_norm_vec[~is_fin_vec] == 0):
+            is_fin_vec = np.isfinite(x_vec).T.flatten()
+            if np.all(np.equal(hyp_norm_vec[~is_fin_vec], 0)):
                 hyp_norm_vec = hyp_norm_vec[is_fin_vec]
                 x_vec = x_vec[is_fin_vec]
                 if abs((hyp_norm_vec.T @ x_vec) - hyp_const) < abs_tol:
                     is_pos = True
             return is_pos
 
-        if (np.shape(size_x_vec)[1] == 2) and (size_x_vec[1] == 1):
-            is_pos_arr = np.array([is_sing_contains(x, x_arr) for x in hyp_arr])
-        elif type(hyp_arr) == cls:
-            other_dim_vec = size_x_vec
-            other_dim_vec[:, 0] = []
-            x_c_arr = process(other_dim_vec)
-            is_pos_arr = np.array([is_sing_contains(hyp_arr, x[0]) for x in x_c_arr])
+        if (np.shape(size_x_vec)[0] == 2) and (size_x_vec[1] == 1):
+            return np.reshape(np.array([is_sing_contains(x, x_arr) for x in hyp_arr]), size_hyp_arr_old)
         else:
             other_dim_vec = np.shape(hyp_arr)
             x_c_arr = process(other_dim_vec)
-            is_pos_arr = np.array([is_sing_contains(x, y[0]) for (x, y) in zip(hyp_arr, x_c_arr)])
-
-        if is_column:
-            is_pos_arr = is_pos_arr.T
-        return is_pos_arr
+            if type(hyp_arr) == cls:
+                is_pos_arr = np.array([is_sing_contains(hyp_arr, x) for x in x_c_arr])
+                return np.reshape(is_pos_arr, size_hyp_arr_old)
+            elif 1 == hyp_arr.size:
+                is_pos_arr = np.array([is_sing_contains(hyp_arr[0], x) for x in x_c_arr])
+                return np.reshape(is_pos_arr, size_x_vec_old[1:])
+            else:
+                is_pos_arr = np.array([is_sing_contains(x, y) for (x, y) in zip(hyp_arr, x_c_arr)])
+                return np.reshape(is_pos_arr, size_x_vec_old[1:])
 
     @classmethod
     def dimension(cls, hyp_arr: Union[Iterable, np.ndarray], return_rank=False) -> np.ndarray:
@@ -215,7 +226,11 @@ class Hyperplane(ABasicEllipsoid):
                     is_pos = True
             return is_pos
 
-        # TO DO: checkmultivar
+        if not ((np.array_equal(np.shape(first_hyp_arr), np.shape(sec_hyp_arr))) or
+                (1 == np.size(first_hyp_arr)) or
+                (1 == np.size(sec_hyp_arr))):
+            throw_error('wrongSizes', 'Sizes of hyperplane arrays do not match.')
+
         if type(first_hyp_arr) == cls:
             if type(sec_hyp_arr) == cls:
                 first_hyp_abs_tol_arr = cls.get_abs_tol(first_hyp_arr)[0].flatten()[0]

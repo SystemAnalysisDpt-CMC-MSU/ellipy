@@ -1,6 +1,7 @@
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
 from ellipy.gen.common.common import throw_error
 import pytest
+import copy
 
 
 class TestEllipsoidBasicSecondTC:
@@ -85,8 +86,9 @@ class TestEllipsoidBasicSecondTC:
         self.__operation_check_eq_func(test_ell, check_center_vec_list, 'uminus')
         #
         self.__empty_test('uminus', [0, 0, 2, 0])
+
         return self
-        
+
     @classmethod
     def __operation_check_eq_func(cls, test_ell_arr, comp_list, operation, argument=None):
         comp_list = np.array(comp_list)
