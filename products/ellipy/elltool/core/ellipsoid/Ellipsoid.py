@@ -7,7 +7,6 @@ from ellipy.gen.logging.logging import get_logger
 from ellipy.gras.geom.ell.ell import rho_mat
 from typing import Tuple, Dict, Callable, Any
 import numpy as np
-from numpy.linalg import inv
 
 
 class Ellipsoid(AEllipsoid):
@@ -66,28 +65,29 @@ class Ellipsoid(AEllipsoid):
 
     def _get_scalar_polar_internal(self, is_robust_method: bool):
         from ellipy.gras.geom.ell.ell import quad_mat
-        from ellipy.gras.geom.ell.ell import inv_mat
         self._check_if_scalar(self)
-        # self._check_if_scalar(is_robust_method)
         if type(is_robust_method) != bool:
             throw_error('wrongInput', 'wrong input')
 
         if is_robust_method:
             c_vec, sh_mat = self.double()
-            inv_sh_mat = inv(sh_mat)
+            inv_sh_mat = np.linalg.inv(sh_mat)
+            inv_sh_mat = (inv_sh_mat + inv_sh_mat.T)/2
+
             norm_const = quad_mat(sh_mat, c_vec, 0, 'inv')
-            polar_c_vec = -(inv(sh_mat) @ c_vec) / (1 - norm_const)
-            polar_sh_mat = inv_sh_mat / (1 - norm_const) + polar_c_vec * polar_c_vec.T
+            polar_c_vec = -(np.linalg.pinv(sh_mat) @ c_vec) / (1.0 - norm_const)
+            polar_sh_mat = inv_sh_mat / (1.0 - norm_const) + polar_c_vec * polar_c_vec.T
             polar_obj = Ellipsoid(polar_c_vec, polar_sh_mat)
             return polar_obj
         else:
             c_vec, sh_mat = self.double()
             is_zero_in_ell = quad_mat(sh_mat, c_vec, 0, 'invadv')
             if is_zero_in_ell < 1:
-                aux_mat = inv_mat(sh_mat - c_vec @ c_vec.T)
-                v_mat, d_mat = np.linalg.eig(aux_mat)
+                aux_mat = np.linalg.inv(sh_mat - c_vec @ c_vec.T)
+                aux_mat = (aux_mat + aux_mat.T) / 2
 
-                m_mat = v_mat @ d_mat @ v_mat.T
+                d_mat, v_mat = np.linalg.eigh(aux_mat)
+                m_mat = v_mat @ np.diag(d_mat) @ v_mat.T
                 aux_mat = 0.5 * (m_mat + m_mat.T)
                 polar_c_vec = -aux_mat @ c_vec
                 polar_sh_mat = (1 + quad_mat(aux_mat, c_vec, 0, 'plain')) * aux_mat
@@ -359,7 +359,7 @@ class Ellipsoid(AEllipsoid):
         l_c_vec = np.reshape(mat_of_vec_mat, (m_rows, m_cols))
         is_positive_vec = np.full((np.size(l_c_vec, 1), 1), True, dtype=bool)
         for i in range(0, np.size(l_c_vec, 1)):
-                is_positive_vec[i] = is_int_single_vec(ell_arr, l_c_vec[:, i], mode)
+            is_positive_vec[i] = is_int_single_vec(ell_arr, l_c_vec[:, i], mode)
 
         return is_positive_vec
 
@@ -385,17 +385,6 @@ class Ellipsoid(AEllipsoid):
             throw_error('degenerateEllipsoid', 'The resulting ellipsoid is not bounded')
         len_ell = np.size(ell_arr)
         pol_ell_arr = np.empty((1, len_ell), dtype=Ellipsoid)
-        # for i_elem in range(len_ell):
-        #     pol_ell_arr[i_elem] = ell_arr[i_elem]
-
-        # lt = tuple([1, np.size(ell_arr)])
-        # size_c_vec = np.array([[x] for x in tuple([1, np.size(ell_arr)])])
-        # pol_ell_arr = np.empty(1)
-        # for i_elem in range(size_c_vec.size):
-        #     pol_ell_arr[size_c_vec[i_elem]] = Ellipsoid(ell_arr[i_elem])
-        # # sizeCVec = num2cell(size(ellArr));
-        # # polEllArr(sizeCVec{:}) = feval(class(ellArr));
-        #
         for i_elem in range(len_ell):
             pol_ell_arr[i_elem] = cls._get_scalar_polar_internal(ell_arr[i_elem], True)
         return pol_ell_arr
