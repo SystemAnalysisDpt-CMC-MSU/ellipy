@@ -506,14 +506,16 @@ class Ellipsoid(AEllipsoid):
         size_c_vec = np.shape(ell_arr)
         if (type(ell_arr) != cls) and (0 == len(ell_arr)):
             return np.empty(shape=size_c_vec, dtype=cls)
-        elif type(ell_arr) != cls:
-            return np.array([Ellipsoid(-ell_arr[0].get_center_vec(), ell_arr[0].get_shape_mat())])
+        elif type(ell_arr) == cls:
+            return np.array([Ellipsoid(-np.array([ell_arr])[0].get_center_vec(),
+                                       np.array([ell_arr])[0].get_shape_mat())])
         else:
             out_ell_arr = []
 
             def f_single_uminus(out_ell_arr_loc, index):
-                out_ell_arr_loc.append(-ell_arr[index].get_center_vec(), ell_arr[index].get_shape_mat())
-            [f_single_uminus(out_ell_arr, i) for i in range(len(out_ell_arr))]
+                out_ell_arr_loc.append(Ellipsoid(-ell_arr[index].get_center_vec(),
+                                                 ell_arr[index].get_shape_mat()))
+            [f_single_uminus(out_ell_arr, i) for i in range(len(ell_arr))]
             if type(ell_arr) != cls:
                 out_ell_arr = np.reshape(out_ell_arr, newshape=size_c_vec)
         return out_ell_arr
