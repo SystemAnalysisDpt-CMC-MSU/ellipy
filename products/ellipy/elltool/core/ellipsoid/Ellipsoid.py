@@ -110,6 +110,10 @@ class Ellipsoid(AEllipsoid):
         abs_tol = Properties.get_abs_tol()
         _, min_ell_pts_mat = first_ell.rho(first_ell, l_mat)
         _, sub_ell_pts_mat = sec_ell.rho(sec_ell, l_mat)
+        if first_ell.dimension(first_ell) == 3:
+            is_plot_center_3d = True
+        else:
+            is_plot_center_3d = False
 
         def calc_diff(is_good: bool, ind: int) -> np.ndarray:
             if is_good:
@@ -122,14 +126,11 @@ class Ellipsoid(AEllipsoid):
                              sec_ell.get_center_vec()) < __ABS_TOL):
                 diff_bnd_mat = first_ell.get_center_vec() - sec_ell.get_center_vec()
             else:
+                nonlocal is_plot_center_3d
                 is_plot_center_3d = False
             return diff_bnd_mat
 
-        if first_ell.dimension(first_ell) == 3:
-            is_plot_center_3d = True
-        else:
-            is_plot_center_3d = False
-        diff_bound_mat = np.array([calc_diff(x,y) for x, y in zip(is_good_dir_vec, np.arange(0, l_mat.shape[1]))])
+        diff_bound_mat = np.array([calc_diff(x, y) for x, y in zip(is_good_dir_vec, np.arange(0, l_mat.shape[1]))])
         return diff_bound_mat, is_plot_center_3d
 
     @staticmethod

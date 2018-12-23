@@ -237,7 +237,7 @@ class ABasicEllipsoid(ABC):
             return np.reshape(copy_ell_arr, ell_shape_vec)
 
     @classmethod
-    def is_empty(cls, ell_arr: Union[Iterable, np.ndarray]):
+    def is_empty(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         cls._check_is_me_virtual(ell_arr)
         return cls.dimension(ell_arr) == 0
 
