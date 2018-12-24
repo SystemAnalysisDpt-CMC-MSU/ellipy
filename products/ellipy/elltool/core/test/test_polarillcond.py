@@ -1,4 +1,6 @@
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
+from scipy.linalg import hilbert as hilb
+from scipy.linalg import invhilbert as invhilb
 import numpy as np
 import pytest
 
@@ -14,49 +16,42 @@ class PolarEllipsoidTest(AEllipsoid):
 
     @classmethod
     def from_rep_mat(cls, *args, **kwargs) -> np.ndarray:
-        ell_arr = cls.from_rep_mat(*args, **kwargs)
-        return ell_arr
+        pass
 
     @classmethod
     def from_dict(cls, dict_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        ell_arr = cls.from_dict(dict_arr)
-        return ell_arr
+        pass
 
     @classmethod
     def _shape_single_internal(cls, is_mod_scal: bool, mod_mat: np.ndarray):
-        ell_obj = cls._shape_single_internal(is_mod_scal, mod_mat)
-        return ell_obj
+        pass
 
     @classmethod
     def _projection_single_internal(cls, ort_basis_mat: np.ndarray):
-        cls._projection_single_internal(ort_basis_mat)
+        pass
 
     @classmethod
     def _check_is_me_virtual(cls, ell_arr: Union[Iterable, np.ndarray], *args, **kwargs):
-        cls._check_is_me_virtual(ell_arr, *args, **kwargs)
+        pass
 
     @classmethod
     def _get_single_copy(cls):
-        copy_ell_obj = cls._get_single_copy()
-        return copy_ell_obj
+        pass
 
     @classmethod
     def _get_scalar_polar_internal(cls, is_robust_method: bool):
-        polar = cls._get_scalar_polar_internal(is_robust_method)
-        return polar
+        pass
 
     @classmethod
     def get_shape_mat(cls) -> np.ndarray:
-        shape_mat = cls.get_shape_mat()
-        return shape_mat
+        pass
 
     @classmethod
     def to_dict(cls, ell_arr: Union[Iterable, np.ndarray],
                 is_prop_included: bool = False, abs_tol: float = None) -> \
             Tuple[np.ndarray, Dict[str, str], Dict[str, str],
                   Dict[str, Callable[[np.ndarray], np.ndarray]]]:
-        s_data_arr, s_field_nice_names, s_field_descr, _ = cls.to_dict(ell_arr, is_prop_included)
-        return Tuple(s_data_arr, s_field_nice_names, s_field_descr)
+        pass
 
 
 class TestPolarIllCondTC:
@@ -74,25 +69,6 @@ class TestPolarIllCondTC:
     def test_get_scalar_polar(self):
         __K_TOL = 1e-2
         __DIM_VEC = np.array(range(2, 12))
-
-        def hilb(num: int) -> np.ndarray:
-            j = np.array([range(1, num+1)], dtype=np.float64)
-            h = 1. / (j.T + j - 1)
-            return h
-
-        def invhilb(n: int) -> np.ndarray:
-            h = np.zeros((n, n), dtype=np.float64)
-            p = n
-            for i in range(0, n):
-                r = p * p
-                h[i, i] = r / (2 * (i + 1) - 1)
-                for j in range(i + 1, n):
-                    r = -((n - (j + 1) + 1) * r * (n + (j + 1) - 1)) / (((j + 1) - 1) ** 2)
-                    h[i, j] = r / ((i + 1) + (j + 1) - 1)
-                    h[j, i] = r / ((i + 1) + (j + 1) - 1)
-                p = ((n - (i + 1)) * p * (n + (i + 1))) / ((i + 1) ** 2)
-            return h
-
         isn_overflow_vec = np.full((__DIM_VEC.size, 1), True)
         for k in range(0, __DIM_VEC.size):
             isn_overflow_vec[k] = np.min(np.linalg.eig(np.linalg.inv(hilb(__DIM_VEC[k])))[0]) > 0
@@ -108,7 +84,8 @@ class TestPolarIllCondTC:
             exp_sh_mat = invhilb(__N_DIMS)
             ell1 = self.ellipsoid(sh_mat)
             sh1_mat, sh2_mat = self.aux_get_test_polars(ell1)
-            is_robust_better_vec[i_elem] = np.linalg.norm(exp_sh_mat - sh1_mat) <= np.linalg.norm(exp_sh_mat - sh2_mat)
+            is_robust_better_vec[i_elem] = np.linalg.norm(exp_sh_mat - sh1_mat) <= \
+                np.linalg.norm(exp_sh_mat - sh2_mat)
 
             is_methods_sim_vec[i_elem] = np.linalg.norm(sh1_mat - sh2_mat) < __K_TOL
 

@@ -63,11 +63,11 @@ class Ellipsoid(AEllipsoid):
     def get_shape_mat(self) -> np.ndarray:
         return np.copy(self._shape_mat)
 
-    def _get_scalar_polar_internal(self, is_robust_method: bool):
+    def _get_scalar_polar_internal(self, is_robust_method: bool = True):
         from ellipy.gras.geom.ell.ell import quad_mat
         self._check_if_scalar(self)
-        if type(is_robust_method) != bool:
-            throw_error('wrongInput', 'wrong input')
+        if not isinstance(is_robust_method, bool):
+            throw_error('wrongInput', 'is_robust_method should be bool')
 
         if is_robust_method:
             c_vec, sh_mat = self.double()
@@ -75,9 +75,9 @@ class Ellipsoid(AEllipsoid):
             inv_sh_mat = (inv_sh_mat + inv_sh_mat.T)/2
 
             norm_const = quad_mat(sh_mat, c_vec, 0, 'inv')
-            polar_c_vec = -(np.linalg.pinv(sh_mat) @ c_vec) / (1.0 - norm_const)
+            polar_c_vec = -np.linalg.lstsq(sh_mat, c_vec, -1)[0] / (1.0 - norm_const)
             polar_sh_mat = inv_sh_mat / (1.0 - norm_const) + polar_c_vec * polar_c_vec.T
-            polar_obj = Ellipsoid(polar_c_vec, polar_sh_mat)
+            polar_obj = self.__class__(polar_c_vec, polar_sh_mat)
             return polar_obj
         else:
             c_vec, sh_mat = self.double()
@@ -86,12 +86,12 @@ class Ellipsoid(AEllipsoid):
                 aux_mat = np.linalg.inv(sh_mat - c_vec @ c_vec.T)
                 aux_mat = (aux_mat + aux_mat.T) / 2
 
-                d_mat, v_mat = np.linalg.eigh(aux_mat)
-                m_mat = v_mat @ np.diag(d_mat) @ v_mat.T
+                d_vec, v_mat = np.linalg.eigh(aux_mat)
+                m_mat = v_mat @ np.diag(d_vec) @ v_mat.T
                 aux_mat = 0.5 * (m_mat + m_mat.T)
                 polar_c_vec = -aux_mat @ c_vec
                 polar_sh_mat = (1 + quad_mat(aux_mat, c_vec, 0, 'plain')) * aux_mat
-                polar_obj = Ellipsoid(polar_c_vec, polar_sh_mat)
+                polar_obj = self.__class__(polar_c_vec, polar_sh_mat)
                 return polar_obj
             else:
                 throw_error('degenerateEllipsoid', 'The resulting ellipsoid is not bounded')
@@ -306,27 +306,27 @@ class Ellipsoid(AEllipsoid):
     def is_internal(cls, ell_arr: Union[Iterable, np.ndarray],
                     mat_of_vec_mat: np.ndarray, mode: str) -> np.ndarray:
         def is_int_single_vec(ell_arr_in, x_vec, mode_in) -> bool:
-            def f_single_case(sing_ell: np.ndarray, abs_tol: Union[np.float64, np.ndarray]) -> bool:
+            def f_single_case(sing_ell: np.ndarray, abs_tol: np.float64) -> bool:
                 from ellipy.gras.geom.ell.ell import inv_mat
                 is_pos = False
                 c_vec = (x_vec - np.array([sing_ell.flat[0].get_center_vec().T])).T
                 sh_mat = sing_ell.flat[0].get_shape_mat()
 
-                if sing_ell.flat[0].is_degenerate([sing_ell]).flatten()[0]:
+                if sing_ell.flat[0].is_degenerate([sing_ell]).flat[0]:
                     if Properties.get_is_verbose():
                         logger = get_logger()
                         logger.info('ISINTERNAL: Warning! There is degenerate ellipsoid in the array.')
                         logger.info('           Regularizing...')
-                    sh_mat = Ellipsoid._regularize(sh_mat, abs_tol[1])
+                    sh_mat = Ellipsoid._regularize(sh_mat, abs_tol)
                 r_val = np.sqrt(c_vec.T @ inv_mat(sh_mat) @ c_vec)
-                if r_val < 1 or np.all(np.abs(r_val - 1) < abs_tol[1]):
+                if r_val < 1.0 or np.all(np.abs(r_val - 1.0) < abs_tol):
                     is_pos = True
                 return is_pos
 
-            abs_tol_arr = cls.get_abs_tol(ell_arr_in)
+            abs_tol_arr = cls.get_abs_tol(ell_arr_in, f_prop_fun=None)
             is_pos_arr = np.full((n_dims_mat.size, 1), True, dtype=bool)
             for j in range(0, n_dims_mat.size):
-                is_pos_arr[j] = f_single_case(ell_arr_in[j], abs_tol_arr)
+                is_pos_arr[j] = f_single_case(ell_arr_in[j], abs_tol_arr[j])
             if mode_in == 'u':
                 is_positive = False
                 if np.any(np.ravel(is_pos_arr)):
@@ -338,22 +338,21 @@ class Ellipsoid(AEllipsoid):
             return is_positive
 
         cls._check_is_me(ell_arr, 'first')
-        if mat_of_vec_mat.dtype != np.float64:
-            throw_error('wrongInput', 'The second input argument must be a double matrix.')
+        if not is_numeric(mat_of_vec_mat):
+            throw_error('wrongInput', 'The second input argument must be a numeric matrix.')
         if ell_arr.size == 0:
             throw_error('wrongInput:emptyArray', 'Each array must be not empty.')
         if np.any(cls.is_empty(np.ravel(ell_arr))):
             throw_error('wrongInput:emptyEllipsoid', 'Array should not have empty ellipsoid.')
 
-        if type(mode) != str:
+        if not isinstance(mode, str):
             mode = 'u'
-        if not(mode == 'u' or mode == 'i'):
-            throw_error('wrongInput', 'third argument is expected to be either ''u'', or ''i''.')
+        if not (mode == 'u' or mode == 'i'):
+            throw_error('wrongInput', "third argument is expected to be either 'u', or 'i'.")
 
         n_dims_mat = cls.dimension(ell_arr)
-        m_rows = mat_of_vec_mat.shape[0]
-        m_cols = mat_of_vec_mat.shape[1]
-        if not(np.all(np.ravel(n_dims_mat) == m_rows)):
+        m_rows, m_cols = mat_of_vec_mat.shape
+        if not np.all(np.ravel(n_dims_mat) == m_rows):
             throw_error('wrongSizes', 'dimensions mismatch.')
 
         l_c_vec = np.reshape(mat_of_vec_mat, (m_rows, m_cols))
@@ -381,13 +380,12 @@ class Ellipsoid(AEllipsoid):
     @classmethod
     def polar(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         cls._check_is_me(ell_arr)
-        if np.any(cls.is_degenerate(ell_arr)):  # ell_arr.flatten()[0]):
+        if np.any(cls.is_degenerate(ell_arr)):
             throw_error('degenerateEllipsoid', 'The resulting ellipsoid is not bounded')
-        len_ell = np.size(ell_arr)
-        pol_ell_arr = np.empty((1, len_ell), dtype=Ellipsoid)
-        for i_elem in range(len_ell):
+        pol_ell_arr = np.empty((1, ell_arr.size), dtype=cls.__class__)
+        for i_elem in range(ell_arr.size):
             pol_ell_arr[i_elem] = cls._get_scalar_polar_internal(ell_arr[i_elem], True)
-        return pol_ell_arr
+        return np.reshape(pol_ell_arr, ell_arr.shape)
 
     @classmethod
     def rho(cls, ell_arr: Union[Iterable, np.ndarray], dirs_arr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
