@@ -133,7 +133,9 @@ class Hyperplane(ABasicEllipsoid):
     @classmethod
     def ne(cls, first_hyp_arr: Union[Iterable, np.ndarray],
            second_hyp_arr: Union[Iterable, np.ndarray]) -> Tuple[np.ndarray, str]:
-        pass
+        res_array = cls.eq(first_hyp_arr, second_hyp_arr)
+        first_hyp_flat_arr = np.array(first_hyp_arr)
+        return np.logical_not(np.array(res_array[0]).flatten()).reshape(first_hyp_flat_arr.shape)
 
     def __ne__(self, other):
         is_ne, _ = self.ne([self], [other])

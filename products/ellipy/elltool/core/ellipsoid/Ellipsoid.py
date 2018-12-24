@@ -154,7 +154,36 @@ class Ellipsoid(AEllipsoid):
     @classmethod
     def ge(cls, first_ell_arr: Union[Iterable, np.ndarray],
            second_ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        pass
+
+        cls._check_is_me(first_ell_arr, 'first')
+        cls._check_is_me(second_ell_arr, 'second')
+        first_ell_flat_arr = np.array(first_ell_arr).flatten()
+        second_ell_flat_arr = np.array(second_ell_arr).flatten()
+
+        if first_ell_flat_arr.size == 0:
+            throw_error('wrongInput:emptyArray', 'Each array should not be empty')
+        if second_ell_flat_arr.size == 0:
+            throw_error('wrongInput:emptyArray', 'Each array should not be empty')
+        if any(cls.is_empty(first_ell_flat_arr)):
+            throw_error('wrongInput:emptyEllipsoid', 'Each ellipsoid should not be empty')
+        if any(cls.is_empty(second_ell_flat_arr)):
+            throw_error('wrongInput:emptyEllipsoid', 'Each ellipsoid should not be empty')
+
+        is_fst_scal = first_ell_flat_arr.size == 1
+        is_sec_scal = second_ell_flat_arr.size == 1
+        if ~(is_sec_scal or is_fst_scal) and np.array(first_ell_arr).shape != np.array(second_ell_arr).shape:
+            throw_error('wrongSizes', 'sizes of ellipsoidal arrays do not match.')
+
+        if not (is_sec_scal or is_fst_scal):
+            res_array = np.array(list(map(lambda x, y: x.is_bigger(y), first_ell_flat_arr,
+                                          second_ell_flat_arr))).flatten()
+            return res_array.reshape(np.array(first_ell_arr).shape)
+        elif is_sec_scal:
+            res_array = np.array(list(map(lambda x: x.is_bigger(second_ell_flat_arr[0]), first_ell_flat_arr))).flatten()
+            return res_array.reshape(np.array(first_ell_arr).shape)
+        else:
+            res_array = np.array(list(map(lambda x: first_ell_flat_arr[0].is_bigger(x), second_ell_flat_arr))).flatten()
+            return res_array.reshape(np.array(second_ell_arr).shape)
 
     def __ge__(self, other):
         return self.ge([self], [other]).flatten()[0]
@@ -162,7 +191,7 @@ class Ellipsoid(AEllipsoid):
     @classmethod
     def gt(cls, first_ell_arr: Union[Iterable, np.ndarray],
            second_ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        pass
+        return cls.ge([first_ell_arr], [second_ell_arr]).flatten()[0]
 
     def __gt__(self, other):
         return self.gt([self], [other]).flatten()[0]
@@ -170,7 +199,7 @@ class Ellipsoid(AEllipsoid):
     @classmethod
     def le(cls, first_ell_arr: Union[Iterable, np.ndarray],
            second_ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        pass
+        return cls.ge([second_ell_arr], [first_ell_arr]).flatten()[0]
 
     def __le__(self, other):
         return self.le([self], [other]).flatten()[0]
@@ -178,7 +207,7 @@ class Ellipsoid(AEllipsoid):
     @classmethod
     def lt(cls, first_ell_arr: Union[Iterable, np.ndarray],
            second_ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        pass
+        return cls.ge([second_ell_arr], [first_ell_arr]).flatten()[0]
 
     def __lt__(self, other):
         return self.lt([self], [other]).flatten()[0]
@@ -186,7 +215,9 @@ class Ellipsoid(AEllipsoid):
     @classmethod
     def ne(cls, first_ell_arr: Union[Iterable, np.ndarray],
            second_ell_arr: Union[Iterable, np.ndarray]) -> Tuple[np.ndarray, str]:
-        pass
+        res_array = cls.eq(first_ell_arr, second_ell_arr)
+        first_ell_flat_arr = np.array(first_ell_arr)
+        return np.logical_not(np.array(res_array[0]).flatten()).reshape(first_ell_flat_arr.shape)
 
     def __ne__(self, other):
         is_ne, _ = self.ne([self], [other])
