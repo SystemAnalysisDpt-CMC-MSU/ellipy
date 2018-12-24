@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from typing import Union, Tuple, Dict, Iterable
 import numpy as np
 from numpy import matlib as ml
-import math
 
 
 class AEllipsoid(ABasicEllipsoid, ABC):
@@ -145,10 +144,10 @@ class AEllipsoid(ABasicEllipsoid, ABC):
                 n_dim = cls.dimension(ell_obj)
                 if np.remainder(n_dim, 2):
                     k = (n_dim - 1)*0.5
-                    s = ((2 ** (2 * k + 1)) * (math.pi ** k) * math.factorial(k))/math.factorial(2 * k + 1)
+                    s = ((2 ** (2 * k + 1)) * (np.pi ** k) * np.math.factorial(k))/np.math.factorial(2 * k + 1)
                 else:
                     k = n_dim * 0.5
-                    s = (math.pi ** k)/math.factorial(k)
+                    s = (np.pi ** k)/np.math.factorial(k)
                 return s * np.sqrt(np.linalg.det(q_mat))
 
         return np.array([f_single_volume(ell_obj) for ell_obj in ell_arr_flatten])

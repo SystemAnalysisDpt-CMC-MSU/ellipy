@@ -225,20 +225,20 @@ class TestEllipsoidTestCase:
         # Check dim=2 with two different centers
         test_ellipsoid_1 = np.array([self.ellipsoid(np.array([[1], [-1]]), np.eye(2, 2))])
         test_ellipsoid_2 = np.array([self.ellipsoid(np.eye(2, 2))])
-        is_test_res = ((test_ellipsoid_1.flat[0].volume(test_ellipsoid_1) - math.pi) <= __ABS_TOL) and \
-                      ((test_ellipsoid_2.flat[0].volume(test_ellipsoid_2) - math.pi) <= __ABS_TOL)
+        is_test_res = ((test_ellipsoid_1.flat[0].volume(test_ellipsoid_1) - np.pi) <= __ABS_TOL) and \
+                      ((test_ellipsoid_2.flat[0].volume(test_ellipsoid_2) - np.pi) <= __ABS_TOL)
         assert np.array_equal(is_test_res, np.array([True]))
         # Check dim=3 with not diagonal matrix
         test_ellipsoid = np.array([self.ellipsoid(np.array([[1, 1, -1], [1, 4, -3], [-1, -3, 9]]))])
-        is_test_res = ((test_ellipsoid.flat[0].volume(test_ellipsoid) - (8 * np.sqrt(5) * math.pi / 3)) <= __ABS_TOL)
+        is_test_res = ((test_ellipsoid.flat[0].volume(test_ellipsoid) - (8 * np.sqrt(5) * np.pi / 3)) <= __ABS_TOL)
         assert np.array_equal(is_test_res, np.array([True]))
         # Check dim=5
         test_ellipsoid = np.array([self.ellipsoid(4 * np.ones((5, 1)), np.eye(5, 5))])
-        is_test_res = ((test_ellipsoid.flat[0].volume(test_ellipsoid) - (8 * math.pi ** 2 / 15)) <= __ABS_TOL)
+        is_test_res = ((test_ellipsoid.flat[0].volume(test_ellipsoid) - (8 * np.pi ** 2 / 15)) <= __ABS_TOL)
         assert np.array_equal(is_test_res, np.array([True]))
         # Check dim=6
         test_ellipsoid = np.array([self.ellipsoid(-np.ones((6, 1)), np.diag(np.array([1, 4, 9, 16, 1, 25])))])
-        is_test_res = ((test_ellipsoid.flat[0].volume(test_ellipsoid) - (20 * math.pi ** 3)) <= __ABS_TOL)
+        is_test_res = ((test_ellipsoid.flat[0].volume(test_ellipsoid) - (20 * np.pi ** 3)) <= __ABS_TOL)
         assert np.array_equal(is_test_res, np.array([True]))
         # High-dimensional self.ellipsoids
         test_ell_mat = np.array([[self.ellipsoid(np.linspace(0.1, 2, 20).T, np.diag(np.linspace(0.01, 0.2, 20))),
@@ -248,14 +248,14 @@ class TestEllipsoidTestCase:
                                  [self.ellipsoid(np.diag(np.linspace(0.1, 10, 100))),
                                   self.ellipsoid(np.diag(np.linspace(0.0, 0.01, 101)))]])
         test_vol_mat = test_ell_mat.flat[0].volume(test_ell_mat)
-        test_right_vol_mat = np.array([[(math.pi**6) * np.sqrt(np.prod(np.linspace(0.01, 0.2, 20)) /
-                                                               np.prod(np.arange(1, 7))),
-                                        (math.pi**6) * (2**7) * np.sqrt(np.prod(np.linspace(0.1, 1.3, 13))) /
+        test_right_vol_mat = np.array([[(np.pi**6) * np.sqrt(np.prod(np.linspace(0.01, 0.2, 20)) /
+                                                             np.prod(np.arange(1, 7))),
+                                        (np.pi**6) * (2**7) * np.sqrt(np.prod(np.linspace(0.1, 1.3, 13))) /
                                         np.prod(np.linspace(1, 13, 7))],
                                        [0.0,
-                                        (math.pi ** 10) * (2 ** 11) * np.sqrt(np.prod(np.linspace(1.0, 21.0, 21))) /
+                                        (np.pi ** 10) * (2 ** 11) * np.sqrt(np.prod(np.linspace(1.0, 21.0, 21))) /
                                         np.prod(np.linspace(1, 21, 11))],
-                                       [(math.pi ** 50) * np.sqrt(np.prod(np.linspace(0.1, 10, 10))) /
+                                       [(np.pi ** 50) * np.sqrt(np.prod(np.linspace(0.1, 10, 10))) /
                                         np.prod(np.linspace(1.0, 50.0, 50)),
                                         0.0]])
         is_test_eq_mat = (test_vol_mat - test_right_vol_mat.flatten()) <= __ABS_TOL

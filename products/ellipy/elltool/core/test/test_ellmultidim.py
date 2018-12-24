@@ -214,7 +214,7 @@ def create_typical_array(ell_factory_obj: TestEllTCMultiDim, flag):
         test_ell_array = create_object_array(array_size_vec, ell_factory_obj.ellipsoid,
                                              np.eye(5, 5), np.array([1]), 1).flatten()
         ans_num_array = create_object_array(array_size_vec, np.diag, np.array([5]), np.array([1]), 1).flatten()
-        volume_double = 8 * (math.pi**2)/15
+        volume_double = 8 * (np.pi**2)/15
         ans_volume_double_array = create_object_array(array_size_vec, np.diag,
                                                       np.array([volume_double]), np.array([1]), 1).flatten()
         return test_ell_array, ans_num_array, ans_volume_double_array
