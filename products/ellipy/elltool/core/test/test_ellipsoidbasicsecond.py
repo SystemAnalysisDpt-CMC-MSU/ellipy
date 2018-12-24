@@ -148,7 +148,7 @@ class TestEllipsoidBasicSecondTC:
         else:
             cls.__operation_check_eq_func(test_ell_arr, check_center_vec_list, method_name, argument)
 
- def test_projection(self):
+    def test_projection(self):
         project_mat = np.array([[1, 0], [0, 1], [0, 0]])
         cent_vec = np.array([[-2], [-1], [4]])
         shape_mat = np.array([[4, -1, 0], [-1, 1, 0], [0, 0, 9]])
