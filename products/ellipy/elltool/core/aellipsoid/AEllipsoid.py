@@ -138,8 +138,8 @@ class AEllipsoid(ABasicEllipsoid, ABC):
         if np.any(cls.is_empty(ell_arr_flatten)):
             throw_error('wrongInput:emptyEllipsoid', 'input argument contains empty ellipsoid')
 
-        def __f_single_volume(ell_obj) -> np.ndarray:
-            if AEllipsoid.is_degenerate(ell_obj):
+        def f_single_volume(ell_obj) -> np.ndarray:
+            if cls.is_degenerate(ell_obj):
                 return np.array([0.0])
             else:
                 q_mat = ell_obj.get_shape_mat()
@@ -150,9 +150,9 @@ class AEllipsoid(ABasicEllipsoid, ABC):
                 else:
                     k = n_dim * 0.5
                     s = (math.pi ** k)/math.factorial(k)
-                return s * sqrt_pos(np.linalg.det(q_mat))
+                return s * np.sqrt(np.linalg.det(q_mat))
 
-        return np.array([__f_single_volume(ell_obj) for ell_obj in list(ell_arr_flatten)])
+        return np.array([f_single_volume(ell_obj) for ell_obj in ell_arr_flatten])
 
     @classmethod
     def dimension(cls, ell_arr: Union[Iterable, np.ndarray], return_rank=False) -> \
@@ -182,7 +182,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
         if np.any(cls.is_empty(ell_arr_flatten)):
             throw_error('wrongInput:emptyEllipsoid', 'input argument contains empty ellipsoid')
 
-        def __get_single_min_eig(ell_obj) -> np.ndarray:
+        def get_single_min_eig(ell_obj) -> np.ndarray:
             shape_mat = ell_obj.get_shape_mat()
             if np.min(shape_mat.flatten()) == np.inf:
                 return np.inf
@@ -191,7 +191,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
             else:
                 return np.min(np.linalg.eigvalsh(shape_mat))
 
-        return np.array([__get_single_min_eig(ell_obj) for ell_obj in list(ell_arr_flatten)])
+        return np.array([get_single_min_eig(ell_obj) for ell_obj in ell_arr_flatten])
 
     @classmethod
     def max_eig(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
@@ -200,7 +200,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
         if np.any(cls.is_empty(ell_arr_flatten)):
             throw_error('wrongInput:emptyEllipsoid', 'input argument contains empty ellipsoid')
 
-        def __get_single_max_eig(ell_obj) -> np.ndarray:
+        def get_single_max_eig(ell_obj) -> np.ndarray:
             shape_mat = ell_obj.get_shape_mat()
             if np.max(shape_mat.flatten()) == np.inf:
                 return np.inf
@@ -209,7 +209,7 @@ class AEllipsoid(ABasicEllipsoid, ABC):
             else:
                 return np.max(np.linalg.eigvalsh(shape_mat))
 
-        return np.array([__get_single_max_eig(ell_obj) for ell_obj in list(ell_arr_flatten)])
+        return np.array([get_single_max_eig(ell_obj) for ell_obj in ell_arr_flatten])
 
     @classmethod
     def plus(cls, *args) -> np.ndarray:
@@ -237,4 +237,4 @@ class AEllipsoid(ABasicEllipsoid, ABC):
         ell_arr_flatten = np.array(ell_arr).flatten()
         if np.any(cls.is_empty(ell_arr_flatten)):
             throw_error('wrongInput:emptyEllipsoid', 'input argument contains empty ellipsoid')
-        return np.array([np.trace(ell_obj.get_shape_mat()) for ell_obj in list(ell_arr_flatten)])
+        return np.array([np.trace(ell_obj.get_shape_mat()) for ell_obj in ell_arr_flatten])

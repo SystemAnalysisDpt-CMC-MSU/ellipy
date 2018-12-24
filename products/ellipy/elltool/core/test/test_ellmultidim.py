@@ -25,145 +25,171 @@ class TestEllTCMultiDim:
         check_maxeig_ans_mineig(False)
 
     def test_trace(self):
-        def __test_correct(flag):
+        def test_correct(flag):
             if (flag == 2) or (flag == 6) or (flag == 16):
                 test_ell_array, ans_num_array, *_ = create_typical_array(self, flag)
             else:
                 test_ell_array, *_, ans_num_array = create_typical_array(self, flag)
-            test_num_array = AEllipsoid.trace(test_ell_array)
+            if test_ell_array.size > 0:
+                test_num_array = test_ell_array.flat[0].trace(test_ell_array)
+            else:
+                test_num_array = AEllipsoid.trace(test_ell_array)
             assert np.array_equal(ans_num_array, test_num_array)
             return ans_num_array, test_num_array
 
-        def __test_error(flag):
+        def test_error(flag):
             test_ell_array, _, error_str, *_ = create_typical_array(self, flag)
             if flag == 1:
                 with pytest.raises(Exception) as e:
-                    AEllipsoid.trace(test_ell_array)
+                    if test_ell_array.size > 0:
+                        test_ell_array.flat[0].trace(test_ell_array)
+                    else:
+                        AEllipsoid.trace(test_ell_array)
                 assert 'wrongInput:emptyEllipsoid' in str(e.value)
             else:
                 with pytest.raises(Exception) as e:
-                    AEllipsoid.trace(test_ell_array)
+                    if test_ell_array.size > 0:
+                        test_ell_array.flat[0].trace(test_ell_array)
+                    else:
+                        AEllipsoid.trace(test_ell_array)
                 assert error_str in str(e.value)
 
-        __test_correct(6)
-        __test_correct(2)
-        __test_correct(7)
-        __test_correct(8)
-        __ans_num_array_res, __test_num_array_res = __test_correct(16)
-        assert type(__ans_num_array_res) == type(__test_num_array_res)
+        test_correct(6)
+        test_correct(2)
+        test_correct(7)
+        test_correct(8)
+        ans_num_array_res, test_num_array_res = test_correct(16)
+        assert type(ans_num_array_res) == type(test_num_array_res)
 
-        __test_error(1)
-        __test_error(14)
-        __test_error(15)
+        test_error(1)
+        test_error(14)
+        test_error(15)
 
     def test_volume(self):
-        def __test_correct(flag):
+        def test_correct(flag):
             if flag == 16:
-                test_ell_array, ans_double_array, *_ = create_typical_array(self, flag)
+                test_ell_array, out_ans_double_array, *_ = create_typical_array(self, flag)
             elif flag == 2:
-                test_ell_array, _, ans_double_array, _ = create_typical_array(self, flag)
+                test_ell_array, _, out_ans_double_array, _ = create_typical_array(self, flag)
             elif flag == 3:
-                test_ell_array, _, ans_double_array = create_typical_array(self, flag)
+                test_ell_array, _, out_ans_double_array = create_typical_array(self, flag)
             else:
-                test_ell_array, *_, ans_double_array = create_typical_array(self, flag)
-            test_double_array = AEllipsoid.volume(test_ell_array)
-            assert np.array_equal(ans_double_array, test_double_array.flatten())
-            return ans_double_array, test_double_array
+                test_ell_array, *_, out_ans_double_array = create_typical_array(self, flag)
+            if test_ell_array.size > 0:
+                out_test_double_array = test_ell_array.flat[0].volume(test_ell_array)
+            else:
+                out_test_double_array = AEllipsoid.volume(test_ell_array)
+            assert np.array_equal(out_ans_double_array, out_test_double_array.flatten())
+            return out_ans_double_array, out_test_double_array
 
-        def __test_error(flag):
+        def test_error(flag):
             test_ell_array, _, error_str, *_ = create_typical_array(self, flag)
             if flag == 1:
                 with pytest.raises(Exception) as e:
-                    AEllipsoid.volume(test_ell_array)
+                    if test_ell_array.size > 0:
+                        test_ell_array.flat[0].volume(test_ell_array)
+                    else:
+                        AEllipsoid.volume(test_ell_array)
                 assert 'wrongInput:emptyEllipsoid' in str(e.value)
             else:
                 with pytest.raises(Exception) as e:
-                    AEllipsoid.volume(test_ell_array)
+                    if test_ell_array.size > 0:
+                        test_ell_array.flat[0].volume(test_ell_array)
+                    else:
+                        AEllipsoid.volume(test_ell_array)
                 assert error_str in str(e.value)
 
         # Check degenerate self.ellipsoid
-        __test_correct(4)
+        test_correct(4)
         # Check dim = 1 with two different centers
-        __test_correct(2)
-        __test_correct(3)
-        __ans_double_array, __test_double_array = __test_correct(16)
-        assert type(__ans_double_array) == type(__test_double_array)
+        test_correct(2)
+        test_correct(3)
+        ans_double_array, test_double_array = test_correct(16)
+        assert type(ans_double_array) == type(test_double_array)
         # Empty self.ellipsoid
-        __test_error(1)
-        __test_error(14)
-        __test_error(15)
+        test_error(1)
+        test_error(14)
+        test_error(15)
 
     def test_is_degenerate(self):
-        def __test_correct(test_ell_array, is_ans_array):
-            is_test_res = AEllipsoid.is_degenerate(test_ell_array)
-            assert np.array_equal(is_ans_array, is_test_res)
+        def test_correct(inp_test_ell_array, inp_is_ans_array):
+            if inp_test_ell_array.size > 0:
+                out_is_test_res = inp_test_ell_array.flat[0].is_degenerate(inp_test_ell_array)
+            else:
+                out_is_test_res = AEllipsoid.is_degenerate(inp_test_ell_array)
+            assert np.array_equal(inp_is_ans_array, out_is_test_res)
 
-            return is_test_res
+            return out_is_test_res
 
-        def __test_error(flag):
+        def test_error(flag):
             test_ell_array_res, *_, error_str = self.__create_typical_array(flag)
+            test_ell_array_res = np.array(test_ell_array_res)
             if flag == 1:
                 with pytest.raises(Exception) as e:
-                    AEllipsoid.is_degenerate(test_ell_array_res[0])
+                    test_ell_array_res.flat[0].is_degenerate(test_ell_array_res[0])
                 assert 'wrongInput:emptyEllipsoid' in str(e.value)
             else:
                 with pytest.raises(Exception) as e:
-                    AEllipsoid.is_degenerate(np.array([test_ell_array_res]))
+                    test_ell_array_res.flat[0].is_degenerate(np.array([test_ell_array_res]))
                 assert error_str[0] in str(e.value)
 
         # Not degerate self.ellipsoid
-        __test_ell_array, __is_ans_array = self.__create_typical_array(5)
-        __test_correct(__test_ell_array, __is_ans_array)
+        test_ell_array, is_ans_array = self.__create_typical_array(5)
+        test_correct(np.array(test_ell_array), np.array(is_ans_array))
         # Degenerate self.ellipsoid
-        __array_size_vec = np.array([2, 1, 1, 1, 3, 1, 1])
-        __test_ell_array = create_object_array(__array_size_vec, self.ellipsoid, np.diag(np.array([1, 2, 3, 4, 0])),
-                                               np.array([[1]]), 1)
-        __is_ans_array = create_object_array(__array_size_vec, np.ones, np.array([1]), np.array([1]), 1)
-        __is_test_res = __test_correct(__test_ell_array, __is_ans_array)
-        __array_size_vec = np.array([1, 1, 2, 3, 1, 2, 1])
-        __diag = np.zeros((100, 100))
-        np.fill_diagonal(__diag[50:100, 50:100], 1)
-        __test_ell_array = create_object_array(__array_size_vec, self.ellipsoid, __diag, np.array([1]), 1)
-        __is_ans_array = create_object_array(__array_size_vec, np.ones, np.array([1]), np.array([1]), 1)
-        __is_test_res = __test_correct(__test_ell_array, __is_ans_array)
-        assert type(__is_ans_array) == type(__is_test_res)
-        __test_ell_array, _, __is_ans_array = create_typical_array(TestEllTCMultiDim(), 16)
-        __is_test_res = __test_correct(__test_ell_array, __is_ans_array)
-        assert type(__is_ans_array) == type(__is_test_res)
+        array_size_vec = np.array([2, 1, 1, 1, 3, 1, 1])
+        test_ell_array = create_object_array(array_size_vec, self.ellipsoid,
+                                             np.diag(np.array([1, 2, 3, 4, 0])),
+                                             np.array([[1]]), 1)
+        is_ans_array = create_object_array(array_size_vec, np.ones, np.array([1]), np.array([1]), 1)
+        test_correct(test_ell_array, is_ans_array)
+        array_size_vec = np.array([1, 1, 2, 3, 1, 2, 1])
+        diag_mat = np.zeros((100, 100))
+        np.fill_diagonal(diag_mat[50:100, 50:100], 1)
+        test_ell_array = create_object_array(array_size_vec, self.ellipsoid, diag_mat, np.array([1]), 1)
+        is_ans_array = create_object_array(array_size_vec, np.ones, np.array([1]), np.array([1]), 1)
+        is_test_res = test_correct(test_ell_array, is_ans_array)
+        assert type(is_ans_array) == type(is_test_res)
+        test_ell_array, _, is_ans_array = create_typical_array(TestEllTCMultiDim(), 16)
+        is_test_res = test_correct(test_ell_array, is_ans_array)
+        assert type(is_ans_array) == type(is_test_res)
         # Empty self.ellipsoid
-        __test_error(1)
-        __test_error(14)
-        __test_error(15)
+        test_error(1)
+        test_error(14)
+        test_error(15)
 
     @classmethod
     def __create_typical_array(cls, *args):
         return zip(*[create_typical_array(TestEllTCMultiDim(), x) for x in args])
 
     def test_is_empty(self):
-        def __test_correct(test_ell_array, is_ans_array):
-            is_test_res = AEllipsoid.is_empty(test_ell_array).flatten()
-            assert np.array_equal(is_test_res, is_ans_array)
-            return is_test_res
+        def test_correct(inp_test_ell_array, inp_is_ans_array):
+            if inp_test_ell_array.size > 0:
+                out_is_test_res = inp_test_ell_array.flat[0].is_empty(inp_test_ell_array).flatten()
+            else:
+                out_is_test_res = AEllipsoid.is_empty(inp_test_ell_array).flatten()
+            assert np.array_equal(out_is_test_res, inp_is_ans_array)
+            return out_is_test_res
 
-        __array_size_vec = np.array([2, 1, 1, 1, 1, 3, 1, 1])
-        __test_ell_array = create_object_array(__array_size_vec, self.ellipsoid, 1, 1, 0).flatten()
-        __is_ans_array = create_object_array(__array_size_vec, np.ones, np.array([1]), np.array([1]), 1).flatten()
-        __test_correct(__test_ell_array, __is_ans_array)
+        array_size_vec = np.array([2, 1, 1, 1, 1, 3, 1, 1])
+        test_ell_array = create_object_array(array_size_vec, self.ellipsoid, 1, 1, 0).flatten()
+        is_ans_array = create_object_array(array_size_vec, np.ones, np.array([1]), np.array([1]), 1).flatten()
+        test_correct(test_ell_array, is_ans_array)
 
         # Check not empty self.ellipsoid
-        __test_ell_array, __is_ans_array = create_typical_array(self, 5)
-        __test_correct(__test_ell_array, __is_ans_array)
+        test_ell_array, is_ans_array = create_typical_array(self, 5)
+        test_correct(test_ell_array, is_ans_array)
 
-        __array_size_vec = np.array([1, 1, 1, 1, 1, 4, 1, 1, 3])
-        __diag = np.zeros((100, 100))
-        np.fill_diagonal(__diag[50:100, 50:100], 1)
-        __test_ell_array = create_object_array(__array_size_vec, self.ellipsoid, __diag, np.array([1]), 1)
-        __is_ans_array = create_object_array(__array_size_vec, np.zeros, np.array([1]), np.array([1]), 1).flatten()
-        __test_correct(__test_ell_array, __is_ans_array)
+        array_size_vec = np.array([1, 1, 1, 1, 1, 4, 1, 1, 3])
+        diag_mat = np.zeros((100, 100))
+        np.fill_diagonal(diag_mat[50:100, 50:100], 1)
+        test_ell_array = create_object_array(array_size_vec, self.ellipsoid, diag_mat, np.array([1]), 1)
+        is_ans_array = create_object_array(array_size_vec, np.zeros, np.array([1]), np.array([1]), 1).flatten()
+        test_correct(test_ell_array, is_ans_array)
 
-        __test_ell_array, *_, __is_ans_array = create_typical_array(self, 16)
-        __is_test_res = __test_correct(__test_ell_array, __is_ans_array)
-        assert type(__is_ans_array) == type(__is_test_res)
+        test_ell_array, *_, is_ans_array = create_typical_array(self, 16)
+        is_test_res = test_correct(test_ell_array, is_ans_array)
+        assert type(is_ans_array) == type(is_test_res)
 
 
 def create_typical_array(ell_factory_obj: TestEllTCMultiDim, flag):
@@ -300,20 +326,20 @@ def create_typical_array(ell_factory_obj: TestEllTCMultiDim, flag):
 
 
 def create_object_array(array_size_vec, func, first_arg, second_arg, n_arg) -> np.ndarray:
-    n_elems = np.prod(array_size_vec)
+    n_elems = np.prod(array_size_vec).flat[0]
     object_c_array = []
     if type(first_arg) == int:
         if n_arg == 0:
-            object_c_array = [func() for i_elem in range(np.int64(n_elems))]
+            object_c_array = [func() for _ in range(n_elems)]
         elif n_arg == 1:
-            object_c_array = [func(first_arg) for i_elem in range(np.int64(n_elems))]
+            object_c_array = [func(first_arg) for _ in range(n_elems)]
         elif n_arg == 2:
-            object_c_array = [[func(first_arg), func(second_arg)] for i_elem in range(np.int64(n_elems))]
+            object_c_array = [[func(first_arg), func(second_arg)] for _ in range(n_elems)]
     else:
         m = first_arg.shape
         n = second_arg.shape
         if n_arg == 0:
-            object_c_array = [func() for i_elem in range(np.int64(n_elems))]
+            object_c_array = [func() for _ in range(n_elems)]
         elif n_arg == 1:
             first_arg_c_array = np.tile(first_arg.flatten(), (n_elems, 1))
             object_c_array = [func(np.reshape(x, m)) for x in first_arg_c_array]
@@ -326,49 +352,64 @@ def create_object_array(array_size_vec, func, first_arg, second_arg, n_arg) -> n
 
 
 def check_maxeig_ans_mineig(is_maxeig_check):
-    def __test_correct(flag):
+    def test_correct(flag):
         if is_maxeig_check:
-            test_ell_array, ans_num_array, *_ = create_typical_array(TestEllTCMultiDim(), flag)
-            test_num_array = AEllipsoid.max_eig(test_ell_array)
+            test_ell_array, out_ans_num_array, *_ = create_typical_array(TestEllTCMultiDim(), flag)
+            if test_ell_array.size > 0:
+                out_test_num_array = test_ell_array.flat[0].max_eig(test_ell_array)
+            else:
+                out_test_num_array = AEllipsoid.max_eig(test_ell_array)
         else:
             if (flag == 2) or (flag == 6) or (flag == 16):
-                test_ell_array, ans_num_array, *_ = create_typical_array(TestEllTCMultiDim(), flag)
+                test_ell_array, out_ans_num_array, *_ = create_typical_array(TestEllTCMultiDim(), flag)
             else:
-                test_ell_array, _, ans_num_array, *_ = create_typical_array(TestEllTCMultiDim(), flag)
-            test_num_array = AEllipsoid.min_eig(test_ell_array)
-        assert np.array_equal(ans_num_array, test_num_array)
-        return ans_num_array, test_num_array
+                test_ell_array, _, out_ans_num_array, *_ = create_typical_array(TestEllTCMultiDim(), flag)
+            if test_ell_array.size > 0:
+                out_test_num_array = test_ell_array.flat[0].min_eig(test_ell_array)
+            else:
+                out_test_num_array = AEllipsoid.min_eig(test_ell_array)
+        assert np.array_equal(out_ans_num_array, out_test_num_array)
+        return out_ans_num_array, out_test_num_array
 
-    def __test_error(flag):
+    def test_error(flag):
         test_ell_array, _, error_str, *_ = create_typical_array(TestEllTCMultiDim(), flag)
         if is_maxeig_check:
             if flag == 1:
                 with pytest.raises(Exception) as e:
-                    [AEllipsoid.max_eig(x) for x in test_ell_array]
+                    [x.max_eig(x) for x in test_ell_array.flatten()]
                 assert 'wrongInput:emptyEllipsoid' in str(e.value)
             else:
                 with pytest.raises(Exception) as e:
-                    AEllipsoid.max_eig(test_ell_array)  # TestEllTCMultiDim.ellipsoid())
+                    if test_ell_array.size > 0:
+                        test_ell_array.flat[0].max_eig(test_ell_array)  # TestEllTCMultiDim.ellipsoid())
+                    else:
+                        AEllipsoid.max_eig(test_ell_array)  # TestEllTCMultiDim.ellipsoid())
                 assert error_str in str(e.value)
         else:
             if flag == 1:
                 with pytest.raises(Exception) as e:
-                    AEllipsoid.min_eig(test_ell_array)
+                    if test_ell_array.size > 0:
+                        test_ell_array.flat[0].min_eig(test_ell_array)
+                    else:
+                        AEllipsoid.min_eig(test_ell_array)
                 assert 'wrongInput:emptyEllipsoid' in str(e.value)
             else:
                 with pytest.raises(Exception) as e:
-                    AEllipsoid.min_eig(test_ell_array)
+                    if test_ell_array.size > 0:
+                        test_ell_array.flat[0].min_eig(test_ell_array)
+                    else:
+                        AEllipsoid.min_eig(test_ell_array)
                 assert error_str in str(e.value)
 
     # Check degenerate matrix
 
-    __test_correct(6)
-    __test_correct(2)
-    __test_correct(7)
-    __test_correct(8)
-    __ans_num_array, _test_num_array = __test_correct(16)
-    assert type(_test_num_array) == type(__ans_num_array)
+    test_correct(6)
+    test_correct(2)
+    test_correct(7)
+    test_correct(8)
+    ans_num_array, test_num_array = test_correct(16)
+    assert type(test_num_array) == type(ans_num_array)
 
-    __test_error(14)
-    __test_error(1)
-    __test_error(15)
+    test_error(1)
+    test_error(14)
+    test_error(15)
