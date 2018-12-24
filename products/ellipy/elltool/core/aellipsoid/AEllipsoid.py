@@ -1,6 +1,5 @@
 from ellipy.elltool.core.abasicellipsoid.ABasicEllipsoid import *
 from ellipy.gras.la.la import is_mat_pos_def
-from ellipy.gras.gen.gen import sqrt_pos
 from abc import ABC, abstractmethod
 from typing import Union, Tuple, Dict, Iterable
 import numpy as np
