@@ -99,17 +99,9 @@ class TestEllipsoidBasicSecondTC:
         if ~is_obj_modif_method:
             test_copy_ell_arr = copy.deepcopy(test_ell_arr)
         if argument is None:
-            try:
-                test_ell_res_arr = np.array([eval('elem.{1}(elem)'.format(str(i), operation))
-                                             for (i, elem) in enumerate(test_ell_arr.flatten())])
-            except TypeError:
-                test_ell_res_arr = eval('elem.{}(test_ell_arr)'.format(operation))
+            test_ell_res_arr = getattr(Ellipsoid, operation)(test_ell_arr.flatten())
         else:
-            try:
-                test_ell_res_arr = np.array([eval('elem.{1}(elem, {2})'.format(str(i), operation, argument))
-                                             for (i, elem) in enumerate(test_ell_arr.flatten())])
-            except TypeError:
-                test_ell_res_arr = eval('elem.{}(test_ell_arr, {})'.format(operation, argument))
+            test_ell_res_arr = getattr(Ellipsoid, operation)(test_ell_arr.flatten(), argument)
         cls.__check_res(test_ell_res_arr, comp_list, operation)
         if is_obj_modif_method:
             # test for methods which modify the input array

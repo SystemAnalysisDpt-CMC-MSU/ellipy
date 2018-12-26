@@ -503,22 +503,18 @@ class Ellipsoid(AEllipsoid):
     @classmethod
     def uminus(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         cls._check_is_me(ell_arr)
-        size_c_vec = np.shape(ell_arr)
-        if (type(ell_arr) != cls) and (0 == len(ell_arr)):
-            return np.empty(shape=size_c_vec, dtype=cls)
-        elif type(ell_arr) == cls:
-            return np.array([Ellipsoid(-np.array([ell_arr])[0].get_center_vec(),
-                                       np.array([ell_arr])[0].get_shape_mat())])
+        ell_arr = np.array(ell_arr)
+        size_vec = np.shape(ell_arr)
+        if 0 == ell_arr.size:
+            return np.empty(shape=size_vec, dtype=cls.__class__)
         else:
-            out_ell_arr = []
+            ell_flat_arr = ell_arr.flatten()
 
-            def f_single_uminus(out_ell_arr_loc, index):
-                out_ell_arr_loc.append(Ellipsoid(-ell_arr[index].get_center_vec(),
-                                                 ell_arr[index].get_shape_mat()))
-            [f_single_uminus(out_ell_arr, i) for i in range(len(ell_arr))]
-            if type(ell_arr) != cls:
-                out_ell_arr = np.reshape(out_ell_arr, newshape=size_c_vec)
-        return out_ell_arr
+            def f_single_uminus(ell_obj):
+                return ell_obj.__class__(-ell_obj.get_center_vec(),
+                                         ell_obj.get_shape_mat())
+
+            return np.reshape(np.array(list(map(f_single_uminus, ell_flat_arr))), newshape=size_vec)
 
     def __neg__(self):
         return self.uminus([self]).flatten()[0]
