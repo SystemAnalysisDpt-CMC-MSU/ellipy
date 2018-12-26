@@ -305,7 +305,7 @@ class Hyperplane(ABasicEllipsoid):
 
             def set_single_prop(hyp_elem):
                 return hyp_elem.__class__(-hyp_elem.parameters()[0],
-                                  -hyp_elem.parameters()[1])
+                                          -hyp_elem.parameters()[1])
 
             return np.reshape(np.array(list(map(set_single_prop, hyp_flat_arr))), newshape=size_vec)
 
