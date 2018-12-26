@@ -1,11 +1,145 @@
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
+from ellipy.gen.common.common import throw_error
 import pytest
+import copy
 
 
 class TestEllipsoidBasicSecondTC:
     # noinspection PyMethodMayBeStatic
     def ellipsoid(self, *args, **kwargs):
         return Ellipsoid(*args, **kwargs)
+
+    def test_uminus(self):
+        test_1_ell = self.ellipsoid(np.array([0, 0]),
+                                    np.array([
+                                        [1, 0],
+                                        [0, 1]
+                                    ]))
+        test_2_ell = self.ellipsoid(np.array([1, 0]),
+                                    np.array([
+                                        [1, 0],
+                                        [0, 1]
+                                    ]))
+        test_3_ell = self.ellipsoid(np.array([1, 0]),
+                                    np.array([
+                                        [2, 0],
+                                        [0, 1]
+                                    ]))
+        test_4_ell = self.ellipsoid(np.array([0, 0]),
+                                    np.array([
+                                        [0, 0],
+                                        [0, 0]
+                                    ]))
+        test_5_ell = self.ellipsoid(np.array([0, 0, 0]),
+                                    np.array([
+                                        [0, 0, 0],
+                                        [0, 0, 0],
+                                        [0, 0, 0]
+                                    ]))
+        test_6_ell = self.ellipsoid()
+        test_7_ell = self.ellipsoid(np.array([2, 1]),
+                                    np.array([
+                                        [3, 1],
+                                        [1, 1]
+                                    ]))
+        test_8_ell = self.ellipsoid(np.array([1, 1]),
+                                    np.array([
+                                        [1, 0],
+                                        [0, 1]
+                                    ]))
+        check_center_vec_list = [np.array([-1, 0])]
+        self.__operation_check_eq_func(test_2_ell, check_center_vec_list, 'uminus')
+        #
+        test_ell_vec = [test_1_ell, test_2_ell, test_3_ell]
+        check_center_vec_list = [np.array([0, 0]),
+                                 np.array([-1, 0]),
+                                 np.array([-1, 0])]
+        self.__operation_check_eq_func(test_ell_vec, check_center_vec_list, 'uminus')
+        #
+        test_ell_mat = [[test_1_ell, test_2_ell], [test_3_ell, test_4_ell]]
+        check_center_vec_list = [[np.array([0, 0]),
+                                  np.array([-1, 0])],
+                                 [np.array([-1, 0]),
+                                  np.array([0, 0])]]
+        self.__operation_check_eq_func(test_ell_mat, check_center_vec_list, 'uminus')
+        #
+        test_ell_vec = [test_1_ell, test_2_ell, test_3_ell, test_4_ell,
+                        test_5_ell, test_6_ell, test_7_ell, test_8_ell]
+        test_ell_arr = np.reshape(test_ell_vec, newshape=(2, 2, 2))
+        check_center_vec_list = np.reshape([np.array([0, 0]),
+                                            np.array([-1, 0]),
+                                            np.array([-1, 0]),
+                                            np.array([0, 0]),
+                                            np.array([0, 0, 0]),
+                                            np.array([]),
+                                            np.array([-2, -1]),
+                                            np.array([-1, -1])], newshape=(2, 2, 2)).tolist()
+        self.__operation_check_eq_func(test_ell_arr, check_center_vec_list, 'uminus')
+        #
+        test_ell_center_vec = np.zeros(shape=(100, 1))
+        test_ell_center_vec[49] = 1
+        test_ell_mat = np.eye(100)
+        test_ell = self.ellipsoid(test_ell_center_vec, test_ell_mat)
+        test_res_vec = np.zeros(shape=(100, 1))
+        test_res_vec[49] = -1
+        check_center_vec_list = [test_res_vec]
+        self.__operation_check_eq_func(test_ell, check_center_vec_list, 'uminus')
+        #
+        self.__empty_test('uminus', [0, 0, 2, 0])
+
+    def __operation_check_eq_func(self, test_ell_arr, comp_list, operation, argument=None):
+        comp_list = np.array(comp_list)
+        test_ell_arr = np.array(test_ell_arr)
+        __OBJ_MODIFICATING_METHODS_LIST = ['inv', 'move_2_origin', 'shape']
+        is_obj_modif_method = np.isin(operation, __OBJ_MODIFICATING_METHODS_LIST)
+        test_copy_ell_arr = []
+        if ~is_obj_modif_method:
+            test_copy_ell_arr = copy.deepcopy(test_ell_arr)
+        if test_ell_arr.size > 0:
+            ell_class = test_ell_arr.flat[0].__class__
+        else:
+            ell_class = self.ellipsoid().__class__
+        if argument is None:
+            test_ell_res_arr = getattr(ell_class, operation)(test_ell_arr.flatten())
+        else:
+            test_ell_res_arr = getattr(ell_class, operation)(test_ell_arr.flatten(), argument)
+        self.__check_res(test_ell_res_arr, comp_list, operation)
+        if is_obj_modif_method:
+            # test for methods which modify the input array
+            self.__check_res(test_ell_arr, comp_list, operation)
+        else:
+            # test for absence of input array's modification
+            is_eq_arr, report_str = ell_class.is_equal(test_copy_ell_arr, test_ell_arr)
+            is_not_modif = np.all(is_eq_arr)
+            assert is_not_modif, report_str
+
+    @staticmethod
+    def __check_res(test_ell_res_arr, comp_list, operation):
+        __VEC_COMP_METHODS_LIST = ['uminus', 'plus', 'minus', 'move_2_origin', 'get_move_2_origin']
+        __MAT_COMP_METHODS_LIST = ['inv', 'shape', 'get_inv', 'get_shape']
+        #
+        test_ell_res_centers_vec_list = np.array([[elem.get_center_vec() for elem in test_ell_res_arr.flatten()]])
+        test_ell_res_shape_mat_list = np.array([[elem.get_shape_mat() for elem in test_ell_res_arr.flatten()]])
+        if np.isin(operation, __VEC_COMP_METHODS_LIST):
+            eq_arr = [np.array_equal(x, y) for (x, y) in
+                      zip(test_ell_res_centers_vec_list.flatten(), comp_list.flatten())]
+        elif np.isin(operation, __MAT_COMP_METHODS_LIST):
+            eq_arr = [np.array_equal(x, y) for (x, y) in
+                      zip(test_ell_res_shape_mat_list.flatten(), comp_list.flatten())]
+        else:
+            eq_arr = []
+            expr = ' '.join(__VEC_COMP_METHODS_LIST + __MAT_COMP_METHODS_LIST)
+            throw_error('wrongInput:badMethodName', 'Allowed method names: {}. Input name: {}'.format(expr, operation))
+        test_is_right = np.all(np.equal(eq_arr[:], 1))
+        assert test_is_right
+
+    def __empty_test(self, method_name, size_vec, argument=None):
+        test_ell_arr = np.empty(shape=size_vec, dtype=self.ellipsoid().__class__)
+        check_center_vec_list = np.tile([], size_vec)
+        if argument is None:
+            self.__operation_check_eq_func(test_ell_arr, check_center_vec_list, method_name)
+        else:
+            self.__operation_check_eq_func(test_ell_arr, check_center_vec_list, method_name, argument)
 
     def test_projection(self):
         project_mat = np.array([[1, 0], [0, 1], [0, 0]])

@@ -502,7 +502,19 @@ class Ellipsoid(AEllipsoid):
 
     @classmethod
     def uminus(cls, ell_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
-        pass
+        cls._check_is_me(ell_arr)
+        ell_arr = np.array(ell_arr)
+        size_vec = np.shape(ell_arr)
+        if 0 == ell_arr.size:
+            return np.empty(shape=size_vec, dtype=cls.__class__)
+        else:
+            ell_flat_arr = ell_arr.flatten()
+
+            def f_single_uminus(ell_obj):
+                return ell_obj.__class__(-ell_obj.get_center_vec(),
+                                         ell_obj.get_shape_mat())
+
+            return np.reshape(np.array(list(map(f_single_uminus, ell_flat_arr))), newshape=size_vec)
 
     def __neg__(self):
         return self.uminus([self]).flatten()[0]
