@@ -3,7 +3,6 @@ from ellipy.elltool.conf.properties.Properties import Properties
 from ellipy.gras.la.la import try_treat_as_real
 from typing import Tuple, Dict, Callable, Any
 import numpy as np
-import copy
 
 
 class Hyperplane(ABasicEllipsoid):
@@ -98,6 +97,8 @@ class Hyperplane(ABasicEllipsoid):
     def contains(cls, hyp_arr: Union[Iterable, np.ndarray], x_arr: np.ndarray) -> np.ndarray:
         cls._check_is_me(hyp_arr)
 
+        hyp_arr = np.array(hyp_arr)
+
         size_x_vec_old = np.shape(x_arr)
         x_arr = np.reshape(x_arr, newshape=(size_x_vec_old[0], np.array(np.prod(size_x_vec_old[1:]), dtype=np.int64)))
 
@@ -129,7 +130,7 @@ class Hyperplane(ABasicEllipsoid):
             size_hyp_arr = (1, size_hyp_arr[0])
 
         if not (np.array_equal(size_x_vec[1:], size_hyp_arr) or
-                ((type(hyp_arr) == cls) and not (0 == len(x_arr))) or
+                ((1 == np.size(hyp_arr)) and not (0 == len(x_arr))) or
                 (1 == np.size(size_x_vec[1:]))):
             throw_error('wrongSizes', 'Array of normal vectors and array of constants has wrong sizes.')
 
@@ -158,10 +159,7 @@ class Hyperplane(ABasicEllipsoid):
         else:
             other_dim_vec = np.shape(hyp_arr)
             x_c_arr = process(other_dim_vec)
-            if type(hyp_arr) == cls:
-                is_pos_arr = np.array([is_sing_contains(hyp_arr, x) for x in x_c_arr])
-                return np.reshape(is_pos_arr, size_hyp_arr_old)
-            elif 1 == hyp_arr.size:
+            if 1 == hyp_arr.size:
                 is_pos_arr = np.array([is_sing_contains(hyp_arr[0], x) for x in x_c_arr])
                 return np.reshape(is_pos_arr, size_x_vec_old[1:])
             else:
@@ -202,20 +200,12 @@ class Hyperplane(ABasicEllipsoid):
         cls._check_is_me(first_hyp_arr)
         cls._check_is_me(sec_hyp_arr)
 
-        def f_copy_hyp(hyp_obj, size_vec):
-            n_elem = np.int32(np.prod(size_vec))
-            res_hyp_arr = np.array([copy.deepcopy(hyp_obj) for _ in range(n_elem)])
-            return np.reshape(res_hyp_arr, newshape=size_vec)
+        first_hyp_arr = np.array(first_hyp_arr)
+        sec_hyp_arr = np.array(sec_hyp_arr)
 
         def is_sing_parallel(first_hyp, sec_hyp, first_hyp_abs_tol):
-            if type(first_hyp) != cls:
-                first_hyp_norm_vec = np.array([elem.parameters()[0] for elem in first_hyp])
-            else:
-                first_hyp_norm_vec = first_hyp.parameters()[0]
-            if type(sec_hyp) != cls:
-                sec_hyp_norm_vec = np.array([elem.parameters()[0] for elem in sec_hyp])
-            else:
-                sec_hyp_norm_vec = sec_hyp.parameters()[0]
+            first_hyp_norm_vec = first_hyp.parameters()[0]
+            sec_hyp_norm_vec = sec_hyp.parameters()[0]
             is_pos = False
             if np.array_equal(np.shape(first_hyp_norm_vec), np.shape(sec_hyp_norm_vec)):
                 first_hyp_norm_vec /= np.linalg.norm(first_hyp_norm_vec)
@@ -231,21 +221,13 @@ class Hyperplane(ABasicEllipsoid):
                 (1 == np.size(sec_hyp_arr))):
             throw_error('wrongSizes', 'Sizes of hyperplane arrays do not match.')
 
-        if type(first_hyp_arr) == cls:
-            if type(sec_hyp_arr) == cls:
-                first_hyp_abs_tol_arr = cls.get_abs_tol(first_hyp_arr)[0].flatten()[0]
-                return is_sing_parallel(first_hyp_arr, sec_hyp_arr, first_hyp_abs_tol_arr)
-            else:
-                first_hyp_arr = f_copy_hyp(first_hyp_arr, np.shape(sec_hyp_arr))
-                first_hyp_abs_tol_arr = [cls.get_abs_tol(elem)[0].flatten()[0] for elem in first_hyp_arr]
-        elif type(sec_hyp_arr) == cls:
-            sec_hyp_arr = f_copy_hyp(sec_hyp_arr, np.shape(first_hyp_arr))
-            first_hyp_abs_tol_arr = np.array([cls.get_abs_tol(elem)[0].flatten()[0] for elem in first_hyp_arr])
-        else:
-            first_hyp_abs_tol_arr = np.array([cls.get_abs_tol(elem)[0].flatten()[0] for elem in first_hyp_arr])
+        first_hyp_abs_tol_arr = np.array([cls.get_abs_tol(elem)[0].flatten()[0] for elem in first_hyp_arr.flatten()])
 
-        is_pos_arr = np.array([is_sing_parallel(x, y, z)
-                               for (x, y, z) in zip(first_hyp_arr, sec_hyp_arr, first_hyp_abs_tol_arr)])
+        is_pos_arr = np.reshape(np.array([is_sing_parallel(x, y, z)
+                                          for (x, y, z) in zip(first_hyp_arr.flatten(),
+                                                               sec_hyp_arr.flatten(),
+                                                               first_hyp_abs_tol_arr.flatten())]),
+                                newshape=np.shape(first_hyp_arr))
 
         return is_pos_arr
 
@@ -313,28 +295,19 @@ class Hyperplane(ABasicEllipsoid):
     @classmethod
     def uminus(cls, hyp_arr: Union[Iterable, np.ndarray]) -> np.ndarray:
         cls._check_is_me(hyp_arr)
+        hyp_arr = np.array(hyp_arr)
         size_vec = np.shape(hyp_arr)
-        n_elems = np.size(hyp_arr)
-        out_hyp_arr = []
 
-        def set_prop(out_hyp_arr_local, i_obj=None):
-            if i_obj is None:
-                new_normal_vec = np.array(map(lambda hyp: -hyp.parameters()[0], hyp_arr))
-                new_shift = np.float64(map(lambda hyp: -hyp.parameters()[1], hyp_arr))
-                out_hyp_arr_local = Hyperplane(new_normal_vec, new_shift)
-            else:
-                new_normal_vec = -hyp_arr[i_obj].parameters()[0]
-                new_shift = -hyp_arr[i_obj].parameters()[1]
-                out_hyp_arr_local.append(Hyperplane(new_normal_vec, new_shift))
-            return out_hyp_arr_local
-
-        if type(hyp_arr) != cls:
-            [set_prop(out_hyp_arr, i) for i in range(n_elems)]
-            out_hyp_arr = np.reshape(out_hyp_arr, newshape=size_vec)
+        if 0 == hyp_arr.size:
+            return np.empty(shape=size_vec, dtype=cls.__class__)
         else:
-            out_hyp_arr = set_prop(out_hyp_arr)
+            hyp_flat_arr = hyp_arr.flatten()
 
-        return out_hyp_arr
+            def set_single_prop(hyp_elem):
+                return Hyperplane(-hyp_elem.parameters()[0],
+                                  -hyp_elem.parameters()[1])
+
+            return np.reshape(np.array(list(map(set_single_prop, hyp_flat_arr))), newshape=size_vec)
 
     def __neg__(self):
         return self.uminus([self]).flatten()[0]
