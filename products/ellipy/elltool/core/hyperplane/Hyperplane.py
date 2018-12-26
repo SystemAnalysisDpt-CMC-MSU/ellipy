@@ -99,16 +99,16 @@ class Hyperplane(ABasicEllipsoid):
 
         hyp_arr = np.array(hyp_arr)
 
-        size_x_vec_old = np.shape(x_arr)
-        x_arr = np.reshape(x_arr, newshape=(size_x_vec_old[0], np.array(np.prod(size_x_vec_old[1:]), dtype=np.int64)))
+        x_size_vec = np.shape(x_arr)
+        x_arr = np.reshape(x_arr, newshape=(x_size_vec[0], -1))
 
-        size_hyp_arr_old = np.shape(hyp_arr)
+        hyp_size_vec = np.shape(hyp_arr)
         hyp_arr = hyp_arr.flatten()
 
         if not is_numeric(x_arr):
-            throw_error('wrongInput', 'Second input argument must be of type double.')
+            throw_error('wrongInput', 'Second input argument must be a numeric array.')
         if np.any(np.isnan(x_arr.flatten())):
-            throw_error('wrongInput', 'Second input argument is not correct')
+            throw_error('wrongInput', 'Second input argument is not correct.')
 
         n_dim_var = cls.dimension(hyp_arr)
         max_dim = np.max(n_dim_var)
@@ -119,7 +119,7 @@ class Hyperplane(ABasicEllipsoid):
 
         n_dims = max_dim
         size_x_vec = np.shape(x_arr)
-        if 1 == np.size(size_x_vec):
+        if np.size(size_x_vec) == 1:
             size_x_vec = (1, size_x_vec[0])
 
         if size_x_vec[0] != n_dims:
@@ -130,8 +130,8 @@ class Hyperplane(ABasicEllipsoid):
             size_hyp_arr = (1, size_hyp_arr[0])
 
         if not (np.array_equal(size_x_vec[1:], size_hyp_arr) or
-                ((1 == np.size(hyp_arr)) and not (0 == len(x_arr))) or
-                (1 == np.size(size_x_vec[1:]))):
+                ((np.size(hyp_arr) == 1) and not (np.size(x_arr) == 0)) or
+                (np.size(size_x_vec[1:]) == 1)):
             throw_error('wrongSizes', 'Array of normal vectors and array of constants has wrong sizes.')
 
         def process(other_dim_vec_loc):
@@ -144,27 +144,27 @@ class Hyperplane(ABasicEllipsoid):
 
         def is_sing_contains(hyp, x_vec):
             hyp_norm_vec, hyp_const = cls.parameters(hyp)
-            abs_tol = cls.get_abs_tol(hyp)[0].flatten()[0]
+            abs_tol = cls.get_abs_tol(hyp, f_prop_fun=None).flat[0]
             is_pos = False
             is_fin_vec = np.isfinite(x_vec).T.flatten()
             if np.all(np.equal(hyp_norm_vec[~is_fin_vec], 0)):
                 hyp_norm_vec = hyp_norm_vec[is_fin_vec]
                 x_vec = x_vec[is_fin_vec]
-                if abs((hyp_norm_vec.T @ x_vec) - hyp_const) < abs_tol:
+                if np.abs((hyp_norm_vec.T @ x_vec) - hyp_const) < abs_tol:
                     is_pos = True
             return is_pos
 
         if (np.shape(size_x_vec)[0] == 2) and (size_x_vec[1] == 1):
-            return np.reshape(np.array([is_sing_contains(x, x_arr) for x in hyp_arr]), size_hyp_arr_old)
+            return np.reshape(np.array([is_sing_contains(x, x_arr) for x in hyp_arr]), hyp_size_vec)
         else:
             other_dim_vec = np.shape(hyp_arr)
             x_c_arr = process(other_dim_vec)
-            if 1 == hyp_arr.size:
+            if hyp_arr.size == 1:
                 is_pos_arr = np.array([is_sing_contains(hyp_arr[0], x) for x in x_c_arr])
-                return np.reshape(is_pos_arr, size_x_vec_old[1:])
+                return np.reshape(is_pos_arr, x_size_vec[1:])
             else:
                 is_pos_arr = np.array([is_sing_contains(x, y) for (x, y) in zip(hyp_arr, x_c_arr)])
-                return np.reshape(is_pos_arr, size_x_vec_old[1:])
+                return np.reshape(is_pos_arr, x_size_vec[1:])
 
     @classmethod
     def dimension(cls, hyp_arr: Union[Iterable, np.ndarray], return_rank=False) -> np.ndarray:
@@ -217,11 +217,11 @@ class Hyperplane(ABasicEllipsoid):
             return is_pos
 
         if not ((np.array_equal(np.shape(first_hyp_arr), np.shape(sec_hyp_arr))) or
-                (1 == np.size(first_hyp_arr)) or
-                (1 == np.size(sec_hyp_arr))):
+                (np.size(first_hyp_arr) == 1) or
+                (np.size(sec_hyp_arr) == 1)):
             throw_error('wrongSizes', 'Sizes of hyperplane arrays do not match.')
 
-        first_hyp_abs_tol_arr = np.array([cls.get_abs_tol(elem)[0].flatten()[0] for elem in first_hyp_arr.flatten()])
+        first_hyp_abs_tol_arr = cls.get_abs_tol(first_hyp_arr, f_prop_fun=None).flatten()
 
         is_pos_arr = np.reshape(np.array([is_sing_parallel(x, y, z)
                                           for (x, y, z) in zip(first_hyp_arr.flatten(),
@@ -298,13 +298,13 @@ class Hyperplane(ABasicEllipsoid):
         hyp_arr = np.array(hyp_arr)
         size_vec = np.shape(hyp_arr)
 
-        if 0 == hyp_arr.size:
+        if hyp_arr.size == 0:
             return np.empty(shape=size_vec, dtype=cls.__class__)
         else:
             hyp_flat_arr = hyp_arr.flatten()
 
             def set_single_prop(hyp_elem):
-                return Hyperplane(-hyp_elem.parameters()[0],
+                return hyp_elem.__class__(-hyp_elem.parameters()[0],
                                   -hyp_elem.parameters()[1])
 
             return np.reshape(np.array(list(map(set_single_prop, hyp_flat_arr))), newshape=size_vec)

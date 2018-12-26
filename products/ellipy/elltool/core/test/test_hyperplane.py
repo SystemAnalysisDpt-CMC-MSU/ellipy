@@ -21,25 +21,22 @@ class TestHyperplaneTestCase:
         s_inp_data = self.__aux_read_file()
         test_normal_vec = s_inp_data['testNormalVec'].flatten()
         test_constant = s_inp_data['testConstant'].flatten()
-        test_hyraplane = self.hyperplane(test_normal_vec, test_constant)
-        minus_test_hyraplane = -test_hyraplane
+        test_hyperplane = self.hyperplane(test_normal_vec, test_constant)
+        minus_test_hyraplane = -test_hyperplane
         res = self.__is_normal_and_constant_right(-test_normal_vec, -test_constant, minus_test_hyraplane)
         assert res
 
-        return self
-
     def test_is_parallel(self):
         s_inp_data = self.__aux_read_file()
-        test_hyperplanes_vec = s_inp_data['testHyperplanesVec'].flatten()[0]
-        test_hyperplanes_vec = Hyperplane(test_hyperplanes_vec[0], test_hyperplanes_vec[1])
+        test_hyperplanes_vec = s_inp_data['testHyperplanesVec'].flat[0]
+        test_hyperplanes_vec = self.hyperplane(test_hyperplanes_vec[0], test_hyperplanes_vec[1])
         is_parallel_vec = s_inp_data['isParallelVec'].flatten()
-        compare_hyperplanes_vec = s_inp_data['compareHyperplanesVec'].flatten()[0]
-        compare_hyperplanes_vec = Hyperplane(compare_hyperplanes_vec[0], compare_hyperplanes_vec[1])
+        compare_hyperplanes_vec = s_inp_data['compareHyperplanesVec'].flat[0]
+        compare_hyperplanes_vec = self.hyperplane(compare_hyperplanes_vec[0], compare_hyperplanes_vec[1])
 
-        tested_is_parallel = Hyperplane.is_parallel([test_hyperplanes_vec], [compare_hyperplanes_vec])
+        tested_is_parallel = test_hyperplanes_vec.is_parallel(
+            [test_hyperplanes_vec], [compare_hyperplanes_vec])
         assert np.array_equal(tested_is_parallel, is_parallel_vec)
-
-        return self
 
     def test_contains(self):
         s_inp_data = self.__aux_read_file()
@@ -48,7 +45,7 @@ class TestHyperplaneTestCase:
         test_hyperplanes_vec = np.array([self.hyperplane(elem[0], elem[1]) for elem in test_hyperplanes_vec])
         test_vectors_mat = s_inp_data['testVectorsMat']
         is_contained_vec = s_inp_data['isContainedVec'].flatten()
-        is_contained_tested_vec = Hyperplane.contains(test_hyperplanes_vec, test_vectors_mat)
+        is_contained_tested_vec = test_hyperplanes_vec.flat[0].contains(test_hyperplanes_vec, test_vectors_mat)
         assert np.array_equal(is_contained_vec, is_contained_tested_vec)
 
         test_hyp = self.hyperplane(np.array([1, 0, 0]), [1])
@@ -69,7 +66,7 @@ class TestHyperplaneTestCase:
             [test_first_hyp, test_third_hyp]
         ])
         test_vectors = np.array([1, 0])
-        is_contained_mat = Hyperplane.contains(test_hyp_mat, test_vectors)
+        is_contained_mat = test_hyp_mat.flat[0].contains(test_hyp_mat, test_vectors)
         is_contained_tested_mat = np.array([
             [True, True],
             [True, False]
@@ -81,12 +78,10 @@ class TestHyperplaneTestCase:
         test_hyp_arr = np.reshape(test_hyp_arr, newshape=(2, 3, 4))
         test_vectors_arr = np.zeros(shape=(2, 2, 3, 4))
         test_vectors_arr[:, 1, 2, 3] = np.array([1, 1])
-        is_contained_arr = Hyperplane.contains(test_hyp_arr, test_vectors_arr)
+        is_contained_arr = test_hyp_arr.flat[0].contains(test_hyp_arr, test_vectors_arr)
         is_contained_tested_arr = np.zeros(shape=(2, 3, 4), dtype=np.bool)
         is_contained_tested_arr[1, 2, 3] = True
         assert np.array_equal(is_contained_arr, is_contained_tested_arr)
-
-        return self
 
     def test_hyperplane_and_double(self):
         s_inp_data = self.__aux_read_file()
@@ -103,7 +98,7 @@ class TestHyperplaneTestCase:
         test_normals_mat = s_inp_data['testNormalsMat']
         test_constant_vec = s_inp_data['testConstants'].flatten()
 
-        testing_hyraplane_vec = np.array([self.hyperplane(x, y)
+        testing_hyperplane_vec = np.array([self.hyperplane(x, y)
                                           for (x, y) in zip(test_normals_mat.T, test_constant_vec)])
 
         n_hyperplanes = np.shape(test_normals_mat)[1]
@@ -111,7 +106,7 @@ class TestHyperplaneTestCase:
         for i_hyperplane in range(n_hyperplanes):
             n_res += self.__is_normal_and_constant_right(test_normals_mat[:, i_hyperplane],
                                                          [test_constant_vec[i_hyperplane]],
-                                                         testing_hyraplane_vec[i_hyperplane])
+                                                         testing_hyperplane_vec[i_hyperplane])
         assert n_hyperplanes == n_res
 
         test_normals_mat = np.array([
@@ -120,13 +115,13 @@ class TestHyperplaneTestCase:
             [5, 2, 2, 12]
         ])
         test_const = 2
-        testing_hyraplane_vec = np.array([self.hyperplane(x, test_const) for x in test_normals_mat.T])
+        testing_hyperplane_vec = np.array([self.hyperplane(x, test_const) for x in test_normals_mat.T])
 
         n_hyperplanes = np.shape(test_normals_mat)[1]
         n_res = 0
         for i_hyperplane in range(n_hyperplanes):
             n_res += self.__is_normal_and_constant_right(test_normals_mat[:, i_hyperplane],
-                                                         [test_const], testing_hyraplane_vec[i_hyperplane])
+                                                         [test_const], testing_hyperplane_vec[i_hyperplane])
         assert n_hyperplanes == n_res
 
         test_norm_arr = np.ones(shape=(10, 2, 2))
@@ -146,15 +141,13 @@ class TestHyperplaneTestCase:
         test_normal_vec = np.array([3, 4, 43, 1])
         test_const = np.array([2, 3, 4, 5, 6, 7])
         n_const = np.size(test_const)
-        testing_hyraplane_vec = np.array([self.hyperplane(test_normal_vec, y) for y in test_const])
-        assert np.array_equal((n_const,), np.shape(testing_hyraplane_vec))
-
-        return self
+        testing_hyperplane_vec = np.array([self.hyperplane(test_normal_vec, y) for y in test_const])
+        assert np.array_equal((n_const,), np.shape(testing_hyperplane_vec))
 
     def test_wrong_input(self):
         s_inp_data = self.__aux_read_file()
         test_constant = s_inp_data['testConstant']
-        test_hyperplane = s_inp_data['testHyperplane'].flatten()[0]
+        test_hyperplane = s_inp_data['testHyperplane'].flat[0]
         test_hyperplane = self.hyperplane(test_hyperplane[0], test_hyperplane[1])
         nan_vec = s_inp_data['nanVector']
         inf_vec = s_inp_data['infVector']
@@ -179,13 +172,9 @@ class TestHyperplaneTestCase:
         return scipy.io.loadmat(inp_file_name)
 
     @staticmethod
-    def __is_normal_and_constant_right(test_normal, test_constant, testing_hyraplane):
-        if type(testing_hyraplane) != Hyperplane:
-            result_normal = [elem._normal_vec.flatten() for elem in testing_hyraplane]
-            result_constant = [elem._shift.flatten() for elem in testing_hyraplane]
-        else:
-            result_normal = testing_hyraplane._normal_vec.flatten()
-            result_constant = testing_hyraplane._shift.flatten()
+    def __is_normal_and_constant_right(test_normal, test_constant, testing_hyperplane):
+        result_normal, result_constant = testing_hyperplane.double()
+        result_constant = np.array(result_constant).flatten()
 
         test_norm_size_vec = np.shape(test_normal)
         res_norm_size_vec = np.shape(result_normal)

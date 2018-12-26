@@ -87,10 +87,7 @@ class TestEllipsoidBasicSecondTC:
         #
         self.__empty_test('uminus', [0, 0, 2, 0])
 
-        return self
-
-    @classmethod
-    def __operation_check_eq_func(cls, test_ell_arr, comp_list, operation, argument=None):
+    def __operation_check_eq_func(self, test_ell_arr, comp_list, operation, argument=None):
         comp_list = np.array(comp_list)
         test_ell_arr = np.array(test_ell_arr)
         __OBJ_MODIFICATING_METHODS_LIST = ['inv', 'move_2_origin', 'shape']
@@ -98,18 +95,23 @@ class TestEllipsoidBasicSecondTC:
         test_copy_ell_arr = []
         if ~is_obj_modif_method:
             test_copy_ell_arr = copy.deepcopy(test_ell_arr)
-        if argument is None:
-            test_ell_res_arr = getattr(Ellipsoid, operation)(test_ell_arr.flatten())
+        if test_ell_arr.size > 0:
+            ell_class = test_ell_arr.flat[0].__class__
         else:
-            test_ell_res_arr = getattr(Ellipsoid, operation)(test_ell_arr.flatten(), argument)
-        cls.__check_res(test_ell_res_arr, comp_list, operation)
+            ell_class = self.ellipsoid().__class__
+        if argument is None:
+            test_ell_res_arr = getattr(ell_class, operation)(test_ell_arr.flatten())
+        else:
+            test_ell_res_arr = getattr(ell_class, operation)(test_ell_arr.flatten(), argument)
+        self.__check_res(test_ell_res_arr, comp_list, operation)
         if is_obj_modif_method:
             # test for methods which modify the input array
-            cls.__check_res(test_ell_arr, comp_list, operation)
+            self.__check_res(test_ell_arr, comp_list, operation)
         else:
             # test for absence of input array's modification
-            is_not_modif = np.all(np.equal(test_copy_ell_arr, test_ell_arr))
-            assert 1 == is_not_modif
+            is_eq_arr, report_str = ell_class.is_equal(test_copy_ell_arr, test_ell_arr)
+            is_not_modif = np.all(is_eq_arr)
+            assert is_not_modif, report_str
 
     @staticmethod
     def __check_res(test_ell_res_arr, comp_list, operation):
@@ -129,16 +131,15 @@ class TestEllipsoidBasicSecondTC:
             expr = ' '.join(__VEC_COMP_METHODS_LIST + __MAT_COMP_METHODS_LIST)
             throw_error('wrongInput:badMethodName', 'Allowed method names: {}. Input name: {}'.format(expr, operation))
         test_is_right = np.all(np.equal(eq_arr[:], 1))
-        assert 1 == test_is_right
+        assert test_is_right
 
-    @classmethod
-    def __empty_test(cls, method_name, size_vec, argument=None):
-        test_ell_arr = np.empty(shape=size_vec, dtype=Ellipsoid)
+    def __empty_test(self, method_name, size_vec, argument=None):
+        test_ell_arr = np.empty(shape=size_vec, dtype=self.ellipsoid().__class__)
         check_center_vec_list = np.tile([], size_vec)
         if argument is None:
-            cls.__operation_check_eq_func(test_ell_arr, check_center_vec_list, method_name)
+            self.__operation_check_eq_func(test_ell_arr, check_center_vec_list, method_name)
         else:
-            cls.__operation_check_eq_func(test_ell_arr, check_center_vec_list, method_name, argument)
+            self.__operation_check_eq_func(test_ell_arr, check_center_vec_list, method_name, argument)
 
     def test_projection(self):
         project_mat = np.array([[1, 0], [0, 1], [0, 0]])
