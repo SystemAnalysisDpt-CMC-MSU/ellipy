@@ -4,7 +4,6 @@ from ellipy.elltool.conf.properties.Properties import Properties
 from ellipy.gras.la.la import is_mat_pos_def, is_mat_symm, try_treat_as_real, sqrtm_pos
 from ellipy.gen.common.common import throw_error
 from ellipy.gen.logging.logging import get_logger
-from ellipy.gras.geom.ell.ell import rho_mat
 from ellipy.gras.geom.tri.tri import sphere_tri_ext
 from ellipy.gras.geom.ell.ell import rho_mat
 from typing import Union, Tuple, Dict, Callable, Any
@@ -277,8 +276,9 @@ class Ellipsoid(AEllipsoid):
 
     def get_boundary(self, n_points: int = None, return_grid: bool = False) -> Union[
         np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        Ellipsoid._check_if_scalar(self)
-        n_dim = self.dimension(self)
+        self._check_if_scalar(self)
+        n_dim = self.dimension([self])
+        n_dim = n_dim[0]
         if n_dim == 2:
             if n_points is None:
                 n_points = self._n_plot_2d_points
@@ -303,8 +303,8 @@ class Ellipsoid(AEllipsoid):
 
     def get_boundary_by_factor(self, factor_vec: Union[np.ndarray, int] = None, return_grid: bool = False) -> Union[
         np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        Ellipsoid._check_if_scalar(self)
-        n_dim = self.dimension(self)
+        self._check_if_scalar(self)
+        n_dim = self.dimension([self])
         if (n_dim < 2) or (n_dim > 3):
             throw_error('wrongDim', 'ellipsoid must be of dimension 2 or 3')
         if factor_vec is None:
@@ -337,8 +337,9 @@ class Ellipsoid(AEllipsoid):
         return cls.projection(proj_ell_arr, basis_mat)
 
     def get_rho_boundary(self, n_points: int = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        Ellipsoid._check_if_scalar(self)
-        n_dim = self.dimension(self)
+        self._check_if_scalar(self)
+        n_dim = self.dimension([self])
+        n_dim = n_dim[0]
         if n_dim == 2:
             if n_points is None:
                 n_points = self._n_plot_2d_points
@@ -350,15 +351,17 @@ class Ellipsoid(AEllipsoid):
         dir_mat, f_mat = sphere_tri_ext(n_dim, n_points, True)
         cen_vec, q_mat = self.double()
         l_grid_mat = np.vstack((dir_mat, dir_mat[0, :]))
-        sup_vec, bp_mat = rho_mat(q_mat, l_grid_mat.T, self._abs_tol, np.expand_dims(cen_vec, 1))
+        abs_tol = self.get_abs_tol([self])
+        abs_tol = abs_tol[0]
+        sup_vec, bp_mat = rho_mat(q_mat, l_grid_mat.T, abs_tol, np.expand_dims(cen_vec, 1))
         sup_vec = sup_vec.T
         bp_mat = bp_mat.T
         return bp_mat, f_mat, sup_vec, l_grid_mat
 
     def get_rho_boundary_by_factor(self, factor_vec: Union[np.ndarray, int] = None) -> \
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        Ellipsoid._check_if_scalar(self)
-        n_dim = self.dimension(self)
+        self._check_if_scalar(self)
+        n_dim = self.dimension([self])
         if factor_vec is None:
             factor = 1
         elif type(factor_vec) is int:
@@ -631,7 +634,7 @@ class Ellipsoid(AEllipsoid):
             bp_arr = np.hstack(x_c_arr)
             sup_arr = np.reshape(sup_arr, ell_size_vec)
             if len(ell_size_vec) > 2:
-                bp_arr = np.reshape(bp_arr, (n_dim, ) + ell_size_vec)
+                bp_arr = np.reshape(bp_arr, (n_dim,) + ell_size_vec)
         else:  # multiple ellipsoids, multiple directions
             dir_c_arr = np.reshape(dirs_arr, (n_dim, n_dirs)).T
             #
