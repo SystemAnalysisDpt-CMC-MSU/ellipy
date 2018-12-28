@@ -427,7 +427,7 @@ class Ellipsoid(AEllipsoid):
             throw_error('wrongSizes', 'ellipsoids in the array and vector(s) must be of the same dimension.')
 
         if n_ell == 1:
-            return ell_arr[0].rep_mat(np.array([1, n_cols]))
+            return np.squeeze(ell_arr[0].rep_mat(np.array([1, n_cols])))
         else:
             cent_vec = np.sum(np.array([ell.get_center_vec() for ell in ell_arr]), 0)
             abs_tol_arr = cls.get_abs_tol(ell_arr)[0]
@@ -474,7 +474,7 @@ class Ellipsoid(AEllipsoid):
         if not (np.all(n_dims_ell_arr.flatten() == n_dims)) & (np.all(n_dims_ell_arr.flatten() == n_dims_ell_arr[0])):
             throw_error('wrongSizes', 'ellipsoids in the array and vector(s) must be of the same dimension.')
         if n_ell == 1:
-            return ell_arr[0].rep_mat(np.array([1, n_cols]))
+            return np.squeeze(ell_arr[0].rep_mat(np.array([1, n_cols])))
         else:
             cent_vec = np.sum(np.array([ell.get_center_vec() for ell in ell_arr]), 0)
             abs_tol_arr = cls.get_abs_tol(ell_arr)[0]
