@@ -5,6 +5,7 @@ from ellipy.gras.la.la import is_mat_pos_def, is_mat_symm, try_treat_as_real, sq
 from ellipy.gen.common.common import throw_error
 from ellipy.gen.logging.logging import get_logger
 from ellipy.gras.geom.ell.ell import rho_mat
+from ellipy.gras.geom.tri.tri import sphere_tri_ext
 from typing import Tuple, Dict, Callable, Any
 import numpy as np
 
@@ -174,8 +175,30 @@ class Ellipsoid(AEllipsoid):
                        cent_vec: np.ndarray, q_mat: np.ndarray, abs_tol: float) -> Tuple[np.ndarray, np.ndarray]:
         pass
 
-    def __get_grid_by_factor(self, factor_vec: np.ndarray):
-        pass
+    def _get_grid_by_factor(self, factor_vec: np.ndarray = np.array(1., dtype=np.float64)):
+        __EPS = 1e-15
+        n_dim = self.dimension([self]).flat[0]
+
+        if n_dim < 2 or n_dim > 3:
+            throw_error('wrongDim:ellipsoid', 'ellipsoid must be of dimension 2 or 3')
+
+        if factor_vec.ndim == 0:
+            factor = factor_vec.flat[0]
+        else:
+            factor = factor_vec.flat[n_dim - 2]
+
+        if n_dim == 2:
+            n_plot_points = self._n_plot_2d_points
+            if not (factor == 1):
+                n_plot_points = np.floor(n_plot_points * factor)
+        else:
+            n_plot_points = self._n_plot_3d_points
+            if not (factor == 1):
+                n_plot_points = np.floor(n_plot_points * factor)
+        v_grid_mat, f_grid_mat = sphere_tri_ext(n_dim, n_plot_points)
+        v_grid_mat[v_grid_mat == 0] = __EPS
+
+        return v_grid_mat, f_grid_mat
 
     @classmethod
     def _check_is_me(cls, ell_arr: Union[Iterable, np.ndarray], *args, **kwargs):
