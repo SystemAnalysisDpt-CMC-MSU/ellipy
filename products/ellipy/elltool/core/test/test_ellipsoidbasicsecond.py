@@ -190,8 +190,8 @@ class TestEllipsoidBasicSecondTC:
                 cent_vec_2_vec, shape_mat_2_vec = zip(*map(lambda ell: ell.double(),
                                                            ell_obj_2_vec.flatten()))
                 is_ok = np.array_equal(cent_vec_1_vec, cent_vec_2_vec) and \
-                        np.array_equal(shape_mat_1_vec, shape_mat_2_vec) and \
-                        np.array_equal(ell_obj_1_vec.shape, ell_obj_2_vec.shape)
+                    np.array_equal(shape_mat_1_vec, shape_mat_2_vec) and \
+                    np.array_equal(ell_obj_1_vec.shape, ell_obj_2_vec.shape)
             return is_ok
 
         is_inp_obj_modify = None
@@ -459,7 +459,8 @@ class TestEllipsoidBasicSecondTC:
             tuple_got = Ellipsoid.get_rho_boundary(test_ell_vec[i], test_num_points_vec[i][0])
             tuple_expected = (
                 bp_right_mat_arr[0, i], f_right_mat_arr[0, i], sup_right_vec[0, i], l_grid_right_arr[0, i])
-            is_ok = np.all([lambda j: np.allclose(tuple_expected[j], tuple_got[j]) for j in range(len(tuple_got))])
+            is_ok = np.all(list(map(lambda j: np.allclose(tuple_expected[j], tuple_got[j]),
+                                range(len(tuple_got)))))
             assert is_ok
 
     @staticmethod
@@ -490,7 +491,7 @@ class TestEllipsoidBasicSecondTC:
             throw_error('wrongInput', 'bp_arr and f_arr must be of the same size')
         for i in range(bp_arr.size):
             is_equal_1 = is_equal_1 and \
-                         abs_rel_compare(bp_right_arr[i], bp_arr[i], __ABSTOL__, __ABSTOL__, np.linalg.norm)[0]
+                abs_rel_compare(bp_right_arr[i], bp_arr[i], __ABSTOL__, __ABSTOL__, np.linalg.norm)[0]
             is_equal_2 = is_equal_2 and \
-                         abs_rel_compare(f_right_arr[i], f_arr[i], __ABSTOL__, __ABSTOL__, np.linalg.norm)[0]
+                abs_rel_compare(f_right_arr[i], f_arr[i], __ABSTOL__, __ABSTOL__, np.linalg.norm)[0]
         return is_equal_1 and is_equal_2

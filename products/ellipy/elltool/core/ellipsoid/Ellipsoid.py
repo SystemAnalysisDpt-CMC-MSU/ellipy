@@ -274,8 +274,8 @@ class Ellipsoid(AEllipsoid):
         is_ne, _ = self.ne([self], [other])
         return np.array(is_ne).flatten()[0]
 
-    def get_boundary(self, n_points: int = None, return_grid: bool = False) -> Union[
-        np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    def get_boundary(self, n_points: int = None, return_grid: bool = False) -> \
+            Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         self._check_if_scalar(self)
         n_dim = self.dimension([self])
         n_dim = n_dim[0]
@@ -292,6 +292,7 @@ class Ellipsoid(AEllipsoid):
             dir_mat, f_mat = sphere_tri_ext(n_dim, n_points, return_grid)
         else:
             dir_mat = sphere_tri_ext(n_dim, n_points, return_grid)
+            f_mat = None
         cen_vec, q_mat = self.double()
         ret_mat = dir_mat @ sqrtm_pos(q_mat, self._abs_tol)
         cen_mat = np.tile(cen_vec.T, (dir_mat.shape[0], 1))
@@ -301,8 +302,8 @@ class Ellipsoid(AEllipsoid):
         else:
             return ret_mat
 
-    def get_boundary_by_factor(self, factor_vec: Union[np.ndarray, int] = None, return_grid: bool = False) -> Union[
-        np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    def get_boundary_by_factor(self, factor_vec: Union[np.ndarray, int] = None, return_grid: bool = False) -> \
+            Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         self._check_if_scalar(self)
         n_dim = self.dimension([self])
         if (n_dim < 2) or (n_dim > 3):
@@ -362,6 +363,7 @@ class Ellipsoid(AEllipsoid):
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         self._check_if_scalar(self)
         n_dim = self.dimension([self])
+        n_plot_points = None
         if factor_vec is None:
             factor = 1
         elif type(factor_vec) is int:

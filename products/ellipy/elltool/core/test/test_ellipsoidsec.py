@@ -1,6 +1,7 @@
 from ellipy.elltool.core.core import *
 from ellipy.elltool.core.hyperplane.Hyperplane import *
 
+
 class TestEllipsoidSecTestCase:
     # noinspection PyMethodMayBeStatic
     def ellipsoid(self, *args, **kwargs):
