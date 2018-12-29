@@ -1,13 +1,16 @@
 from ellipy.elltool.core.core import *
 import scipy.io
 import numpy as np
-
-FUSIONLAMBDA_VEC_DATA_OUTPUT = scipy.io.loadmat('fusionlambda_data')['output']
-VALIGN_VEC_DATA_OUTPUT = scipy.io.loadmat('valign_data')['output']
+import os
 
 
 class TestCore:
+    __TEST_DATA_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
     def test_fusion_lambda(self):
+        __FUSIONLAMBDA_VEC_DATA_OUTPUT = \
+            scipy.io.loadmat(os.path.join(self.__TEST_DATA_ROOT_DIR, 'fusionlambda_data.mat'))['output']
+
         result0 = ell_fusion_lambda(0.5, np.array([[1, 1]], dtype=np.float64).T,
                                     np.array([[1, 1], [1, 1]], dtype=np.float64),
                                     np.array([[1, 1]], dtype=np.float64).T,
@@ -29,13 +32,16 @@ class TestCore:
                                     np.array([[1, 1]], dtype=np.float64).T,
                                     np.array([[100, 1], [1, 0]], dtype=np.float64), 2)
 
-        assert np.isclose(result0, FUSIONLAMBDA_VEC_DATA_OUTPUT[0][0], rtol=1e-9)
-        assert np.isclose(result1, FUSIONLAMBDA_VEC_DATA_OUTPUT[0][1], rtol=1e-9)
-        assert np.isclose(result2, FUSIONLAMBDA_VEC_DATA_OUTPUT[0][2], rtol=1e-9)
-        assert np.isclose(result3, FUSIONLAMBDA_VEC_DATA_OUTPUT[0][3], rtol=1e-9)
-        assert np.isclose(result4, FUSIONLAMBDA_VEC_DATA_OUTPUT[0][4], rtol=1e-9)
+        assert np.isclose(result0, __FUSIONLAMBDA_VEC_DATA_OUTPUT[0][0], rtol=1e-9)
+        assert np.isclose(result1, __FUSIONLAMBDA_VEC_DATA_OUTPUT[0][1], rtol=1e-9)
+        assert np.isclose(result2, __FUSIONLAMBDA_VEC_DATA_OUTPUT[0][2], rtol=1e-9)
+        assert np.isclose(result3, __FUSIONLAMBDA_VEC_DATA_OUTPUT[0][3], rtol=1e-9)
+        assert np.isclose(result4, __FUSIONLAMBDA_VEC_DATA_OUTPUT[0][4], rtol=1e-9)
 
     def test_valign(self):
+        __VALIGN_VEC_DATA_OUTPUT = \
+            scipy.io.loadmat(os.path.join(self.__TEST_DATA_ROOT_DIR, 'valign_data.mat'))['output']
+
         v = np.array([[1, 1]], dtype=np.float64).T
         x = np.array([[1, 1]], dtype=np.float64).T
         mat0 = ell_valign(v, x)
@@ -46,6 +52,6 @@ class TestCore:
         x = np.array([[100, 1.0123]], dtype=np.float64).T
         mat2 = ell_valign(v, x)
 
-        assert np.allclose(mat0, VALIGN_VEC_DATA_OUTPUT[0][0], rtol=1e-9)
-        assert np.allclose(mat1, VALIGN_VEC_DATA_OUTPUT[0][1], rtol=1e-9)
-        assert np.allclose(mat2, VALIGN_VEC_DATA_OUTPUT[0][2], rtol=1e-9)
+        assert np.allclose(mat0, __VALIGN_VEC_DATA_OUTPUT[0][0], rtol=1e-9)
+        assert np.allclose(mat1, __VALIGN_VEC_DATA_OUTPUT[0][1], rtol=1e-9)
+        assert np.allclose(mat2, __VALIGN_VEC_DATA_OUTPUT[0][2], rtol=1e-9)

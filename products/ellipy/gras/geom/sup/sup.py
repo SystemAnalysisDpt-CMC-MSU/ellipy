@@ -4,7 +4,7 @@ import numpy as np
 import numpy.matlib
 
 
-def sup_2_boundary_2(dir_mat, sup_vec):
+def sup_2_boundary_2(dir_mat: np.ndarray, sup_vec: np.ndarray) -> np.ndarray:
     n_dirs = np.shape(dir_mat)[0]
     x_bound_mat = np.zeros((2, n_dirs), dtype=np.float64)
     for i_dir in range(n_dirs - 1):
@@ -17,7 +17,7 @@ def sup_2_boundary_2(dir_mat, sup_vec):
     return x_bound_mat
 
 
-def sup_2_boundary_3(dir_mat, sup_vec, face_mat):
+def sup_2_boundary_3(dir_mat: np.ndarray, sup_vec: np.ndarray, face_mat: np.ndarray) -> np.ndarray:
     n_faces = face_mat.shape[0]
     x_bound_mat = np.zeros((3, n_faces), dtype=np.float64)
 
@@ -33,31 +33,29 @@ def sup_geom_diff_2d(rho1_vec: np.ndarray, rho2_vec: np.ndarray, l_mat: np.ndarr
         throw_error('wrongInput:l_mat',
                     'l_mat must be a matrix')
 
-    if rho1_vec.ndim == 2 and rho1_vec.shape[0] != 1:
+    if rho1_vec.size != max(rho1_vec.shape):
         throw_error('wrongInput:rho1_vec',
-                    'rho1_vec must be a row-vector')
+                    'rho1_vec must be a vector')
 
-    if rho2_vec.ndim == 2 and rho2_vec.shape[0] != 1:
+    if rho2_vec.size != max(rho2_vec.shape):
         throw_error('wrongInput:rho2_vec',
-                    'rho2_vec must be a row-vector')
+                    'rho2_vec must be a vector')
 
-    if rho1_vec.ndim == 1:
+    if rho1_vec.ndim == 0:
         rho1_vec = np.expand_dims(rho1_vec, axis=0)
-        if rho1_vec.shape[0] > 1:
-            throw_error('wrongInput:rho1_vec',
-                        'rho1_vec must be a row-vector')
+    else:
+        rho1_vec = np.squeeze(rho1_vec)
 
-    if rho2_vec.ndim == 1:
+    if rho2_vec.ndim == 0:
         rho2_vec = np.expand_dims(rho2_vec, axis=0)
-        if rho2_vec.shape[0] > 1:
-            throw_error('wrongInput:rho2_vec',
-                        'rho2_vec must be a row-vector')
+    else:
+        rho2_vec = np.squeeze(rho2_vec)
 
-    if rho1_vec.shape[1] != rho2_vec.shape[1]:
+    if rho1_vec.shape[0] != rho2_vec.shape[0]:
         throw_error('wrongInput:rho1_vec,rho2_vec',
                     'rho1_vec, rho2_vec must have the same length')
 
-    if rho1_vec.shape[1] != l_mat.shape[1]:
+    if rho1_vec.shape[0] != l_mat.shape[1]:
         throw_error('wrongInput:rho1_vec,l_mat',
                     'The number of columns of l_mat must equal the length of rho1_vec')
 
@@ -84,7 +82,7 @@ def sup_geom_diff_2d(rho1_vec: np.ndarray, rho2_vec: np.ndarray, l_mat: np.ndarr
     n_faces = len(ind_face_vec)
     s_norm_vec = np.ones(n_dirs, dtype=np.float64)
 
-    for i_face in range(0, n_faces):
+    for i_face in range(n_faces):
         ind_face = ind_face_vec[i_face]
         ind_left = ind_mat[ind_face, 0]
         ind_right = ind_mat[ind_face, 1]
@@ -112,7 +110,7 @@ def sup_geom_diff_2d(rho1_vec: np.ndarray, rho2_vec: np.ndarray, l_mat: np.ndarr
 
     rho_diff_vec = rho_diff_vec / s_norm_vec
 
-    return rho_diff_vec[0]
+    return rho_diff_vec
 
 
 def sup_geom_diff_3d(rho1_vec: np.ndarray, rho2_vec: np.ndarray, l_mat: np.ndarray) -> np.ndarray:
@@ -122,31 +120,29 @@ def sup_geom_diff_3d(rho1_vec: np.ndarray, rho2_vec: np.ndarray, l_mat: np.ndarr
         throw_error('wrongInput:l_mat',
                     'l_mat must be a matrix')
 
-    if rho1_vec.ndim == 2 and rho1_vec.shape[0] != 1:
+    if rho1_vec.size != max(rho1_vec.shape):
         throw_error('wrongInput:rho1_vec',
-                    'rho1_vec must be a row-vector')
+                    'rho1_vec must be a vector')
 
-    if rho2_vec.ndim == 2 and rho2_vec.shape[0] != 1:
+    if rho2_vec.size != max(rho2_vec.shape):
         throw_error('wrongInput:rho2_vec',
-                    'rho2_vec must be a row-vector')
+                    'rho2_vec must be a vector')
 
-    if rho1_vec.ndim == 1:
+    if rho1_vec.ndim == 0:
         rho1_vec = np.expand_dims(rho1_vec, axis=0)
-        if rho1_vec.shape[0] > 1:
-            throw_error('wrongInput:rho1_vec',
-                        'rho1_vec must be a row-vector')
+    else:
+        rho1_vec = np.squeeze(rho1_vec)
 
-    if rho2_vec.ndim == 1:
+    if rho2_vec.ndim == 0:
         rho2_vec = np.expand_dims(rho2_vec, axis=0)
-        if rho2_vec.shape[0] > 1:
-            throw_error('wrongInput:rho2_vec',
-                        'rho2_vec must be a row-vector')
+    else:
+        rho2_vec = np.squeeze(rho2_vec)
 
-    if rho1_vec.shape[1] != rho2_vec.shape[1]:
+    if rho1_vec.shape[0] != rho2_vec.shape[0]:
         throw_error('wrongInput:rho1_vec, rho2_vec',
                     'rho1_vec, rho2_vec must have the same length')
 
-    if rho1_vec.shape[1] != l_mat.shape[1]:
+    if rho1_vec.shape[0] != l_mat.shape[1]:
         throw_error('wrongInput:rho1_vec, l_mat',
                     'The number of columns of l_mat must equal the length of rho1_vec')
 
@@ -165,8 +161,8 @@ def sup_geom_diff_3d(rho1_vec: np.ndarray, rho2_vec: np.ndarray, l_mat: np.ndarr
     f_s_mat = ConvexHull(s_mat.T).simplices
     dist_vec = np.zeros(l_mat.shape[1])
 
-    for i_dist in range(0, l_mat.shape[1]):
-        for j_tri in range(0, f_s_mat.shape[0]):
+    for i_dist in range(l_mat.shape[1]):
+        for j_tri in range(f_s_mat.shape[0]):
             tri_mat = s_mat[:, f_s_mat[j_tri, :]]
             x1_vec = tri_mat[:, 1] - tri_mat[:, 0]
             x2_vec = tri_mat[:, 2] - tri_mat[:, 0]
@@ -186,4 +182,4 @@ def sup_geom_diff_3d(rho1_vec: np.ndarray, rho2_vec: np.ndarray, l_mat: np.ndarr
 
     rho_diff_vec = rho_diff_vec / dist_vec
 
-    return rho_diff_vec[0]
+    return rho_diff_vec

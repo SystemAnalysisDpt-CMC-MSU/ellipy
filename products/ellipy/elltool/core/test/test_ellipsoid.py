@@ -4,8 +4,7 @@ from ellipy.elltool.conf.properties.Properties import *
 import pytest
 import scipy.io
 import numpy as np
-
-GET_GRID_BY_FACTOR = scipy.io.loadmat('get_grid_by_factor_data')['getGridByFactorData']
+import os
 
 
 class TestEllipsoidTestCase:
@@ -265,26 +264,30 @@ class TestEllipsoidTestCase:
         assert is_test_res
 
     def test_get_grid_by_factor(self):
+        __GET_GRID_BY_FACTOR = \
+            scipy.io.loadmat(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                          'get_grid_by_factor_data.mat'))['getGridByFactorData']
+
         class MyTestClass(Ellipsoid):
-            def call_method(self, factor_vec: np.ndarray):
-                return self._get_grid_by_factor(factor_vec)
+            def call_method(self, *args):
+                return self._get_grid_by_factor(*args)
 
         ell_obj = MyTestClass(np.diag([1, 2, 1]))
-        v_grid_mat, f_grid_mat = ell_obj.call_method(np.array([1.], dtype=np.float64))
-        assert np.allclose(GET_GRID_BY_FACTOR[0][0][0][0], v_grid_mat, rtol=1e-9)
-        assert np.allclose(GET_GRID_BY_FACTOR[0][0][0][1], f_grid_mat + 1, rtol=1e-9)
+        v_grid_mat, f_grid_mat = ell_obj.call_method()
+        assert np.allclose(__GET_GRID_BY_FACTOR[0][0][0][0], v_grid_mat, rtol=1e-9)
+        assert np.allclose(__GET_GRID_BY_FACTOR[0][0][0][1], f_grid_mat + 1, rtol=1e-9)
 
         ell_obj = MyTestClass(np.diag([0.8, 0.1, 0.1]))
-        v_grid_mat, f_grid_mat = ell_obj.call_method(np.array([1.], dtype=np.float64))
-        assert np.allclose(GET_GRID_BY_FACTOR[0][1][0][0], v_grid_mat, rtol=1e-9)
-        assert np.allclose(GET_GRID_BY_FACTOR[0][1][0][1], f_grid_mat + 1, rtol=1e-9)
+        v_grid_mat, f_grid_mat = ell_obj.call_method(np.array(1., dtype=np.float64))
+        assert np.allclose(__GET_GRID_BY_FACTOR[0][1][0][0], v_grid_mat, rtol=1e-9)
+        assert np.allclose(__GET_GRID_BY_FACTOR[0][1][0][1], f_grid_mat + 1, rtol=1e-9)
 
         ell_obj = MyTestClass(np.diag([1, 2, 1]))
         v_grid_mat, f_grid_mat = ell_obj.call_method(np.array([2., 4.], dtype=np.float64))
-        assert np.allclose(GET_GRID_BY_FACTOR[0][2][0][0], v_grid_mat, rtol=1e-9)
-        assert np.allclose(GET_GRID_BY_FACTOR[0][2][0][1], f_grid_mat + 1, rtol=1e-9)
+        assert np.allclose(__GET_GRID_BY_FACTOR[0][2][0][0], v_grid_mat, rtol=1e-9)
+        assert np.allclose(__GET_GRID_BY_FACTOR[0][2][0][1], f_grid_mat + 1, rtol=1e-9)
 
         ell_obj = MyTestClass(np.diag([0.8, 0.1, 0.1]))
         v_grid_mat, f_grid_mat = ell_obj.call_method(np.array([10., 5.], dtype=np.float64))
-        assert np.allclose(GET_GRID_BY_FACTOR[0][3][0][0], v_grid_mat, rtol=1e-9)
-        assert np.allclose(GET_GRID_BY_FACTOR[0][3][0][1], f_grid_mat + 1, rtol=1e-9)
+        assert np.allclose(__GET_GRID_BY_FACTOR[0][3][0][0], v_grid_mat, rtol=1e-9)
+        assert np.allclose(__GET_GRID_BY_FACTOR[0][3][0][1], f_grid_mat + 1, rtol=1e-9)

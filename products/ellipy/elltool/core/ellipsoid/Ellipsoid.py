@@ -175,17 +175,17 @@ class Ellipsoid(AEllipsoid):
                        cent_vec: np.ndarray, q_mat: np.ndarray, abs_tol: float) -> Tuple[np.ndarray, np.ndarray]:
         pass
 
-    def _get_grid_by_factor(self, factor_vec: np.ndarray):
+    def _get_grid_by_factor(self, factor_vec: np.ndarray = np.array(1., dtype=np.float64)):
         __EPS = 1e-15
-        n_dim = self.dimension([self, self])[0]
+        n_dim = self.dimension([self]).flat[0]
 
         if n_dim < 2 or n_dim > 3:
             throw_error('wrongDim:ellipsoid', 'ellipsoid must be of dimension 2 or 3')
 
-        if factor_vec.shape[0] < 2:
-            factor = 1
+        if factor_vec.ndim == 0:
+            factor = factor_vec.flat[0]
         else:
-            factor = factor_vec[n_dim - 2]
+            factor = factor_vec.flat[n_dim - 2]
 
         if n_dim == 2:
             n_plot_points = self._n_plot_2d_points

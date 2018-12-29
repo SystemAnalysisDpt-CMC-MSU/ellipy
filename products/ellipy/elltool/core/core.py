@@ -25,7 +25,8 @@ def ell_sim_diag(a_mat: np.ndarray, b_mat: np.ndarray, abs_tol: float) -> np.nda
     return u2_mat.T @ u_mat.T
 
 
-def ell_fusion_lambda(a, q1: np.ndarray, q1_mat: np.ndarray, q2: np.ndarray, q2_mat: np.ndarray, n) -> float:
+def ell_fusion_lambda(a: float, q1: np.ndarray, q1_mat: np.ndarray,
+                      q2: np.ndarray, q2_mat: np.ndarray, n: int) -> float:
     x_mat = a * q1_mat + (1 - a) * q2_mat
     y_mat = inv(x_mat)
     y_mat = 0.5 * (y_mat + y_mat.T)
@@ -43,22 +44,26 @@ def ell_valign(v: np.ndarray, x: np.ndarray) -> np.ndarray:
     if (not is_numeric(v)) or (not is_numeric(x)):
         throw_error('wrongInput:v,x', 'ELL_VALIGN: both arguments must be vectors in R^n.')
 
-    if v.ndim != 2:
-        throw_error('wrongInput:v', 'ELL_VALIGN: first argument must be 2-dimension vector.')
-    if x.ndim != 2:
-        throw_error('wrongInput:x', 'ELL_VALIGN: second argument must be 2-dimension vector.')
+    if v.size != max(v.shape):
+        throw_error('wrongInput:v', 'ELL_VALIGN: first argument must be a vector.')
+    if x.size != max(x.shape):
+        throw_error('wrongInput:x', 'ELL_VALIGN: second argument must be a vector.')
 
-    v_dim1, v_dim2 = v.shape
-    x_dim1, x_dim2 = x.shape
+    if v.ndim == 0:
+        v = np.expand_dims(v, axis=0)
+    else:
+        v = np.squeeze(v)
 
-    if (v_dim2 != 1) or (x_dim2 != 1):
-        throw_error('wrongInput:v,x', 'ELL_VALIGN: both arguments must be vectors in R^n.')
+    if x.ndim == 0:
+        x = np.expand_dims(x, axis=0)
+    else:
+        x = np.squeeze(x)
 
-    if v_dim1 != x_dim1:
+    if v.shape[0] != x.shape[0]:
         throw_error('wrongInput:v,x', 'ELL_VALIGN: both vectors must be of the same dimension.')
 
-    u1_mat, _, v1_mat = svd(v)
-    u2_mat, _, v2_mat = svd(x)
+    u1_mat, _, v1_mat = svd(np.expand_dims(v, axis=1), full_matrices=True)
+    u2_mat, _, v2_mat = svd(np.expand_dims(x, axis=1), full_matrices=True)
 
     v2_mat = v2_mat[0, 0]
     v1_mat = v1_mat[0, 0]

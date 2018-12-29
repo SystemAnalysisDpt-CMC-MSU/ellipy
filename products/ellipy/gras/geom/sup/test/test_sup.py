@@ -7,10 +7,7 @@ import pytest
 import scipy.io
 import numpy.matlib
 import scipy as sc
-
-SUPP1_MAT = scipy.io.loadmat('supp1_mat_data')['supp1Mat']
-SUPP2_MAT = scipy.io.loadmat('supp2_mat_data')['supp2Mat']
-SEC_BOUND_MAT = scipy.io.loadmat('sec_bound_mat_data')['secBoundMat']
+import os
 
 
 class TestSup:
@@ -71,8 +68,8 @@ class TestSup:
         __N_DIRS = 200
 
         l_mat = circle_part(__N_DIRS).T
-        rho1_vec = np.expand_dims(np.ones(__N_DIRS), axis=0)
-        rho2_vec = np.expand_dims(np.ones(__N_DIRS) * 0.5, axis=0)
+        rho1_vec = np.ones(__N_DIRS)
+        rho2_vec = np.ones(__N_DIRS) * 0.5
 
         with pytest.raises(Exception) as e:
             sup_geom_diff_2d(rho2_vec, rho1_vec, l_mat)
@@ -83,20 +80,27 @@ class TestSup:
         assert 'wrongInput:rho1_vec,l_mat' in str(e.value)
 
         with pytest.raises(Exception) as e:
-            sup_geom_diff_2d(rho2_vec, rho1_vec.T, l_mat)
+            sup_geom_diff_2d(rho2_vec, np.matlib.repmat(rho1_vec, 2, 1), l_mat)
         assert 'wrongInput:rho2_vec' in str(e.value)
 
         with pytest.raises(Exception) as e:
-            sup_geom_diff_2d(rho2_vec.T, rho1_vec.T, l_mat.T)
+            sup_geom_diff_2d(np.matlib.repmat(rho2_vec, 2, 1), rho1_vec, l_mat.T)
         assert 'wrongInput:rho1_vec' in str(e.value)
 
     def test_sup_geom_diff_3d(self):
         __ABS_TOL = 1e-10
         __POINTS_NUMBER = 200
+        __TEST_DATA_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+        __SUPP1_MAT = \
+            scipy.io.loadmat(os.path.join(__TEST_DATA_ROOT_DIR, 'supp1_mat_data.mat'))['supp1Mat']
+        __SUPP2_MAT = \
+            scipy.io.loadmat(os.path.join(__TEST_DATA_ROOT_DIR, 'supp2_mat_data.mat'))['supp2Mat']
+        __SEC_BOUND_MAT = \
+            scipy.io.loadmat(os.path.join(__TEST_DATA_ROOT_DIR, 'sec_bound_mat_data.mat'))['secBoundMat']
 
         l_grid_mat, _ = sphere_tri(3)
-        supp1_mat = SUPP1_MAT[0]
-        supp2_mat = SUPP2_MAT[0]
+        supp1_mat = __SUPP1_MAT[0]
+        supp2_mat = __SUPP2_MAT[0]
         rho_diff_vec = sup_geom_diff_3d(supp1_mat, supp2_mat, l_grid_mat.T)
         l_grid2_mat = np.diag([-1, -1, 1]) @ l_grid_mat.T
         rho_diff2_vec = sup_geom_diff_3d(supp1_mat, supp2_mat, l_grid2_mat)
@@ -104,7 +108,7 @@ class TestSup:
         assert np.array_equal(np.abs(rho_diff_vec - rho_diff2_vec) < __ABS_TOL, np.ones(rho_diff_vec.shape[0]))
 
         fir_bound_mat = circle_part(__POINTS_NUMBER).T
-        sec_bound_mat = SEC_BOUND_MAT
+        sec_bound_mat = __SEC_BOUND_MAT
         third_bound_mat = np.concatenate((numpy.matlib.repmat(fir_bound_mat, 1, 10),
                                           np.floor(np.expand_dims(np.arange(0, 2000), axis=0) /
                                                    __POINTS_NUMBER)), axis=0)
