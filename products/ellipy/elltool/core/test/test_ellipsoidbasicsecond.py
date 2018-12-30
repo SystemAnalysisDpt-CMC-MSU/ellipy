@@ -1,6 +1,8 @@
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
 from ellipy.gen.common.common import throw_error
 from ellipy.gen.common.common import abs_rel_compare
+from ellipy.gras.geom.tri.tri import is_tri_equal
+from ellipy.gras.gen.gen import sort_rows_tol
 from typing import Tuple
 import os
 import scipy.io
@@ -447,6 +449,7 @@ class TestEllipsoidBasicSecondTC:
         check_scal()
 
     def test_get_rho_boundary(self):
+        __MAX_TOL__ = 1e-7
         test_ell_vec, test_num_points_vec = self.__get_ell_params(self, 2)
         data_size = test_ell_vec.size
         loaded_data = scipy.io.loadmat(
@@ -455,13 +458,23 @@ class TestEllipsoidBasicSecondTC:
         f_right_mat_arr = loaded_data['fRightMatCArr']
         l_grid_right_arr = loaded_data['lGridRightCMat']
         sup_right_vec = loaded_data['supRightCVec']
+        ell_class = test_ell_vec.flat[0].__class__
         for i in range(data_size):
-            tuple_got = Ellipsoid.get_rho_boundary(test_ell_vec[i], test_num_points_vec[i][0])
-            tuple_expected = (
-                bp_right_mat_arr[0, i], f_right_mat_arr[0, i], sup_right_vec[0, i], l_grid_right_arr[0, i])
-            is_ok = np.all(list(map(lambda j: np.allclose(tuple_expected[j], tuple_got[j]),
-                                range(len(tuple_got)))))
-            assert is_ok
+            bp_arr, f_arr, sup_vec, l_grid_arr = ell_class.get_rho_boundary(test_ell_vec[i], test_num_points_vec[i][0])
+            is_lgrid_ok = np.allclose(l_grid_arr[0, :], l_grid_arr[-1, :])
+            l_grid_right = l_grid_right_arr[0, i]
+            bp_right = bp_right_mat_arr[0, i]
+            sup_right = sup_right_vec[0, i]
+            f_right = f_right_mat_arr[0, i] - 1
+            v_arr = l_grid_arr[0:-1, :]
+            v_right_arr = l_grid_right[0:-1, :]
+            is_v_eq, _ = is_tri_equal(v_arr, f_arr, v_right_arr, f_right, __MAX_TOL__)
+            l_grid_arr, ind_sort_py, _ = sort_rows_tol(l_grid_arr, __MAX_TOL__)
+            l_grid_right, ind_sort_mat, _ = sort_rows_tol(l_grid_right, __MAX_TOL__)
+            is_lgrid_eq = np.allclose(l_grid_arr, l_grid_right)
+            is_bp_eq = np.allclose(bp_arr[ind_sort_py], bp_right[ind_sort_mat])
+            is_sup_eq = np.allclose(sup_vec[ind_sort_py], sup_right[ind_sort_mat])
+            assert is_lgrid_ok and is_v_eq and is_lgrid_eq and is_bp_eq and is_sup_eq
 
     @staticmethod
     def __get_ell_params(ell_factory_obj, flag: int) -> Tuple[np.ndarray, np.ndarray]:
