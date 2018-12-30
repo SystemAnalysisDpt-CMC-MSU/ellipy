@@ -446,9 +446,9 @@ def sphere_tri_ext(n_dim: int, n_points: int, return_f_grid: bool = False) \
             Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         bp_mat = circle_part(n_points_2d)
         if return_f_vec:
-            f_mat = np.vstack((np.arange(1, n_points_2d + 1),
-                               np.arange(2, n_points_2d + 2))).T
-            f_mat[n_points - 1, 1] = 1
+            f_mat = np.vstack((np.arange(0, n_points_2d),
+                               np.arange(1, n_points_2d + 1))).T
+            f_mat[n_points_2d - 1, 1] = 0
             return bp_mat, f_mat
         return bp_mat
 
