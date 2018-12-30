@@ -421,10 +421,10 @@ class Ellipsoid(AEllipsoid):
             n_cols = dir_mat.shape[1]
         if not n_ell > 0:
             throw_error('wrongInput:emptyArray', 'Each array must be not empty.')
-        if np.all(ell_arr[0].is_empty(np.ravel(ell_arr))):
+        if not np.all(~ell_arr[0].is_empty(np.ravel(ell_arr))):
             throw_error('wrongInput:emptyEllipsoid', 'Array should not have empty ellipsoid.')
-        if not (np.all(n_dims_ell_arr.flatten() == n_dims)) & (np.all(n_dims_ell_arr.flatten() == n_dims_ell_arr[0])):
-            throw_error('wrongSizes', 'ellipsoids in the array and vector(s) must be of the same dimension.')
+        if not ((np.all(n_dims_ell_arr == n_dims)) and (np.all(n_dims_ell_arr == n_dims_ell_arr[0]))):
+            throw_error('wrongSizes:', 'ellipsoids in the array and vector(s) must be of the same dimension.')
 
         if n_ell == 1:
             return np.squeeze(ell_arr[0].rep_mat(np.array([1, n_cols])))
@@ -447,17 +447,18 @@ class Ellipsoid(AEllipsoid):
                 sh_mat = cls._regularize(sh_mat, abs_tol_arr[ell_ind])
             sh_sqrt_mat = sqrtm_pos(sh_mat, abs_tol_arr[ell_ind])
             dst_mat = sh_sqrt_mat @ dir_mat
-            return sh_sqrt_mat, ml_orth_transl(dst_mat, src_mat)
+            return sh_sqrt_mat, np.reshape(ml_orth_transl(dst_mat, src_mat), [n_dims, n_dims, n_cols])
 
         def f_single_direction(dir_ind: int) -> Ellipsoid:
             sub_sh_mat = np.cumsum(np.array(list(map(lambda ell_ind:
-                                                     np.squeeze(rot_arr[ell_ind, :, :, dir_ind])
+                                                     rot_arr[ell_ind, :, :, dir_ind]
                                                      @ sqrt_sh_arr[ell_ind, :, :],
                                                      np.arange(0, n_ell)))), 0)
-            sub_sh_mat = np.squeeze(sub_sh_mat[-1, :, :])
-            return ell_arr[0].__class__(cent_vec, sub_sh_mat.T @ sub_sh_mat)
+            sub_sh_mat = sub_sh_mat[-1, :, :]
+            sh_mat = sub_sh_mat.T @ sub_sh_mat
+            return ell_arr[0].__class__(cent_vec, sh_mat)
         #
-        ell_arr = np.array(ell_arr)
+        ell_arr = np.array(ell_arr.flatten())
         cls._check_is_me(ell_arr, 'first')
         n_ell = ell_arr.size
         n_dims_ell_arr = cls.dimension(ell_arr)
@@ -469,10 +470,10 @@ class Ellipsoid(AEllipsoid):
 
         if not n_ell > 0:
             throw_error('wrongInput:emptyArray', 'Each array must be not empty.')
-        if np.all(ell_arr[0].is_empty(np.ravel(ell_arr))):
+        if not np.all(~ell_arr[0].is_empty(np.ravel(ell_arr))):
             throw_error('wrongInput:emptyEllipsoid', 'Array should not have empty ellipsoid.')
-        if not (np.all(n_dims_ell_arr.flatten() == n_dims)) & (np.all(n_dims_ell_arr.flatten() == n_dims_ell_arr[0])):
-            throw_error('wrongSizes', 'ellipsoids in the array and vector(s) must be of the same dimension.')
+        if not ((np.all(n_dims_ell_arr == n_dims)) and (np.all(n_dims_ell_arr == n_dims_ell_arr[0]))):
+            throw_error('wrongSizes:', 'ellipsoids in the array and vector(s) must be of the same dimension.')
         if n_ell == 1:
             return np.squeeze(ell_arr[0].rep_mat(np.array([1, n_cols])))
         else:

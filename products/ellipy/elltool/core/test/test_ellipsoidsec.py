@@ -103,9 +103,15 @@ def calc_exp_mink_sum(ell_factory_obj: TestEllipsoidSecTestCase, is_ext_apx: boo
                 supp1_l_vec = supp1_mat @ l_vec
                 supp2_l_vec = supp2_mat @ l_vec
                 supp3_l_vec = supp3_mat @ l_vec
-                unitary_u1, tmp, unitary_v1 = np.linalg.svd(supp1_l_vec)
-                unitary_u2, tmp, unitary_v2 = np.linalg.svd(supp2_l_vec)
-                unitary_u3, tmp, unitary_v3 = np.linalg.svd(supp3_l_vec)
+                unitary_u1, tmp, unitary_v1 = np.linalg.svd(np.expand_dims(supp1_l_vec, 1))
+                unitary_u2, tmp, unitary_v2 = np.linalg.svd(np.expand_dims(supp2_l_vec, 1))
+                unitary_u3, tmp, unitary_v3 = np.linalg.svd(np.expand_dims(supp3_l_vec, 1))
+                if unitary_v1.size == 1:
+                    unitary_v1 = unitary_v1 * np.eye(unitary_u1.shape[1])
+                if unitary_v2.size == 1:
+                    unitary_v2 = unitary_v2 * np.eye(unitary_v1.shape[1])
+                if unitary_v3.size == 1:
+                    unitary_v3 = unitary_v3 * np.eye(unitary_v1.shape[1])
                 s2_mat = unitary_u1 @ unitary_v1 @ unitary_v2.T @ unitary_u2.T
                 s2_mat = np.real(s2_mat)
                 s3_mat = unitary_u1 @ unitary_v1 @ unitary_v3.T @ unitary_u3.T
@@ -136,12 +142,11 @@ def compare_analytic_for_mink_sum(ell_factory_obj: TestEllipsoidSecTestCase, is_
                                     test0_ell.get_copy([test0_ell]).flat[0],
                                     test0_ell.get_copy([test0_ell]).flat[0]])
             is_eq_vec, report_str = analytic_res_ell_vec[0].is_equal(analytic_res_ell_vec, test_res)
-            is_eq= all(is_eq_vec)
-            assert is_eq is True #how to disp report_str
+            is_eq = all(is_eq_vec)
+            assert is_eq is True, report_str
         else:
             analytic_res_ell_vec = calc_exp_mink_sum(ell_factory_obj,  is_ea, n_good_dirs, a_mat, e0_vec, e0_mat,
                                                      e1_vec, e1_mat, e2_vec, e2_mat)
             is_eq_vec, report_str = analytic_res_ell_vec[0].is_equal(analytic_res_ell_vec, test_res)
-            is_eq= all(is_eq_vec)
-            assert exp_result == is_eq
-
+            is_eq = all(is_eq_vec)
+            assert exp_result == is_eq, report_str
