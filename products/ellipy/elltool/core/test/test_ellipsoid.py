@@ -293,7 +293,7 @@ class TestEllipsoidTestCase:
         assert np.allclose(__GET_GRID_BY_FACTOR[0][3][0][1], f_grid_mat + 1, rtol=1e-9)
 
     def test_sqrtm_pos_tolerance_failure(self):
-        sh1Mat = np.diag([1e-7, 1e-7, 1e-7, 1e-7]) + np.diag([1, 1, 0, 0])
-        sh2Mat = np.eye(4)
-        ell_arr = np.array([self.ellipsoid(np.zeros(4), sh1Mat), self.ellipsoid(np.zeros(4), sh2Mat)])
+        sh1_mat = np.diag([1e-7, 1e-7, 1e-7, 1e-7]) + np.diag([1, 1, 0, 0])
+        sh2_mat = np.eye(4)
+        ell_arr = np.array([self.ellipsoid(np.zeros(4), sh1_mat), self.ellipsoid(np.zeros(4), sh2_mat)])
         ell_arr[0].minksum_ia(ell_arr, np.array([0, 0, 1, 0]))

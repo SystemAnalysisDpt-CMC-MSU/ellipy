@@ -1,6 +1,7 @@
 from ellipy.elltool.core.core import *
 import pytest
 
+
 class TestEllSecTCMultiDim:
     # noinspection PyMethodMayBeStatic
     def ellipsoid(self, *args, **kwargs):
@@ -68,7 +69,7 @@ def create_typical_high_dim_array(ell_factory_obj, ind_example: int):
     if ind_example == 2:
         array_size = np.array([1, 1, 1, 1, 1, 3, 1, 1, 3, 1])
         my_ell_array = create_object_array(array_size, lambda x, y: ell_factory_obj.ellipsoid(x, y),
-                                         np.ones(100), np.diag(0.25 * np.ones(100)), 2)
+                                           np.ones(100), np.diag(0.25 * np.ones(100)), 2)
         my_mat = np.vstack((np.eye(5), np.zeros([95, 5])))
         ans_ell_mat = np.diag((4.5 ** 2) * np.ones(100))
         ans_ell_vec = create_object_array(np.array([5]), lambda x, y: ell_factory_obj.ellipsoid(x, y),
@@ -104,7 +105,7 @@ def create_typical_array(ell_factory_obj, ind_example: int):
         return my_ell_array, my_mat, ans_ell_vec
     if ind_example == 10:
         array_size = np.array([2, 1, 1, 2, 1, 3, 1])
-        test_ell_array = np.empty([1, 0, 0, 1, 5], dtype = object)
+        test_ell_array = np.empty([1, 0, 0, 1, 5], dtype=object)
         test2_ell_array = create_object_array(array_size, lambda x: ell_factory_obj.ell_unitball(x), 3, 1, 1)
         error_str = 'wrongInput:emptyArray'
         return test_ell_array, test2_ell_array, error_str
@@ -118,7 +119,6 @@ def create_typical_array(ell_factory_obj, ind_example: int):
     if ind_example == 12:
         array_size = np.array([2, 1, 1, 2, 1, 3, 1])
         test_ell_array = create_object_array(array_size, lambda x: ell_factory_obj.ellipsoid(), 3, 1, 1)
-        ell = test_ell_array.flat[0]
         test2_ell_array = create_object_array(array_size, lambda x: ell_factory_obj.ell_unitball(x), 3, 1, 1)
         error_str = 'wrongInput:emptyEllipsoid'
         return test_ell_array, test2_ell_array, error_str
@@ -127,13 +127,12 @@ def create_typical_array(ell_factory_obj, ind_example: int):
         test_ell_array = create_object_array(array_size, lambda x: ell_factory_obj.ell_unitball(x), 3, 1, 1)
         test2_ell_array = create_object_array(array_size, lambda x: ell_factory_obj.ell_unitball(x), 3, 1, 1)
         test_ell_array[1, 0, 0, 0, 0, 0, 0] = ell_factory_obj.ell_unitball(7)
-        tmp = ell_factory_obj.ell_unitball(7)
         error_str = 'wrongSizes'
         return test_ell_array, test2_ell_array, error_str
 
 
 def compare_for_mink_func(method: str, n_arg: int, ans_ell_vec: np.ndarray, first_arg, second_arg,
-                          third_arg = 0, fourth_arg = 0):
+                          third_arg=0, fourth_arg=0):
     if n_arg == 2:
         res_ell_vec = getattr(first_arg.flat[0], method)(first_arg, second_arg)
     elif n_arg == 3:

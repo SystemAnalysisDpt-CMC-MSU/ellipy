@@ -71,13 +71,13 @@ def create_typical_ell(ell_factory_obj: TestEllipsoidSecTestCase, ind_example: i
         return vec_1, mat_1, vec_2, mat_2, vec_3, mat_3, ell_vec
     if ind_example == 13:
         vec_1 = np.array([32, 0, 8, 1, 23])
-        mat_1 = np.diag ([3, 5, 6, 5, 2])
+        mat_1 = np.diag([3, 5, 6, 5, 2])
         ell_1 = ell_factory_obj.ellipsoid(vec_1, mat_1)
         vec_2 = np.array([7, 3, 5, 42, 3])
-        mat_2 = np.diag ([32, 34, 23, 12, 21])
+        mat_2 = np.diag([32, 34, 23, 12, 21])
         ell_2 = ell_factory_obj.ellipsoid(vec_2, mat_2)
         vec_3 = np.array([32, 81, 36, -25, -62])
-        mat_3 = np.diag ([4, 12, 1, 1, 75])
+        mat_3 = np.diag([4, 12, 1, 1, 75])
         ell_3 = ell_factory_obj.ellipsoid(vec_3, mat_3)
         ell_vec = np.array([ell_1, ell_2, ell_3])
         return vec_1, mat_1, vec_2, mat_2, vec_3, mat_3, ell_vec
@@ -88,7 +88,7 @@ def calc_exp_mink_sum(ell_factory_obj: TestEllipsoidSecTestCase, is_ext_apx: boo
                       e2_vec: np.ndarray, e2_mat: np.ndarray) -> np.ndarray:
         from scipy.linalg import sqrtm
         analytic_res_vec = e0_vec + e1_vec + e2_vec
-        analytic_res_ell_vec = np.empty(n_dirs, dtype = object)
+        analytic_res_ell_vec = np.empty(n_dirs, dtype=object)
         for i_dir in range(n_dirs):
             l_vec = a_mat[:, i_dir]
             if is_ext_apx:
@@ -118,29 +118,29 @@ def calc_exp_mink_sum(ell_factory_obj: TestEllipsoidSecTestCase, is_ext_apx: boo
                 s3_mat = np.real(s3_mat)
                 q_star_mat = supp1_mat + s2_mat @ supp2_mat + s3_mat @ supp3_mat
                 analytic_res_mat = q_star_mat.T @ q_star_mat
-            analytic_res_ell_vec[i_dir] =  ell_factory_obj.ellipsoid(analytic_res_vec, analytic_res_mat)
+            analytic_res_ell_vec[i_dir] = ell_factory_obj.ellipsoid(analytic_res_vec, analytic_res_mat)
         return analytic_res_ell_vec
 
 
 def compare_analytic_for_mink_sum(ell_factory_obj: TestEllipsoidSecTestCase, is_ea: bool, is_high_dim: bool,
-                                  ind_typical_example: int, n_dirs: int, n_good_dirs: int, exp_result: bool):
+                                  ind_example: int, n_dirs: int, n_good_dirs: int, exp_result: bool):
         if is_high_dim:
             [e0_vec, e0_mat, e1_vec, e1_mat, e2_vec, e2_mat, a_ell_vec] = create_typical_high_dim_ell(ell_factory_obj,
-                                                                                                     ind_typical_example)
+                                                                                                      ind_example)
         else:
             [e0_vec, e0_mat, e1_vec, e1_mat, e2_vec, e2_mat, a_ell_vec] = create_typical_ell(ell_factory_obj,
-                                                                                            ind_typical_example)
+                                                                                             ind_example)
         a_mat = np.eye(n_dirs)
         if is_ea:
             test_res = a_ell_vec[0].minksum_ea(a_ell_vec, a_mat)
         else:
             test_res = a_ell_vec[0].minksum_ia(a_ell_vec, a_mat)
-        if ~is_high_dim and (ind_typical_example == 11):
+        if ~is_high_dim and (ind_example == 11):
             test0_ell = ell_factory_obj.ellipsoid(e0_vec, e0_mat)
             analytic_res_ell_vec = np.array([test0_ell, test0_ell.get_copy([test0_ell]).flat[0],
-                                    test0_ell.get_copy([test0_ell]).flat[0],
-                                    test0_ell.get_copy([test0_ell]).flat[0],
-                                    test0_ell.get_copy([test0_ell]).flat[0]])
+                                             test0_ell.get_copy([test0_ell]).flat[0],
+                                             test0_ell.get_copy([test0_ell]).flat[0],
+                                             test0_ell.get_copy([test0_ell]).flat[0]])
             is_eq_vec, report_str = analytic_res_ell_vec[0].is_equal(analytic_res_ell_vec, test_res)
             is_eq = all(is_eq_vec)
             assert is_eq is True, report_str
