@@ -97,9 +97,9 @@ def calc_exp_mink_sum(ell_factory_obj: TestEllipsoidSecTestCase, is_ext_apx: boo
                 a2 = np.sqrt(l_vec @ (e2_mat @ l_vec))
                 analytic_res_mat = (a0 + a1 + a2) * (e0_mat / a0 + e1_mat / a1 + e2_mat / a2)
             else:
-                supp1_mat = sqrtm(e0_mat)
-                supp2_mat = sqrtm(e1_mat)
-                supp3_mat = sqrtm(e2_mat)
+                supp1_mat, _ = sqrtm(e0_mat, disp=False)
+                supp2_mat, _ = sqrtm(e1_mat, disp=False)
+                supp3_mat, _ = sqrtm(e2_mat, disp=False)
                 supp1_l_vec = supp1_mat @ l_vec
                 supp2_l_vec = supp2_mat @ l_vec
                 supp3_l_vec = supp3_mat @ l_vec
@@ -122,7 +122,7 @@ def calc_exp_mink_sum(ell_factory_obj: TestEllipsoidSecTestCase, is_ext_apx: boo
         return analytic_res_ell_vec
 
 
-def compare_analytic_for_mink_sum(ell_factory_obj: TestEllipsoidSecTestCase, is_ea: bool, is_high_dim: bool,
+def compare_analytic_for_mink_sum(ell_factory_obj, is_ea: bool, is_high_dim: bool,
                                   ind_example: int, n_dirs: int, n_good_dirs: int, exp_result: bool):
         if is_high_dim:
             [e0_vec, e0_mat, e1_vec, e1_mat, e2_vec, e2_mat, a_ell_vec] = create_typical_high_dim_ell(ell_factory_obj,
@@ -150,3 +150,4 @@ def compare_analytic_for_mink_sum(ell_factory_obj: TestEllipsoidSecTestCase, is_
             is_eq_vec, report_str = analytic_res_ell_vec[0].is_equal(analytic_res_ell_vec, test_res)
             is_eq = all(is_eq_vec)
             assert exp_result == is_eq, report_str
+

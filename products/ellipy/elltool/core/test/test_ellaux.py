@@ -56,6 +56,3 @@ class TestEllAuxTestCase:
         #
         check_apx_reg('minksum_ia')
         check_apx_reg('minksum_ea')
-        #
-        #
-        # master_check_is_pos(ell_reg_shape_mat)
