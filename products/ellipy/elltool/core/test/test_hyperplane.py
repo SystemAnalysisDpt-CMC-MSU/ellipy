@@ -54,7 +54,7 @@ class TestHyperplaneTestCase:
             [0, 1, 0, 0],
             [0, 0, 1, 0]
         ])
-        is_contained_vec = Hyperplane.contains(np.array([test_hyp]), test_vectors_mat)
+        is_contained_vec = test_hyp.contains(np.array([test_hyp]), test_vectors_mat)
         is_contained_tested_vec = [True, 0, 0, 0]
         assert np.array_equal(is_contained_vec, is_contained_tested_vec)
 
@@ -154,7 +154,7 @@ class TestHyperplaneTestCase:
 
         with pytest.raises(Exception) as e:
             # noinspection PyChecker
-            Hyperplane.contains(np.array([test_hyperplane]), nan_vec)
+            test_hyperplane.contains(np.array([test_hyperplane]), nan_vec)
             assert 'wrongInput' in str(e.value)
             self.hyperplane(inf_vec, test_constant)
             assert 'wrongInput' in str(e.value)

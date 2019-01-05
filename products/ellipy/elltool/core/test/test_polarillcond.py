@@ -83,7 +83,7 @@ class TestPolarIllCondTC:
             sh_mat = hilb(__N_DIMS)
             exp_sh_mat = invhilb(__N_DIMS)
             ell1 = self.ellipsoid(sh_mat)
-            sh1_mat, sh2_mat = self.aux_get_test_polars(ell1)
+            sh1_mat, sh2_mat = self.__aux_get_test_polars(ell1)
             is_robust_better_vec[i_elem] = np.linalg.norm(exp_sh_mat - sh1_mat) <= \
                 np.linalg.norm(exp_sh_mat - sh2_mat)
 
@@ -95,12 +95,12 @@ class TestPolarIllCondTC:
         assert np.any(is_robust_better_vec)
         assert np.any(~is_robust_better_vec)
 
-    def aux_get_test_polars(self, ell) -> Tuple[np.ndarray, np.ndarray]:
+    def __aux_get_test_polars(self, ell) -> Tuple[np.ndarray, np.ndarray]:
         test_ell_obj = self.get_test()
         polar1_obj = test_ell_obj.get_scalar_polar_test(ell, True)
-        _, sh1_mat = Ellipsoid.double(polar1_obj)
+        _, sh1_mat = polar1_obj.double()
         polar2_obj = test_ell_obj.get_scalar_polar_test(ell, False)
-        _, sh2_mat = Ellipsoid.double(polar2_obj)
+        _, sh2_mat = polar2_obj.double()
         return tuple((sh1_mat, sh2_mat))
 
     def test_negative(self):
