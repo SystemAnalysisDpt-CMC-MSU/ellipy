@@ -294,6 +294,6 @@ class TestEllipsoidTestCase:
 
     def test_sqrtm_pos_tolerance_failure(self):
         sh1_mat = np.diag([1e-7, 1e-7, 1e-7, 1e-7]) + np.diag([1, 1, 0, 0])
-        sh2_mat = np.eye(4)
+        sh2_mat = np.eye(4, dtype=np.float64)
         ell_arr = np.array([self.ellipsoid(np.zeros(4), sh1_mat), self.ellipsoid(np.zeros(4), sh2_mat)])
         ell_arr[0].minksum_ia(ell_arr, np.array([0, 0, 1, 0]))
