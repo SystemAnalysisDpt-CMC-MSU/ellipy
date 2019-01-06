@@ -344,7 +344,7 @@ class TestEllipsoidBasicSecondTC:
         for i in range(data_size):
             bp_arr[i], f_arr[i] = test_ell_vec[i].get_boundary(test_num_points_vec[i], True)
             bp_right_arr[i] = bp_right_data_list[i]
-            f_right_arr[i] = np.array([[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 1]], dtype=np.float64)
+            f_right_arr[i] = np.array([[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]], dtype=np.float64)
         is_ok = self.__compare_cells(bp_arr, f_arr, bp_right_arr, f_right_arr)
         assert is_ok
 
@@ -468,13 +468,15 @@ class TestEllipsoidBasicSecondTC:
             f_right = f_right_mat_arr[0, i] - 1
             v_arr = l_grid_arr[0:-1, :]
             v_right_arr = l_grid_right[0:-1, :]
-            is_v_eq, _ = is_tri_equal(v_arr, f_arr, v_right_arr, f_right, __MAX_TOL__)
             l_grid_arr, ind_sort_py, _ = sort_rows_tol(l_grid_arr, __MAX_TOL__)
             l_grid_right, ind_sort_mat, _ = sort_rows_tol(l_grid_right, __MAX_TOL__)
-            is_lgrid_eq = np.allclose(l_grid_arr, l_grid_right)
+            if test_ell_vec.flat[i].dimension(test_ell_vec.flat[i]) == 3:
+                is_v_eq, _ = is_tri_equal(v_arr, f_arr, v_right_arr, f_right, __MAX_TOL__)
+            else:
+                is_v_eq = np.allclose(l_grid_arr, l_grid_right)
             is_bp_eq = np.allclose(bp_arr[ind_sort_py], bp_right[ind_sort_mat])
             is_sup_eq = np.allclose(sup_vec[ind_sort_py], sup_right[ind_sort_mat])
-            assert is_lgrid_ok and is_v_eq and is_lgrid_eq and is_bp_eq and is_sup_eq
+            assert is_lgrid_ok and is_v_eq and is_bp_eq and is_sup_eq
 
     @staticmethod
     def __get_ell_params(ell_factory_obj, flag: int) -> Tuple[np.ndarray, np.ndarray]:
