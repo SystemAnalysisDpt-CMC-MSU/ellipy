@@ -345,7 +345,7 @@ class TestEllipsoidBasicSecondTC:
             bp_arr[i], f_arr[i] = test_ell_vec[i].get_boundary(test_num_points_vec[i], True)
             bp_right_arr[i] = bp_right_data_list[i]
             f_right_arr[i] = np.array([[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]], dtype=np.float64)
-        is_ok = self.__compare_cells(bp_arr, f_arr, bp_right_arr, f_right_arr)
+        is_ok = self.__compare_arrays(bp_arr, f_arr, bp_right_arr, f_right_arr)
         assert is_ok
 
     def test_get_boundary_by_factor(self):
@@ -358,20 +358,20 @@ class TestEllipsoidBasicSecondTC:
         test_num_right_points_vec = np.zeros(data_size, dtype=np.int)
 
         for i in range(data_size):
-            test_num_right_points_vec[i] = test_ell_vec[i].get_n_plot_2d_points(test_ell_vec[i]) * test_num_points_vec[
-                i]
+            test_num_right_points_vec[i] = test_ell_vec[i].get_n_plot_2d_points(test_ell_vec[i]) * \
+                                           test_num_points_vec[i]
             bp_arr[i], f_arr[i] = test_ell_vec[i].get_boundary_by_factor(test_num_points_vec[i], True)
             bp_right_arr[i], f_right_arr[i] = test_ell_vec[i].get_boundary(test_num_right_points_vec[i], True)
-        is_ok = self.__compare_cells(bp_arr, f_arr, bp_right_arr, f_right_arr)
+        is_ok = self.__compare_arrays(bp_arr, f_arr, bp_right_arr, f_right_arr)
         assert is_ok
 
     def test_get_rho_boundary_by_factor(self):
-        def get_num_points(ell: Ellipsoid, factor_vec: Union[int, np.ndarray]) -> int:
+        def get_num_points(ell: Ellipsoid, factor_vec: Union[float, np.ndarray]) -> int:
             n_dims = ell.dimension([ell])
             if n_dims == 2:
-                return int(ell._n_plot_2d_points) * factor_vec
+                return int(ell.get_n_plot_2d_points([ell]).flat[0] * factor_vec)
             else:
-                return int(ell._n_plot_3d_points) * factor_vec[n_dims - 2]
+                return int(ell.get_n_plot_3d_points([ell]).flat[0] * factor_vec[n_dims - 2])
 
         test_ell_vec, test_num_points_vec = self.__get_ell_params(self, 2)
         data_size = test_ell_vec.size
@@ -384,16 +384,6 @@ class TestEllipsoidBasicSecondTC:
             assert is_ok
 
     def test_neg_boundary(self):
-        # noinspection PyChecker,PyUnboundLocalVariable
-        def run_and_check_error(func: Callable, val: str):
-            try:
-                func()
-            except Exception as e:
-                split_str = str(e).split(":")
-                is_ok = (split_str[-2] == val) or (split_str[-3] == val)
-                assert is_ok
-
-        # noinspection PyChecker
         def check_dim():
 
             def check_dim_g_b():
@@ -412,44 +402,54 @@ class TestEllipsoidBasicSecondTC:
                 ell_obj = self.ellipsoid(np.eye(4))
                 ell_obj.get_rho_boundary_by_factor()
 
-            errmsg = 'wrongDim'
-            run_and_check_error(check_dim_g_b, errmsg)
-            run_and_check_error(check_dim_g_b_b_f, errmsg)
-            run_and_check_error(check_dim_g_r_b, errmsg)
-            run_and_check_error(check_dim_g_r_b_b_f, errmsg)
+            with pytest.raises(Exception) as e:
+                check_dim_g_b()
+            assert 'wrongDim' in str(e.value)
+            with pytest.raises(Exception) as e:
+                check_dim_g_b_b_f()
+            assert 'wrongDim' in str(e.value)
+            with pytest.raises(Exception) as e:
+                check_dim_g_r_b()
+            assert 'wrongDim' in str(e.value)
+            with pytest.raises(Exception) as e:
+                check_dim_g_r_b_b_f()
+            assert 'wrongDim' in str(e.value)
 
-        # noinspection PycChecker
         def check_scal():
-            ell_vec = np.array([self.ellipsoid(np.array([[1], [3]]), np.eye(2)),
-                                self.ellipsoid(np.array([[2], [5]]), np.array([[4, 1], [1, 1]]))])
+            ell_vec = np.array([self.ellipsoid(np.array([1, 3]), np.eye(2)),
+                                self.ellipsoid(np.array([2, 5]), np.array([[4, 1], [1, 1]]))])
+            ell_class = ell_vec.flat[0].__class__
 
-            # noinspection PyTypeChecker,PyCallByClass
             def check_scal_g_b():
-                ell_vec[0].get_boundary()
+                ell_class.get_boundary(ell_vec)
 
-            # noinspection PyTypeChecker,PyCallByClass
             def check_scal_g_b_b_f():
-                ell_vec[0].get_boundary_by_factor()
+                ell_class.get_boundary_by_factor(ell_vec)
 
-            # noinspection PyTypeChecker,PyCallByClass
             def check_scal_g_r_b():
-                ell_vec[0].get_rho_boundary()
+                ell_class.get_rho_boundary(ell_vec)
 
-            # noinspection PyTypeChecker,PyCallByClass
             def check_scal_g_r_b_b_f():
-                ell_vec[0].get_rho_boundary_by_factor()
+                ell_class.get_rho_boundary_by_factor(ell_vec)
 
-            errmsg = 'wrongInput'
-            run_and_check_error(check_scal_g_b, errmsg)
-            run_and_check_error(check_scal_g_b_b_f, errmsg)
-            run_and_check_error(check_scal_g_r_b, errmsg)
-            run_and_check_error(check_scal_g_r_b_b_f, errmsg)
+            with pytest.raises(Exception) as e:
+                check_scal_g_b()
+            assert 'wrongInput' in str(e.value)
+            with pytest.raises(Exception) as e:
+                check_scal_g_b_b_f()
+            assert 'wrongInput' in str(e.value)
+            with pytest.raises(Exception) as e:
+                check_scal_g_r_b()
+            assert 'wrongInput' in str(e.value)
+            with pytest.raises(Exception) as e:
+                check_scal_g_r_b_b_f()
+            assert 'wrongInput' in str(e.value)
 
         check_dim()
         check_scal()
 
     def test_get_rho_boundary(self):
-        __MAX_TOL__ = 1e-7
+        __MAX_TOL__ = 1e-12
         test_ell_vec, test_num_points_vec = self.__get_ell_params(self, 2)
         data_size = test_ell_vec.size
         loaded_data = scipy.io.loadmat(
@@ -468,8 +468,8 @@ class TestEllipsoidBasicSecondTC:
             f_right = f_right_mat_arr[0, i] - 1
             v_arr = l_grid_arr[0:-1, :]
             v_right_arr = l_grid_right[0:-1, :]
-            l_grid_arr, ind_sort_py, _ = sort_rows_tol(l_grid_arr, __MAX_TOL__)
-            l_grid_right, ind_sort_mat, _ = sort_rows_tol(l_grid_right, __MAX_TOL__)
+            l_grid_arr, _, ind_sort_py = sort_rows_tol(l_grid_arr, __MAX_TOL__)
+            l_grid_right, _, ind_sort_mat = sort_rows_tol(l_grid_right, __MAX_TOL__)
             if test_ell_vec.flat[i].dimension(test_ell_vec.flat[i]) == 3:
                 is_v_eq, _ = is_tri_equal(v_arr, f_arr, v_right_arr, f_right, __MAX_TOL__)
             else:
@@ -496,8 +496,8 @@ class TestEllipsoidBasicSecondTC:
         return ell_vec, points_vec
 
     @staticmethod
-    def __compare_cells(bp_arr: np.ndarray, f_arr: np.ndarray, bp_right_arr: np.ndarray,
-                        f_right_arr: np.ndarray) -> bool:
+    def __compare_arrays(bp_arr: np.ndarray, f_arr: np.ndarray, bp_right_arr: np.ndarray,
+                         f_right_arr: np.ndarray) -> bool:
 
         __ABSTOL__ = 1.0e-12
         is_equal_1 = True

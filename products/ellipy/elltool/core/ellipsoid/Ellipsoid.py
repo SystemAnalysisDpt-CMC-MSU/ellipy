@@ -276,9 +276,8 @@ class Ellipsoid(AEllipsoid):
 
     def get_boundary(self, n_points: int = None, return_grid: bool = False) -> \
             Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        self._check_if_scalar(self)
-        n_dim = self.dimension([self])
-        n_dim = n_dim[0]
+        Ellipsoid._check_if_scalar(self)
+        n_dim = self.dimension([self]).flat[0]
         if n_dim == 2:
             if n_points is None:
                 n_points = self._n_plot_2d_points
@@ -294,7 +293,7 @@ class Ellipsoid(AEllipsoid):
             dir_mat = sphere_tri_ext(n_dim, n_points, return_grid)
             f_mat = None
         cen_vec, q_mat = self.double()
-        ret_mat = dir_mat @ sqrtm_pos(q_mat, self._abs_tol)
+        ret_mat = dir_mat @ sqrtm_pos(q_mat, self.get_abs_tol([self], f_prop_fun=None).flat[0])
         cen_mat = np.tile(cen_vec.T, (dir_mat.shape[0], 1))
         ret_mat = ret_mat + cen_mat
         if return_grid:
@@ -302,10 +301,10 @@ class Ellipsoid(AEllipsoid):
         else:
             return ret_mat
 
-    def get_boundary_by_factor(self, factor_vec: Union[np.ndarray, int] = None, return_grid: bool = False) -> \
+    def get_boundary_by_factor(self, factor_vec: Union[np.ndarray, float] = None, return_grid: bool = False) -> \
             Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        self._check_if_scalar(self)
-        n_dim = self.dimension([self])
+        Ellipsoid._check_if_scalar(self)
+        n_dim = self.dimension([self]).flat[0]
         if (n_dim < 2) or (n_dim > 3):
             throw_error('wrongDim', 'ellipsoid must be of dimension 2 or 3')
         if factor_vec is None:
@@ -314,13 +313,14 @@ class Ellipsoid(AEllipsoid):
             factor = factor_vec
         else:
             factor = factor_vec[n_dim - 2]
+        factor = np.float64(factor)
         if n_dim == 2:
-            n_plot_points = int(self._n_plot_2d_points)
-            if not (factor == 1):
+            n_plot_points = self._n_plot_2d_points
+            if factor != 1.0:
                 n_plot_points = int(np.floor(n_plot_points * factor))
         else:
-            n_plot_points = int(self._n_plot_3d_points)
-            if not (factor == 1):
+            n_plot_points = self._n_plot_3d_points
+            if factor != 1.0:
                 n_plot_points = int(np.floor(n_plot_points * factor))
         return self.get_boundary(n_plot_points, return_grid)
 
@@ -338,9 +338,8 @@ class Ellipsoid(AEllipsoid):
         return cls.projection(proj_ell_arr, basis_mat)
 
     def get_rho_boundary(self, n_points: int = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        self._check_if_scalar(self)
-        n_dim = self.dimension([self])
-        n_dim = n_dim[0]
+        Ellipsoid._check_if_scalar(self)
+        n_dim = self.dimension([self]).flat[0]
         if n_dim == 2:
             if n_points is None:
                 n_points = self._n_plot_2d_points
@@ -352,17 +351,16 @@ class Ellipsoid(AEllipsoid):
         dir_mat, f_mat = sphere_tri_ext(n_dim, n_points, True)
         cen_vec, q_mat = self.double()
         l_grid_mat = np.vstack((dir_mat, dir_mat[0, :]))
-        abs_tol = self.get_abs_tol([self])
-        abs_tol = abs_tol[0]
+        abs_tol = self.get_abs_tol([self], f_prop_fun=None).flat[0]
         sup_vec, bp_mat = rho_mat(q_mat, l_grid_mat.T, abs_tol, np.expand_dims(cen_vec, 1))
         sup_vec = sup_vec.T
         bp_mat = bp_mat.T
         return bp_mat, f_mat, sup_vec, l_grid_mat
 
-    def get_rho_boundary_by_factor(self, factor_vec: Union[np.ndarray, int] = None) -> \
+    def get_rho_boundary_by_factor(self, factor_vec: Union[np.ndarray, float] = None) -> \
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        self._check_if_scalar(self)
-        n_dim = self.dimension([self])
+        Ellipsoid._check_if_scalar(self)
+        n_dim = self.dimension([self]).flat[0]
         n_plot_points = None
         if factor_vec is None:
             factor = 1
@@ -370,13 +368,14 @@ class Ellipsoid(AEllipsoid):
             factor = factor_vec
         else:
             factor = factor_vec[n_dim - 2]
+        factor = np.float64(factor)
         if n_dim == 2:
-            n_plot_points = int(self._n_plot_2d_points)
-            if not (factor == 1):
+            n_plot_points = self._n_plot_2d_points
+            if factor != 1.0:
                 n_plot_points = int(np.floor(n_plot_points * factor))
         elif n_dim == 3:
-            n_plot_points = int(self._n_plot_3d_points)
-            if not (factor == 1):
+            n_plot_points = self._n_plot_3d_points
+            if factor != 1.0:
                 n_plot_points = int(np.floor(n_plot_points * factor))
         else:
             throw_error('wrongDim', 'ellipsoid must be of dimension 2 or 3')
