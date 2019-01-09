@@ -31,6 +31,7 @@ class TestEllipsoidSecTestCase:
                                         n_good_dirs: int, exp_result: bool):
         _compare_analytic_for_mink_sum(self, is_ea, is_high_dim, ind_typical_example, n_dirs, n_good_dirs, exp_result)
 
+
 def __create_typical_high_dim_ell(ell_factory_obj, flag: int):
     if flag == 10:
         vec_1 = np.array(np.random.rand(100), dtype=np.float64)
@@ -81,6 +82,7 @@ def __create_typical_ell(ell_factory_obj, flag: int):
         ell_vec = np.array([ell_1, ell_2, ell_3])
         return vec_1, mat_1, vec_2, mat_2, vec_3, mat_3, ell_vec
 
+
 def __calc_exp_mink_sum(ell_factory_obj, is_ext_apx: bool, n_dirs: int, a_mat: np.ndarray,
                         e0_vec: np.ndarray, e0_mat: np.ndarray, e1_vec: np.ndarray, e1_mat: np.ndarray,
                         e2_vec: np.ndarray, e2_mat: np.ndarray) -> np.ndarray:
@@ -118,6 +120,7 @@ def __calc_exp_mink_sum(ell_factory_obj, is_ext_apx: bool, n_dirs: int, a_mat: n
                 analytic_res_mat = q_star_mat.T @ q_star_mat
             analytic_res_ell_vec[i_dir] = ell_factory_obj.ellipsoid(analytic_res_vec, analytic_res_mat)
         return analytic_res_ell_vec
+
 
 def _compare_analytic_for_mink_sum(ell_factory_obj, is_ea: bool, is_high_dim: bool,
                                    ind_typical_example: int, n_dirs: int, n_good_dirs: int, exp_result: bool):
