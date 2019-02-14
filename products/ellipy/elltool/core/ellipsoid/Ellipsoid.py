@@ -64,6 +64,9 @@ class Ellipsoid(AEllipsoid):
     def get_shape_mat(self) -> np.ndarray:
         return np.copy(self._shape_mat)
 
+    def get_center_vec(self) ->np.ndarray:
+        return np.copy(self._center_vec)
+
     def _get_scalar_polar_internal(self, is_robust_method: bool = True):
         from ellipy.gras.geom.ell.ell import quad_mat
         self._check_if_scalar(self)
