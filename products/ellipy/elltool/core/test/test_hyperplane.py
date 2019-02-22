@@ -1,8 +1,6 @@
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
 from ellipy.elltool.core.hyperplane.Hyperplane import *
 from ellipy.gen.common.common import get_caller_name_ext
-from ellipy.elltool.core.abasicellipsoid.ABasicEllipsoid import *
-#from ellipy.elltool.conf.properties.Properties import Properties
 import scipy.io
 import os
 import pytest
