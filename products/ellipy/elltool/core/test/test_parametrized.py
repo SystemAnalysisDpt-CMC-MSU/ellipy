@@ -39,10 +39,11 @@ class TestParametrizedTC:
             obj_list = [f_create_obj(cent_vec, shape_mat) for (cent_vec, shape_mat) in zip(cent_list, shape_mat_list)]
 
         else:
-            obj_list = [f_create_obj(cent_vec, shape_mat, **{'absTol': add_args[0], 'relTol': add_args[1]}) for
+            obj_list = [f_create_obj(cent_vec, shape_mat, abs_tol=add_args[0], rel_tol=add_args[1]) for
                         (cent_vec, shape_mat, add_args) in zip(cent_list, shape_mat_list, args)]
         return obj_list
 
+    # noinspection PyShadowingNames
     def test_is_equal_sym_prop(self, f_create):
         # test symmetry property
         def_tol = min(get_def_tol())
@@ -52,6 +53,7 @@ class TestParametrizedTC:
         check_for_is_equal(test_obj_list[1], test_obj_list[0],
                            np.equal(test_obj_list[0], test_obj_list[1]))
 
+    # noinspection PyShadowingNames
     def test_is_equal_trans_prop(self, f_create):
         # test transitive property
         def_tol = min(get_def_tol())
@@ -63,6 +65,7 @@ class TestParametrizedTC:
                            np.equal(test_obj_list[0], test_obj_list[1]) and
                            np.equal(test_obj_list[1], test_obj_list[2]))
 
+    # noinspection PyShadowingNames
     def test_is_equal_abs_tol_rep_by_rel_tol(self, f_create):
         # test captures that abs_tol replaced by rel_tol
         def_abs_tol, def_rel_tol = get_def_tol()
