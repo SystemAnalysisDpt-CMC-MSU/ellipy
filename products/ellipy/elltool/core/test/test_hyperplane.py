@@ -1,6 +1,7 @@
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
 from ellipy.elltool.core.hyperplane.Hyperplane import *
 from ellipy.gen.common.common import get_caller_name_ext
+import numpy as np
 import scipy.io
 import os
 import pytest
@@ -162,6 +163,33 @@ class TestHyperplaneTestCase:
             assert 'wrongInput' in str(e.value)
 
         return self
+
+    def test_get_abs_tol(self):
+        norm_vec = np.ones((3, 1))
+        const = 0
+        test_abs_tol = 1.
+        args = [norm_vec, const]
+        kwargs = {'abs_tol': test_abs_tol}
+        h_plane_arr = np.zeros(shape=(2, 2, 2), dtype=object)
+        h_plane_arr[:][:][0] = np.array([[self.hyperplane(*args, **kwargs), self.hyperplane(*args, **kwargs)],
+                                        [self.hyperplane(*args, **kwargs), self.hyperplane(*args, **kwargs)]])
+        h_plane_arr[:][:][1] = np.array([[self.hyperplane(*args, **kwargs), self.hyperplane(*args, **kwargs)],
+                                        [self.hyperplane(*args, **kwargs), self.hyperplane(*args, **kwargs)]])
+        size_arr = np.shape(h_plane_arr)
+        test_abs_tol_arr = np.tile(test_abs_tol, size_arr)
+        h_plane_arr_abs = (h_plane_arr[0][0][0]).get_abs_tol(h_plane_arr, f_prop_fun=None)
+        is_ok_arr = (np.equal(test_abs_tol_arr.flatten(), h_plane_arr_abs))
+        is_ok = np.all(is_ok_arr)
+        assert is_ok
+
+    def test_rel_tol(self):
+        def aux_test_rel_tol(hyp, rel_tol):
+            assert hyp.get_rel_tol(hyp, f_prop_fun=None) == rel_tol
+        hp = self.hyperplane()
+        aux_test_rel_tol(hp, 1e-5)
+
+        hp = self.hyperplane(np.ones(1), 1, rel_tol=1e-3)
+        aux_test_rel_tol(hp, 1e-3)
 
     def __aux_read_file(self):
         method_name = get_caller_name_ext(2)[0]
