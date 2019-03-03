@@ -1,6 +1,7 @@
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
 from ellipy.elltool.core.hyperplane.Hyperplane import *
 from ellipy.gen.common.common import get_caller_name_ext
+import numpy as np
 import scipy.io
 import os
 import pytest
@@ -182,8 +183,8 @@ class TestHyperplaneTestCase:
         assert is_ok
 
     def test_rel_tol(self):
-        def aux_test_rel_tol(hp, rel_tol):
-            assert ABasicEllipsoid.get_rel_tol(hp, f_prop_fun=None) == rel_tol
+        def aux_test_rel_tol(hyp, rel_tol):
+            assert ABasicEllipsoid.get_rel_tol(hyp, f_prop_fun=None) == rel_tol
         hp = self.hyperplane()
         aux_test_rel_tol(hp, 1e-5)
 

@@ -304,17 +304,17 @@ class TestEllipsoidTestCase:
                 return 0
             else:
                 eps = 1e-9
-                is_equal_mat = np.zeros(np.shape(a1))
+                is_eq_mat = np.zeros(np.shape(a1))
                 for i in range(np.shape(a1)[0]):
                     for j in range(np.shape(a1)[1]):
                         if np.shape(a1[i][j].get_shape_mat()) == np.shape(a2[i][j].get_shape_mat()):
-                            is_equal_mat[i][j] = (np.all(np.abs((a1[i][j]).get_center_vec() -
-                                                                (a2[i][j]).get_center_vec()) < eps) and
-                                                  np.all(np.abs((a1[i][j]).get_shape_mat() -
-                                                                (a2[i][j]).get_shape_mat()) < eps))
+                            is_eq_mat[i][j] = (np.all(np.abs((a1[i][j]).get_center_vec() -
+                                                             (a2[i][j]).get_center_vec()) < eps) and
+                                               np.all(np.abs((a1[i][j]).get_shape_mat() -
+                                                             (a2[i][j]).get_shape_mat()) < eps))
                         else:
-                            is_equal_mat[i][j] = 0
-                return is_equal_mat
+                            is_eq_mat[i][j] = 0
+                return is_eq_mat
 
         ell_mat = np.array([[self.ellipsoid(np.eye(3)), self.ellipsoid(1.0001*np.eye(3)),
                              self.ellipsoid(np.eye(2))],
@@ -323,8 +323,8 @@ class TestEllipsoidTestCase:
                             [self.ellipsoid(np.eye(4)),
                              self.ellipsoid(np.array([[0, ], [1, ], [2, ]]), np.ones((3, 3))),
                              self.ellipsoid(np.eye(5))]])
-        coppied_ell_mat = ell_mat.copy()
-        assert np.all(is_equal(coppied_ell_mat, ell_mat))
+        copied_ell_mat = ell_mat.copy()
+        assert np.all(is_equal(copied_ell_mat, ell_mat))
         first_cut_ell_mat = ell_mat[0:2, 0:2]
         second_cut_ell_mat = ell_mat[1:3, 1:3]
         third_cut_ell_mat = ell_mat[0:2, 1:3]

@@ -10,7 +10,7 @@ def hyp(hyp_norm_arr, hyp_const_arr, *args, **kwargs):
 
 
 def ellipsoid(*args, **kwargs):
-   return Ellipsoid(*args, **kwargs)
+    return Ellipsoid(*args, **kwargs)
 
 
 def get_def_tol():
@@ -46,7 +46,7 @@ class TestParametrizedTC:
         return obj_list
 
     def test_is_equal_sym_prop(self, f_create):
-    #test symmetry property
+        # test symmetry property
         def_tol = min(get_def_tol())
         tol_vec = [[10 * def_tol, 10 * def_tol], [def_tol, def_tol]]
         cent_vec_list = [np.array([0, 1]), np.array([tol_vec[0][0], 1])]
@@ -55,9 +55,9 @@ class TestParametrizedTC:
                            np.equal(test_obj_list[0], test_obj_list[1]))
 
     def test_is_equal_trans_prop(self, f_create):
-    #test transitive property
+        # test transitive property
         def_tol = min(get_def_tol())
-        #abs_tol_vec = rel_tol_vec = tol_vec
+        # abs_tol_vec = rel_tol_vec = tol_vec
         tol_vec = [[10 * def_tol, 10 * def_tol], [100 * def_tol, 100 * def_tol], [def_tol, def_tol]]
         cent_vec_list = [np.array([0, 1]), np.array([tol_vec[0][0], 1]), np.array([tol_vec[1][0], 1])]
         test_obj_list = self.__create_obj_list(f_create, cent_vec_list, *tol_vec)
@@ -66,7 +66,7 @@ class TestParametrizedTC:
                            np.equal(test_obj_list[1], test_obj_list[2]))
 
     def test_is_equal_abs_tol_rep_by_rel_tol(self, f_create):
-    #test captures that abs_tol replaced by rel_tol
+        # test captures that abs_tol replaced by rel_tol
         def_abs_tol, def_rel_tol = get_def_tol()
         if def_abs_tol != def_rel_tol:
             if def_abs_tol < def_rel_tol:
