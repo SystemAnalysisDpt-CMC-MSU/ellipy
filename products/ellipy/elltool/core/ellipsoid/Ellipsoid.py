@@ -684,7 +684,7 @@ class Ellipsoid(AEllipsoid):
             'center_vec': 'q'
         }
         field_transform_func_dict = {
-            'shape_mat': lambda z: sqrtm_pos(z),
+            'shape_mat': lambda z: sqrtm_pos(z, abs_tol),
             'center_vec': lambda z: z
         }
         field_descr_dict = {
