@@ -63,9 +63,10 @@ class TestParametrizedTC:
         tol_vec = [[10 * def_tol, 10 * def_tol], [100 * def_tol, 100 * def_tol], [def_tol, def_tol]]
         cent_vec_list = [np.array([0, 1]), np.array([tol_vec[0][0], 1]), np.array([tol_vec[1][0], 1])]
         test_obj_list = self.__create_obj_list(f_create, cent_vec_list, *tol_vec)
-        check_for_is_equal(test_obj_list[0], test_obj_list[2],
-                           np.equal(test_obj_list[0], test_obj_list[1]) and
-                           np.equal(test_obj_list[1], test_obj_list[2]))
+        test_obj_list = np.array(test_obj_list)
+        expr1, report_str = test_obj_list.flat[0].is_equal(test_obj_list[0], test_obj_list[1])
+        expr2, report_str = test_obj_list.flat[1].is_equal(test_obj_list[1], test_obj_list[2])
+        check_for_is_equal(test_obj_list[0], test_obj_list[2], expr1 and expr2)
 
     # noinspection PyShadowingNames
     def test_is_equal_abs_tol_rep_by_rel_tol(self, f_create):

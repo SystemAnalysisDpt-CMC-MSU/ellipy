@@ -316,10 +316,10 @@ class TestEllipsoidTestCase:
         with pytest.raises(Exception) as e:
             copied_ell_mat.flat[0].is_equal(copied_ell_mat, first_cut_ell_mat)
         assert 'wrongSizes' in str(e.value)
-        is_equal_mat = is_equal(first_cut_ell_mat, second_cut_ell_mat)
+        is_equal_mat = first_cut_ell_mat.flat[0].is_equal(first_cut_ell_mat, second_cut_ell_mat)
         is_ok_mat = is_equal_mat == np.array([[1, 0], [1, 0]])
         assert np.all(is_ok_mat)
 
-        is_equal_mat = is_equal(first_cut_ell_mat, third_cut_ell_mat)
+        is_equal_mat = first_cut_ell_mat.flat[0].is_equal(first_cut_ell_mat, third_cut_ell_mat)
         is_ok_mat = is_equal_mat == np.array([[0, 0], [0, 1]])
         assert np.all(is_ok_mat)
