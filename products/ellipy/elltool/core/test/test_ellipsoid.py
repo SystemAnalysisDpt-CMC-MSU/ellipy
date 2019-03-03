@@ -299,23 +299,6 @@ class TestEllipsoidTestCase:
         ell_arr[0].minksum_ia(ell_arr, np.array([0, 0, 1, 0]))
 
     def test_get_copy(self):
-        def is_equal(a1, a2):
-            if np.shape(a1) != np.shape(a2):
-                return 0
-            else:
-                eps = 1e-9
-                is_eq_mat = np.zeros(np.shape(a1))
-                for i in range(np.shape(a1)[0]):
-                    for j in range(np.shape(a1)[1]):
-                        if np.shape(a1[i][j].get_shape_mat()) == np.shape(a2[i][j].get_shape_mat()):
-                            is_eq_mat[i][j] = (np.all(np.abs((a1[i][j]).get_center_vec() -
-                                                             (a2[i][j]).get_center_vec()) < eps) and
-                                               np.all(np.abs((a1[i][j]).get_shape_mat() -
-                                                             (a2[i][j]).get_shape_mat()) < eps))
-                        else:
-                            is_eq_mat[i][j] = 0
-                return is_eq_mat
-
         ell_mat = np.array([[self.ellipsoid(np.eye(3)), self.ellipsoid(1.0001*np.eye(3)),
                              self.ellipsoid(np.eye(2))],
                             [self.ellipsoid(np.array([[0, ], [1, ], [2, ]]), np.ones((3, 3))),
@@ -323,11 +306,16 @@ class TestEllipsoidTestCase:
                             [self.ellipsoid(np.eye(4)),
                              self.ellipsoid(np.array([[0, ], [1, ], [2, ]]), np.ones((3, 3))),
                              self.ellipsoid(np.eye(5))]])
-        copied_ell_mat = ell_mat.copy()
-        assert np.all(is_equal(copied_ell_mat, ell_mat))
+        copied_ell_mat = ell_mat.flat[0].get_copy(ell_mat)
+        expr, report = copied_ell_mat.flat[0].is_equal(copied_ell_mat, ell_mat)
+        assert np.all(expr)
+
         first_cut_ell_mat = ell_mat[0:2, 0:2]
         second_cut_ell_mat = ell_mat[1:3, 1:3]
         third_cut_ell_mat = ell_mat[0:2, 1:3]
+        with pytest.raises(Exception) as e:
+            copied_ell_mat.flat[0].is_equal(copied_ell_mat, first_cut_ell_mat)
+        assert 'wrongSizes' in str(e.value)
         is_equal_mat = is_equal(first_cut_ell_mat, second_cut_ell_mat)
         is_ok_mat = is_equal_mat == np.array([[1, 0], [1, 0]])
         assert np.all(is_ok_mat)

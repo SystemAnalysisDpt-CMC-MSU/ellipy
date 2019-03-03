@@ -184,7 +184,7 @@ class TestHyperplaneTestCase:
 
     def test_rel_tol(self):
         def aux_test_rel_tol(hyp, rel_tol):
-            assert ABasicEllipsoid.get_rel_tol(hyp, f_prop_fun=None) == rel_tol
+            assert hyp.get_rel_tol(hyp, f_prop_fun=None) == rel_tol
         hp = self.hyperplane()
         aux_test_rel_tol(hp, 1e-5)
 

@@ -16,9 +16,10 @@ def get_def_tol():
 
 
 def check_for_is_equal(test_ell1_vec, test_ell2_vec, is_exp_res_is_equal):
-    is_ok_arr = np.equal(test_ell1_vec, test_ell2_vec)
+    test_ell1_vec = np.array(test_ell1_vec)
+    is_ok_arr, report_str = test_ell1_vec.flat[0].is_equal(test_ell1_vec, test_ell2_vec)
     is_ok = np.all(is_ok_arr == is_exp_res_is_equal)
-    assert is_ok
+    assert is_ok, report_str
 
 
 @pytest.fixture(
@@ -50,8 +51,9 @@ class TestParametrizedTC:
         tol_vec = [[10 * def_tol, 10 * def_tol], [def_tol, def_tol]]
         cent_vec_list = [np.array([0, 1]), np.array([tol_vec[0][0], 1])]
         test_obj_list = self.__create_obj_list(f_create, cent_vec_list, *tol_vec)
-        check_for_is_equal(test_obj_list[1], test_obj_list[0],
-                           np.equal(test_obj_list[0], test_obj_list[1]))
+        test_obj_list = np.array(test_obj_list)
+        expr, report_str = test_obj_list.flat[0].is_equal(test_obj_list[0], test_obj_list[1])
+        check_for_is_equal(test_obj_list[1], test_obj_list[0], expr)
 
     # noinspection PyShadowingNames
     def test_is_equal_trans_prop(self, f_create):
