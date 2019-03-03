@@ -1,12 +1,10 @@
 import pytest
-import numpy as np
-from ellipy.elltool.conf.properties.Properties import *
 from ellipy.elltool.core.ellipsoid.Ellipsoid import *
 from ellipy.elltool.core.hyperplane.Hyperplane import *
 
 
-def hyp(hyp_norm_arr, hyp_const_arr, *args, **kwargs):
-    return Hyperplane(hyp_norm_arr, hyp_const_arr.flatten()[0], *args, **kwargs)
+def hyp(hyp_norm_arr, hyp_const_arr, **kwargs):
+    return Hyperplane(hyp_norm_arr, hyp_const_arr.flatten()[0], **kwargs)
 
 
 def ellipsoid(*args, **kwargs):
@@ -35,13 +33,13 @@ def f_create(request):
 class TestParametrizedTC:
 
     @staticmethod
-    def __create_obj_list(f_create, cent_list, *args):
+    def __create_obj_list(f_create_obj, cent_list, *args):
         shape_mat_list = [np.eye(cent_list[0].size)] * len(cent_list)
         if len(args) == 0:
-            obj_list = [f_create(cent_vec, shape_mat) for (cent_vec, shape_mat) in zip(cent_list, shape_mat_list)]
+            obj_list = [f_create_obj(cent_vec, shape_mat) for (cent_vec, shape_mat) in zip(cent_list, shape_mat_list)]
 
         else:
-            obj_list = [f_create(cent_vec, shape_mat, **{'absTol': add_args[0], 'relTol': add_args[1]}) for
+            obj_list = [f_create_obj(cent_vec, shape_mat, **{'absTol': add_args[0], 'relTol': add_args[1]}) for
                         (cent_vec, shape_mat, add_args) in zip(cent_list, shape_mat_list, args)]
         return obj_list
 
