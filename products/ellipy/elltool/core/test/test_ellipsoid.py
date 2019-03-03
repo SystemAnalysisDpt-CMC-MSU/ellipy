@@ -307,8 +307,8 @@ class TestEllipsoidTestCase:
                              self.ellipsoid(np.array([[0, ], [1, ], [2, ]]), np.ones((3, 3))),
                              self.ellipsoid(np.eye(5))]])
         copied_ell_mat = ell_mat.flat[0].get_copy(ell_mat)
-        expr, report = copied_ell_mat.flat[0].is_equal(copied_ell_mat, ell_mat)
-        assert np.all(expr)
+        is_ok_arr, report_str = copied_ell_mat.flat[0].is_equal(copied_ell_mat, ell_mat)
+        assert np.all(is_ok_arr)
 
         first_cut_ell_mat = ell_mat[0:2, 0:2]
         second_cut_ell_mat = ell_mat[1:3, 1:3]
@@ -316,10 +316,10 @@ class TestEllipsoidTestCase:
         with pytest.raises(Exception) as e:
             copied_ell_mat.flat[0].is_equal(copied_ell_mat, first_cut_ell_mat)
         assert 'wrongSizes' in str(e.value)
-        is_equal_mat = first_cut_ell_mat.flat[0].is_equal(first_cut_ell_mat, second_cut_ell_mat)
+        is_equal_mat, report_str = first_cut_ell_mat.flat[0].is_equal(first_cut_ell_mat, second_cut_ell_mat)
         is_ok_mat = is_equal_mat == np.array([[1, 0], [1, 0]])
         assert np.all(is_ok_mat)
 
-        is_equal_mat = first_cut_ell_mat.flat[0].is_equal(first_cut_ell_mat, third_cut_ell_mat)
+        is_equal_mat, report_str = first_cut_ell_mat.flat[0].is_equal(first_cut_ell_mat, third_cut_ell_mat)
         is_ok_mat = is_equal_mat == np.array([[0, 0], [0, 1]])
         assert np.all(is_ok_mat)
