@@ -188,8 +188,7 @@ class TestHyperplaneTestCase:
         hp = self.hyperplane()
         aux_test_rel_tol(hp, 1e-5)
 
-        args = [np.ones(1), 1]
-        hp = self.hyperplane(*args, rel_tol=1e-3)
+        hp = self.hyperplane(np.ones(1), 1, rel_tol=1e-3)
         aux_test_rel_tol(hp, 1e-3)
 
     def __aux_read_file(self):
